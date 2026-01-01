@@ -1,3 +1,5 @@
+.env
+
 HELP.md
 .gradle
 build/
@@ -35,3 +37,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+**/application-dev.properties
+**/application-prod.properties
+
+.DS_Store

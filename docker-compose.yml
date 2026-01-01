@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: syncapi-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${USER}
+      POSTGRES_PASSWORD: ${PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U syncapi_user -d syncapi_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - syncapi-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: syncapi-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${USER}
+      SPRING_DATASOURCE_PASSWORD: ${PASSWORD}
+      JWT_SECRET: ${SECRET}
+      JWT_EXPIRATION: 86400000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - syncapi-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: syncapi-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - postgres
+    networks:
+      - syncapi-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  syncapi-network:
+    driver: bridge
