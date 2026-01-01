@@ -3,7 +3,8 @@
 # Full Docker setup (database + app)
 setup:
 	@echo "Setting up complete environment..."
-	@./setup.sh
+	@chmod +x scripts/setup.sh
+	@./scripts/setup.sh
 
 # Start all containers
 start:
@@ -39,7 +40,11 @@ clean:
 
 # Development mode (database in Docker, app locally)
 dev:
-	@./dev.sh
+	@echo "Starting database only..."
+	@docker-compose up -d postgres pgadmin
+	@echo "Database ready at localhost:5432"
+	@echo "pgAdmin ready at http://localhost:5050"
+	@echo "Run app locally: ./gradlew bootRun --args='--spring.profiles.active=dev'"
 
 # Rebuild and restart app
 rebuild:
@@ -57,3 +62,8 @@ shell-app:
 # Shell into database container
 shell-db:
 	@docker exec -it syncapi-postgres psql -U syncapi_user -d syncapi_db
+
+# Generate coverage report
+coverage:
+	@./gradlew test jacocoTestReport
+	@echo "Coverage report: build/reports/jacoco/test/html/index.html"
