@@ -1,4 +1,4 @@
-package com.syncapi.dto;
+package com.syncapi.dto.auth;
 
 public class AuthResponse {
     private String token;

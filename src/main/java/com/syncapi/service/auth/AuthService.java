@@ -1,8 +1,8 @@
-package com.syncapi.service;
+package com.syncapi.service.auth;
 
-import com.syncapi.dto.AuthResponse;
-import com.syncapi.dto.LoginRequest;
-import com.syncapi.dto.RegisterRequest;
+import com.syncapi.dto.auth.AuthResponse;
+import com.syncapi.dto.auth.LoginRequest;
+import com.syncapi.dto.auth.RegisterRequest;
 import com.syncapi.entity.User;
 import com.syncapi.repository.UserRepository;
 import com.syncapi.security.JwtUtil;

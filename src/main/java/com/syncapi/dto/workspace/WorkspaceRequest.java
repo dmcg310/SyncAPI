@@ -1,4 +1,4 @@
-package com.syncapi.dto;
+package com.syncapi.dto.workspace;
 
 import jakarta.validation.constraints.NotBlank;
 

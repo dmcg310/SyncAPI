@@ -1,9 +1,9 @@
-package com.syncapi.controller;
+package com.syncapi.controller.auth;
 
-import com.syncapi.dto.AuthResponse;
-import com.syncapi.dto.LoginRequest;
-import com.syncapi.dto.RegisterRequest;
-import com.syncapi.service.AuthService;
+import com.syncapi.dto.auth.AuthResponse;
+import com.syncapi.dto.auth.LoginRequest;
+import com.syncapi.dto.auth.RegisterRequest;
+import com.syncapi.service.auth.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

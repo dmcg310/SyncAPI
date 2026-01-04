@@ -1,9 +1,9 @@
-package com.syncapi.controller;
+package com.syncapi.controller.workspace;
 
-import com.syncapi.dto.AddMemberRequest;
-import com.syncapi.dto.WorkspaceRequest;
-import com.syncapi.dto.WorkspaceResponse;
-import com.syncapi.service.WorkspaceService;
+import com.syncapi.dto.workspace.AddMemberRequest;
+import com.syncapi.dto.workspace.WorkspaceRequest;
+import com.syncapi.dto.workspace.WorkspaceResponse;
+import com.syncapi.service.workspace.WorkspaceService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

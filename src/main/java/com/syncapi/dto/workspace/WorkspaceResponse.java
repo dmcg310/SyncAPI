@@ -1,4 +1,4 @@
-package com.syncapi.dto;
+package com.syncapi.dto.workspace;
 
 import java.time.LocalDateTime;
 import java.util.List;

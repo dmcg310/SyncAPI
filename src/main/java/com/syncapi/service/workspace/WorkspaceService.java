@@ -1,8 +1,8 @@
-package com.syncapi.service;
+package com.syncapi.service.workspace;
 
-import com.syncapi.dto.AddMemberRequest;
-import com.syncapi.dto.WorkspaceRequest;
-import com.syncapi.dto.WorkspaceResponse;
+import com.syncapi.dto.workspace.AddMemberRequest;
+import com.syncapi.dto.workspace.WorkspaceRequest;
+import com.syncapi.dto.workspace.WorkspaceResponse;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
 import com.syncapi.repository.UserRepository;
