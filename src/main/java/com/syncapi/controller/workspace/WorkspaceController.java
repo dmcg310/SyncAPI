@@ -4,12 +4,11 @@ import com.syncapi.dto.workspace.AddMemberRequest;
 import com.syncapi.dto.workspace.WorkspaceRequest;
 import com.syncapi.dto.workspace.WorkspaceResponse;
 import com.syncapi.service.workspace.WorkspaceService;
+import com.syncapi.util.AuthUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +21,7 @@ public class WorkspaceController {
 
     @GetMapping
     public ResponseEntity<List<WorkspaceResponse>> getUserWorkspaces() {
-        List<WorkspaceResponse> workspaces = workspaceService.getUserWorkspaces(getCurrentUserEmail());
+        List<WorkspaceResponse> workspaces = workspaceService.getUserWorkspaces(AuthUtil.getCurrentUserEmail());
 
         return ResponseEntity.ok(workspaces);
     }
@@ -30,7 +29,7 @@ public class WorkspaceController {
     @GetMapping("/{id}")
     public ResponseEntity<WorkspaceResponse> getWorkspace(@PathVariable Long id) {
         try {
-            WorkspaceResponse workspace = workspaceService.getWorkspace(id, getCurrentUserEmail());
+            WorkspaceResponse workspace = workspaceService.getWorkspace(id, AuthUtil.getCurrentUserEmail());
 
             return ResponseEntity.ok(workspace);
         } catch (RuntimeException e) {
@@ -40,7 +39,7 @@ public class WorkspaceController {
 
     @PostMapping
     public ResponseEntity<WorkspaceResponse> createWorkspace(@Valid @RequestBody WorkspaceRequest request) {
-        WorkspaceResponse workspace = workspaceService.createWorkspace(request, getCurrentUserEmail());
+        WorkspaceResponse workspace = workspaceService.createWorkspace(request, AuthUtil.getCurrentUserEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(workspace);
     }
@@ -50,7 +49,7 @@ public class WorkspaceController {
     public ResponseEntity<WorkspaceResponse> updateWorkspace(@PathVariable Long id,
                                                              @Valid @RequestBody WorkspaceRequest request) {
         try {
-            WorkspaceResponse workspace = workspaceService.updateWorkspace(id, request, getCurrentUserEmail());
+            WorkspaceResponse workspace = workspaceService.updateWorkspace(id, request, AuthUtil.getCurrentUserEmail());
 
             return ResponseEntity.ok(workspace);
         } catch (RuntimeException e) {
@@ -61,7 +60,7 @@ public class WorkspaceController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteWorkspace(@PathVariable Long id) {
         try {
-            workspaceService.deleteWorkspace(id, getCurrentUserEmail());
+            workspaceService.deleteWorkspace(id, AuthUtil.getCurrentUserEmail());
 
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
@@ -72,9 +71,8 @@ public class WorkspaceController {
     @PostMapping("/{id}/members")
     public ResponseEntity<WorkspaceResponse> addMember(@PathVariable Long id,
                                                        @Valid @RequestBody AddMemberRequest request) {
-
         try {
-            WorkspaceResponse workspace = workspaceService.addMember(id, request, getCurrentUserEmail());
+            WorkspaceResponse workspace = workspaceService.addMember(id, request, AuthUtil.getCurrentUserEmail());
 
             return ResponseEntity.ok(workspace);
         } catch (RuntimeException e) {
@@ -85,20 +83,11 @@ public class WorkspaceController {
     @DeleteMapping("/{id}/members/{userId}")
     public ResponseEntity<WorkspaceResponse> removeMember(@PathVariable Long id, @PathVariable Long userId) {
         try {
-            WorkspaceResponse workspace = workspaceService.removeMember(id, userId, getCurrentUserEmail());
+            WorkspaceResponse workspace = workspaceService.removeMember(id, userId, AuthUtil.getCurrentUserEmail());
 
             return ResponseEntity.ok(workspace);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
-    }
-
-    private String getCurrentUserEmail() {
-        Authentication authentication;
-        if ((authentication = SecurityContextHolder.getContext().getAuthentication()) == null) {
-            throw new RuntimeException("No authenticated user found");
-        }
-
-        return authentication.getName();
     }
 }
