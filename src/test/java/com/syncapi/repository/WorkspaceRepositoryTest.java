@@ -1,20 +1,17 @@
 package com.syncapi.repository;
 
+import com.syncapi.AbstractIntegrationTest;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-@ActiveProfiles("test")
-class WorkspaceRepositoryTest {
+class WorkspaceRepositoryTest extends AbstractIntegrationTest {
     @Autowired
     private WorkspaceRepository workspaceRepository;
 
@@ -86,5 +83,20 @@ class WorkspaceRepositoryTest {
         // then
         assertThat(found.getMembers()).hasSize(2);
         assertThat(found.getMembers()).contains(user1, user2);
+    }
+
+    @Test
+    void shouldCascadeDeleteToFolders() {
+        // given
+        Workspace workspace = new Workspace("Test Workspace");
+        workspace = workspaceRepository.save(workspace);
+
+        Long workspaceId = workspace.getId();
+
+        // when
+        workspaceRepository.delete(workspace);
+
+        // then
+        assertThat(workspaceRepository.findById(workspaceId)).isEmpty();
     }
 }

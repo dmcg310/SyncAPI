@@ -1,5 +1,6 @@
 package com.syncapi.repository;
 
+import com.syncapi.AbstractIntegrationTest;
 import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
 import com.syncapi.entity.User;
@@ -7,8 +8,6 @@ import com.syncapi.entity.Workspace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,9 +15,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-@ActiveProfiles("test")
-class RequestRepositoryTest {
+class RequestRepositoryTest extends AbstractIntegrationTest {
     @Autowired
     private RequestRepository requestRepository;
 
@@ -172,5 +169,17 @@ class RequestRepositoryTest {
 
         // then
         assertThat(updated.getUpdatedAt()).isAfter(originalUpdatedAt);
+    }
+
+    @Test
+    void shouldCascadeDeleteWhenFolderDeleted() {
+        // given
+        Long requestId = request1.getId();
+
+        // when
+        folderRepository.delete(folder);
+
+        // then
+        assertThat(requestRepository.findById(requestId)).isEmpty();
     }
 }

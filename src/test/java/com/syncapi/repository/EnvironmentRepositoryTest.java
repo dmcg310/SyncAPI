@@ -1,5 +1,6 @@
 package com.syncapi.repository;
 
+import com.syncapi.AbstractIntegrationTest;
 import com.syncapi.entity.Environment;
 import com.syncapi.entity.EnvironmentVariable;
 import com.syncapi.entity.User;
@@ -7,8 +8,6 @@ import com.syncapi.entity.Workspace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,9 +15,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@DataJpaTest
-@ActiveProfiles("test")
-public class EnvironmentRepositoryTest {
+public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
     @Autowired
     private EnvironmentRepository environmentRepository;
 
@@ -132,5 +129,36 @@ public class EnvironmentRepositoryTest {
 
         // then
         assertThat(saved.getVariables()).hasSize(2);
+    }
+
+    @Test
+    void shouldCascadeDeleteVariables() {
+        // given
+        Environment environment = new Environment("Test Env", workspace);
+
+        EnvironmentVariable var = new EnvironmentVariable("KEY", "value", environment);
+        environment.getVariables().add(var);
+
+        environment = environmentRepository.save(environment);
+
+        Long envId = environment.getId();
+
+        // when
+        environmentRepository.delete(environment);
+
+        // then
+        assertThat(environmentRepository.findById(envId)).isEmpty();
+    }
+
+    @Test
+    void shouldCascadeDeleteWhenWorkspaceDeleted() {
+        // given
+        Long envId = environment1.getId();
+
+        // when
+        workspaceRepository.delete(workspace);
+
+        // then
+        assertThat(environmentRepository.findById(envId)).isEmpty();
     }
 }

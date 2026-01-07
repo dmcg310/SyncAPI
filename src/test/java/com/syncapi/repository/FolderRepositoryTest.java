@@ -1,21 +1,18 @@
 package com.syncapi.repository;
 
+import com.syncapi.AbstractIntegrationTest;
 import com.syncapi.entity.Folder;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-@ActiveProfiles("test")
-class FolderRepositoryTest {
+class FolderRepositoryTest extends AbstractIntegrationTest {
     @Autowired
     private FolderRepository folderRepository;
 
@@ -100,5 +97,17 @@ class FolderRepositoryTest {
 
         // then
         assertThat(found).isNull();
+    }
+
+    @Test
+    void shouldCascadeDeleteWhenWorkspaceDeleted() {
+        // given
+        Long folderId = folder1.getId();
+
+        // when
+        workspaceRepository.delete(workspace);
+
+        // then
+        assertThat(folderRepository.findById(folderId)).isEmpty();
     }
 }
