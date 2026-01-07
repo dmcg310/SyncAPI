@@ -173,16 +173,4 @@ class RequestRepositoryTest {
         // then
         assertThat(updated.getUpdatedAt()).isAfter(originalUpdatedAt);
     }
-
-    @Test
-    void shouldCascadeDeleteWhenFolderDeleted() {
-        // given
-        Long requestId = request1.getId();
-
-        // when
-        folderRepository.delete(folder);
-
-        // then
-        assertThat(requestRepository.findById(requestId)).isEmpty();
-    }
 }

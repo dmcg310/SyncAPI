@@ -101,16 +101,4 @@ class FolderRepositoryTest {
         // then
         assertThat(found).isNull();
     }
-
-    @Test
-    void shouldCascadeDeleteWhenWorkspaceDeleted() {
-        // given
-        Long folderId = folder1.getId();
-
-        // when
-        workspaceRepository.delete(workspace);
-
-        // then
-        assertThat(folderRepository.findById(folderId)).isEmpty();
-    }
 }

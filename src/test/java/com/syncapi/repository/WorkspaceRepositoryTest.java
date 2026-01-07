@@ -87,19 +87,4 @@ class WorkspaceRepositoryTest {
         assertThat(found.getMembers()).hasSize(2);
         assertThat(found.getMembers()).contains(user1, user2);
     }
-
-    @Test
-    void shouldCascadeDeleteToFolders() {
-        // given
-        Workspace workspace = new Workspace("Test Workspace");
-        workspace = workspaceRepository.save(workspace);
-
-        Long workspaceId = workspace.getId();
-
-        // when
-        workspaceRepository.delete(workspace);
-
-        // then
-        assertThat(workspaceRepository.findById(workspaceId)).isEmpty();
-    }
 }

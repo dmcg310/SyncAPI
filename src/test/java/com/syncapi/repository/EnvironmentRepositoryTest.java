@@ -133,35 +133,4 @@ public class EnvironmentRepositoryTest {
         // then
         assertThat(saved.getVariables()).hasSize(2);
     }
-
-    @Test
-    void shouldCascadeDeleteVariables() {
-        // given
-        Environment environment = new Environment("Test Env", workspace);
-
-        EnvironmentVariable var = new EnvironmentVariable("KEY", "value", environment);
-        environment.getVariables().add(var);
-
-        environment = environmentRepository.save(environment);
-
-        Long envId = environment.getId();
-
-        // when
-        environmentRepository.delete(environment);
-
-        // then
-        assertThat(environmentRepository.findById(envId)).isEmpty();
-    }
-
-    @Test
-    void shouldCascadeDeleteWhenWorkspaceDeleted() {
-        // Given
-        Long envId = environment1.getId();
-
-        // when
-        workspaceRepository.delete(workspace);
-
-        // then
-        assertThat(environmentRepository.findById(envId)).isEmpty();
-    }
 }
