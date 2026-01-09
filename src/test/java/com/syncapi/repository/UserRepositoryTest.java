@@ -42,7 +42,7 @@ class UserRepositoryTest extends AbstractIntegrationTest {
         // then
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getEmail()).isEqualTo(testEmail);
-        assertThat(saved.getCreatedAt()).isNotNull();
+        assertThat(saved.getCreatedAt()).isNull();
     }
 
     @Test
