@@ -9,10 +9,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.syncapi.repository.RepositoryTestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class RequestRepositoryTest extends AbstractIntegrationTest {
@@ -38,7 +40,9 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         workspaceRepository.deleteAll();
         userRepository.deleteAll();
 
-        User user = userRepository.save(new User("test@example.com", "hash", "Test User"));
+        User user = userRepository.save(new User(generateRandomEmail(), generateRandomPasswordHash(),
+                generateRandomName()));
+
         Workspace workspace = new Workspace("Test Workspace");
         workspace.getMembers().add(user);
         workspace = workspaceRepository.save(workspace);
@@ -47,6 +51,8 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         folder = folderRepository.save(folder);
 
         request1 = new Request("Get Users", "GET", "https://api.example.com/users", folder);
+        requestRepository.save(request1);
+
         request2 = new Request("Create User", "POST", "https://api.example.com/users", folder);
 
         Map<String, String> headers = new HashMap<>();
@@ -58,23 +64,25 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         body.put("email", "john@example.com");
         request2.setBody(body);
 
-        requestRepository.save(request1);
         requestRepository.save(request2);
     }
 
     @Test
     void shouldSaveRequest() {
         // given
-        Request request = new Request("Delete User", "DELETE", "https://api.example.com/users/1", folder);
+        String name = "Delete User";
+        String method = "DELETE";
+        String url = "https://api.example.com/users/1";
+        Request request = new Request(name, method, url, folder);
 
         // when
         Request saved = requestRepository.save(request);
 
         // then
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getName()).isEqualTo("Delete User");
-        assertThat(saved.getMethod()).isEqualTo("DELETE");
-        assertThat(saved.getUrl()).isEqualTo("https://api.example.com/users/1");
+        assertThat(saved.getName()).isEqualTo(name);
+        assertThat(saved.getMethod()).isEqualTo(method);
+        assertThat(saved.getUrl()).isEqualTo(url);
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getUpdatedAt()).isNotNull();
     }
@@ -82,21 +90,33 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldSaveRequestWithJsonFields() {
         // given
-        Request request = new Request("Update User", "PUT", "https://api.example.com/users/1", folder);
+        String name = "Update User";
+        String method = "PUT";
+        String url = "https://api.example.com/users/1";
+        Request request = new Request(name, method, url, folder);
+
+        String authorizationValue = "Bearer token";
+        String contentTypeValue = "application/json";
 
         Map<String, String> headers = new HashMap<>();
-        headers.put("Authorization", "Bearer token");
-        headers.put("Content-Type", "application/json");
+        headers.put("Authorization", authorizationValue);
+        headers.put("Content-Type", contentTypeValue);
         request.setHeaders(headers);
 
+        String bodyNameValue = "Jane";
+        int bodyAgeValue = 25;
+
         Map<String, Object> body = new HashMap<>();
-        body.put("name", "Jane");
-        body.put("age", 25);
+        body.put("name", bodyNameValue);
+        body.put("age", bodyAgeValue);
         request.setBody(body);
 
+        String authTypeValue = "bearer";
+        String authTokenValue = "secret-token";
+
         Map<String, String> authConfig = new HashMap<>();
-        authConfig.put("type", "bearer");
-        authConfig.put("token", "secret-token");
+        authConfig.put("type", authTypeValue);
+        authConfig.put("token", authTokenValue);
         request.setAuthConfig(authConfig);
 
         // when
@@ -104,10 +124,14 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
 
         // then
         assertThat(saved.getHeaders()).hasSize(2);
-        assertThat(saved.getHeaders().get("Authorization")).isEqualTo("Bearer token");
+        assertThat(saved.getHeaders().get("Authorization")).isEqualTo(authorizationValue);
+        assertThat(saved.getHeaders().get("Content-Type")).isEqualTo(contentTypeValue);
         assertThat(saved.getBody()).hasSize(2);
-        assertThat(saved.getBody().get("name")).isEqualTo("Jane");
+        assertThat(saved.getBody().get("name")).isEqualTo(bodyNameValue);
+        assertThat(saved.getBody().get("age")).isEqualTo(bodyAgeValue);
         assertThat(saved.getAuthConfig()).hasSize(2);
+        assertThat(saved.getAuthConfig().get("type")).isEqualTo(authTypeValue);
+        assertThat(saved.getAuthConfig().get("token")).isEqualTo(authTokenValue);
     }
 
     @Test
@@ -118,7 +142,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         // then
         assertThat(requests).hasSize(2);
         assertThat(requests).extracting(Request::getName)
-                .containsExactlyInAnyOrder("Get Users", "Create User");
+                .containsExactlyInAnyOrder(request1.getName(), request2.getName());
     }
 
     @Test
@@ -140,7 +164,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
 
         // then
         assertThat(found).isNotNull();
-        assertThat(found.getName()).isEqualTo("Get Users");
+        assertThat(found.getName()).isEqualTo(request1.getName());
     }
 
     @Test
@@ -159,7 +183,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
     void shouldUpdateTimestampOnUpdate() throws InterruptedException {
         // given
         Request request = requestRepository.findById(request1.getId()).orElseThrow();
-        var originalUpdatedAt = request.getUpdatedAt();
+        LocalDateTime originalUpdatedAt = request.getUpdatedAt();
 
         Thread.sleep(10); // ensure time difference
 
@@ -177,7 +201,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         Long requestId = request1.getId();
 
         // when
-        folderRepository.delete(folder);
+        folderRepository.deleteById(folder.getId());
 
         // then
         assertThat(requestRepository.findById(requestId)).isEmpty();

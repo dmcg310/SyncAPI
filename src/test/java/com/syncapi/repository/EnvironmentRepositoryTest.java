@@ -12,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Optional;
 
+import static com.syncapi.repository.RepositoryTestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
-
 
 public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
     @Autowired
@@ -34,7 +34,8 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
         workspaceRepository.deleteAll();
         userRepository.deleteAll();
 
-        User user = userRepository.save(new User("test@example.com", "hash", "Test User"));
+        User user = userRepository.save(new User(generateRandomEmail(), generateRandomPasswordHash(),
+                generateRandomName()));
 
         workspace = new Workspace("Test Workspace");
         workspace.getMembers().add(user);
@@ -42,25 +43,25 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
 
         environment1 = new Environment("Development", workspace);
         environment1.setActive(true);
+        environmentRepository.save(environment1);
 
         environment2 = new Environment("Production", workspace);
         environment2.setActive(false);
-
-        environmentRepository.save(environment1);
         environmentRepository.save(environment2);
     }
 
     @Test
     void shouldSaveEnvironment() {
         // given
-        Environment environment = new Environment("Staging", workspace);
+        String environmentName = "Staging";
+        Environment environment = new Environment(environmentName, workspace);
 
         // when
         Environment saved = environmentRepository.save(environment);
 
         // then
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getName()).isEqualTo("Staging");
+        assertThat(saved.getName()).isEqualTo(environmentName);
         assertThat(saved.isActive()).isFalse();
         assertThat(saved.getCreatedAt()).isNotNull();
     }
@@ -73,7 +74,7 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
         // then
         assertThat(environments).hasSize(2);
         assertThat(environments).extracting(Environment::getName)
-                .containsExactlyInAnyOrder("Development", "Production");
+                .containsExactlyInAnyOrder(environment1.getName(), environment2.getName());
     }
 
     @Test
@@ -95,7 +96,7 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
 
         // then
         assertThat(active).isPresent();
-        assertThat(active.get().getName()).isEqualTo("Development");
+        assertThat(active.get().getName()).isEqualTo(environment1.getName());
         assertThat(active.get().isActive()).isTrue();
     }
 
@@ -156,7 +157,7 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
         Long envId = environment1.getId();
 
         // when
-        workspaceRepository.delete(workspace);
+        workspaceRepository.deleteById(workspace.getId());
 
         // then
         assertThat(environmentRepository.findById(envId)).isEmpty();

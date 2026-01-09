@@ -8,23 +8,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 
+import static com.syncapi.repository.RepositoryTestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class UserRepositoryTest extends AbstractIntegrationTest {
     @Autowired
+    private WorkspaceRepository workspaceRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     private User testUser;
+    private String testEmail, testPasswordHash, testName;
 
     @BeforeEach
     void setUp() {
+        workspaceRepository.deleteAll();
         userRepository.deleteAll();
 
-        testUser = new User();
-        testUser.setEmail("test@example.com");
-        testUser.setPasswordHash("hashedPassword");
-        testUser.setName("Test User");
+        testEmail = generateRandomEmail();
+        testPasswordHash = generateRandomPasswordHash();
+        testName = generateRandomName();
+
+        testUser = new User(testEmail, testPasswordHash, testName);
     }
 
     @Test
@@ -34,7 +41,7 @@ class UserRepositoryTest extends AbstractIntegrationTest {
 
         // then
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getEmail()).isEqualTo("test@example.com");
+        assertThat(saved.getEmail()).isEqualTo(testEmail);
         assertThat(saved.getCreatedAt()).isNotNull();
     }
 
@@ -44,11 +51,11 @@ class UserRepositoryTest extends AbstractIntegrationTest {
         userRepository.save(testUser);
 
         // when
-        Optional<User> found = userRepository.findByEmail("test@example.com");
+        Optional<User> found = userRepository.findByEmail(testEmail);
 
         // then
         assertThat(found).isPresent();
-        assertThat(found.get().getEmail()).isEqualTo("test@example.com");
+        assertThat(found.get().getEmail()).isEqualTo(testEmail);
     }
 
     @Test
@@ -66,7 +73,7 @@ class UserRepositoryTest extends AbstractIntegrationTest {
         userRepository.save(testUser);
 
         // when
-        boolean exists = userRepository.existsByEmail("test@example.com");
+        boolean exists = userRepository.existsByEmail(testEmail);
 
         // then
         assertThat(exists).isTrue();
@@ -86,10 +93,7 @@ class UserRepositoryTest extends AbstractIntegrationTest {
         // given
         userRepository.save(testUser);
 
-        User duplicate = new User();
-        duplicate.setEmail("test@example.com");
-        duplicate.setPasswordHash("anotherHash");
-        duplicate.setName("Another User");
+        User duplicate = new User(testEmail, generateRandomPasswordHash(), generateRandomName());
 
         // when / then
         assertThrows(Exception.class, () -> {

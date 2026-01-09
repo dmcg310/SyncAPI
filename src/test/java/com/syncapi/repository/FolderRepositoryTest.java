@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
+import static com.syncapi.repository.RepositoryTestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class FolderRepositoryTest extends AbstractIntegrationTest {
@@ -31,25 +32,31 @@ class FolderRepositoryTest extends AbstractIntegrationTest {
         workspaceRepository.deleteAll();
         userRepository.deleteAll();
 
-        User user = userRepository.save(new User("test@example.com", "hash", "Test User"));
+        User user = userRepository.save(new User(generateRandomEmail(), generateRandomPasswordHash(),
+                generateRandomName()));
+
         workspace = new Workspace("Test Workspace");
         workspace.getMembers().add(user);
         workspace = workspaceRepository.save(workspace);
 
         folder1 = new Folder("Folder 1", workspace);
         folderRepository.save(folder1);
+
         folder2 = new Folder("Folder 2", workspace);
         folderRepository.save(folder2);
     }
 
     @Test
     void shouldSaveFolder() {
+        // given
+        String folderName = "New Folder";
+
         // when
-        Folder saved = folderRepository.save(new Folder("New Folder", workspace));
+        Folder saved = folderRepository.save(new Folder(folderName, workspace));
 
         // then
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getName()).isEqualTo("New Folder");
+        assertThat(saved.getName()).isEqualTo(folderName);
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getWorkspace()).isEqualTo(workspace);
     }
@@ -62,7 +69,7 @@ class FolderRepositoryTest extends AbstractIntegrationTest {
         // then
         assertThat(folders).hasSize(2);
         assertThat(folders).extracting(Folder::getName)
-                .containsExactlyInAnyOrder("Folder 1", "Folder 2");
+                .containsExactlyInAnyOrder(folder1.getName(), folder2.getName());
     }
 
     @Test
@@ -105,7 +112,7 @@ class FolderRepositoryTest extends AbstractIntegrationTest {
         Long folderId = folder1.getId();
 
         // when
-        workspaceRepository.delete(workspace);
+        workspaceRepository.deleteById(workspace.getId());
 
         // then
         assertThat(folderRepository.findById(folderId)).isEmpty();

@@ -4,14 +4,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(classes = SyncapiApplication.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:15-alpine")
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test");

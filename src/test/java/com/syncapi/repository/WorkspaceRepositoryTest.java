@@ -3,12 +3,14 @@ package com.syncapi.repository;
 import com.syncapi.AbstractIntegrationTest;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
+import static com.syncapi.repository.RepositoryTestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class WorkspaceRepositoryTest extends AbstractIntegrationTest {
@@ -26,9 +28,10 @@ class WorkspaceRepositoryTest extends AbstractIntegrationTest {
         workspaceRepository.deleteAll();
         userRepository.deleteAll();
 
-        user1 = new User("user1@example.com", "hash1", "User 1");
-        user2 = new User("user2@example.com", "hash2", "User 2");
+        user1 = new User(generateRandomEmail(), generateRandomPasswordHash(), generateRandomName());
         user1 = userRepository.save(user1);
+
+        user2 = new User(generateRandomEmail(), generateRandomPasswordHash(), generateRandomName());
         user2 = userRepository.save(user2);
 
         workspace1 = new Workspace("Workspace 1");
@@ -36,19 +39,21 @@ class WorkspaceRepositoryTest extends AbstractIntegrationTest {
         workspace1 = workspaceRepository.save(workspace1);
 
         workspace2 = new Workspace("Workspace 2");
-        workspace2.getMembers().add(user1);
-        workspace2.getMembers().add(user2);
+        workspace2.getMembers().addAll(List.of(user1, user2));
         workspace2 = workspaceRepository.save(workspace2);
     }
 
     @Test
     void shouldSaveWorkspace() {
+        // given
+        String workspaceName = "New Workspace";
+
         // when
-        Workspace saved = workspaceRepository.save(new Workspace("New Workspace"));
+        Workspace saved = workspaceRepository.save(new Workspace(workspaceName));
 
         // then
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getName()).isEqualTo("New Workspace");
+        assertThat(saved.getName()).isEqualTo(workspaceName);
         assertThat(saved.getCreatedAt()).isNotNull();
     }
 
@@ -60,13 +65,14 @@ class WorkspaceRepositoryTest extends AbstractIntegrationTest {
         // then
         assertThat(workspaces).hasSize(2);
         assertThat(workspaces).extracting(Workspace::getName)
-                .containsExactlyInAnyOrder("Workspace 1", "Workspace 2");
+                .containsExactlyInAnyOrder(workspace1.getName(), workspace2.getName());
     }
 
     @Test
     void shouldReturnEmptyListWhenUserHasNoWorkspaces() {
         // given
-        User user3 = userRepository.save(new User("user3@example.com", "hash3", "User 3"));
+        User user3 = userRepository.save(new User(generateRandomEmail(), generateRandomPasswordHash(),
+                generateRandomName()));
 
         // when
         List<Workspace> workspaces = workspaceRepository.findByMemberId(user3.getId());
@@ -76,6 +82,7 @@ class WorkspaceRepositoryTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Transactional
     void shouldHandleManyToManyRelationship() {
         // when
         Workspace found = workspaceRepository.findById(workspace2.getId()).orElseThrow();
