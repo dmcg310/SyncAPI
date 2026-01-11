@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-import static com.syncapi.repository.RepositoryTestUtil.*;
+import static com.syncapi.TestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class FolderRepositoryTest extends AbstractIntegrationTest {

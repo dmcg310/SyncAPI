@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Optional;
 
-import static com.syncapi.repository.RepositoryTestUtil.*;
+import static com.syncapi.TestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
