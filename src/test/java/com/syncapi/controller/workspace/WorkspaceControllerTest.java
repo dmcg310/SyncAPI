@@ -266,6 +266,21 @@ class WorkspaceControllerTest {
     }
 
     @Test
+    void shouldReturnForbiddenWhenDeleteWorkspaceThrows() throws Exception {
+        // given
+        Long workspaceId = TestUtil.generateRandomId();
+        doThrow(new RuntimeException("forbidden"))
+                .when(workspaceService)
+                .deleteWorkspace(eq(workspaceId), anyString());
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.deleteAuth(WORKSPACES_URL + "/" + workspaceId, token))
+                .andExpect(status().isForbidden());
+
+        verify(workspaceService).deleteWorkspace(eq(workspaceId), anyString());
+    }
+
+    @Test
     void shouldAddMember() throws Exception {
         // given
         AddMemberRequest request = new AddMemberRequest(TestUtil.generateRandomEmail());
@@ -296,6 +311,22 @@ class WorkspaceControllerTest {
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
                 );
+
+        verify(workspaceService).addMember(eq(workspaceId), any(AddMemberRequest.class), anyString());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenAddMemberThrows() throws Exception {
+        // given
+        AddMemberRequest request = new AddMemberRequest(TestUtil.generateRandomEmail());
+
+        Long workspaceId = TestUtil.generateRandomId();
+        when(workspaceService.addMember(eq(workspaceId), any(AddMemberRequest.class), anyString()))
+                .thenThrow(new RuntimeException("bad request"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.postJsonAuth(WORKSPACES_URL + "/" + workspaceId + "/members", request, token))
+                .andExpect(status().isBadRequest());
 
         verify(workspaceService).addMember(eq(workspaceId), any(AddMemberRequest.class), anyString());
     }
@@ -335,4 +366,18 @@ class WorkspaceControllerTest {
         verify(workspaceService).removeMember(eq(workspaceId), eq(userId), anyString());
     }
 
+    @Test
+    void shouldReturnBadRequestWhenRemoveMemberThrows() throws Exception {
+        // given
+        Long workspaceId = TestUtil.generateRandomId();
+        Long userId = TestUtil.generateRandomId();
+        when(workspaceService.removeMember(eq(workspaceId), eq(userId), anyString()))
+                .thenThrow(new RuntimeException("bad request"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.deleteAuth(WORKSPACES_URL + "/" + workspaceId + "/members/" + userId, token))
+                .andExpect(status().isBadRequest());
+
+        verify(workspaceService).removeMember(eq(workspaceId), eq(userId), anyString());
+    }
 }
