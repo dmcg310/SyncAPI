@@ -1,0 +1,338 @@
+package com.syncapi.controller.workspace;
+
+import com.syncapi.JsonTestUtil;
+import com.syncapi.TestUtil;
+import com.syncapi.dto.workspace.AddMemberRequest;
+import com.syncapi.dto.workspace.WorkspaceRequest;
+import com.syncapi.dto.workspace.WorkspaceResponse;
+import com.syncapi.repository.UserRepository;
+import com.syncapi.security.JwtUtil;
+import com.syncapi.service.workspace.WorkspaceService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Stream;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(controllers = WorkspaceController.class)
+@AutoConfigureMockMvc(addFilters = false)
+class WorkspaceControllerTest {
+    private static final String WORKSPACES_URL = "/api/workspaces";
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private WorkspaceService workspaceService;
+
+    // required as JwtAuthenticationFilter dependency
+    @MockitoBean
+    private JwtUtil jwtUtil;
+    @MockitoBean
+    private UserRepository userRepository;
+
+    private LocalDateTime now;
+
+    private String token;
+
+    @BeforeEach
+    void setUp() {
+        reset(workspaceService);
+
+        now = LocalDateTime.now();
+        token = TestUtil.generateRandomToken();
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(TestUtil.generateRandomEmail(), null, List.of())
+        );
+    }
+
+    @Test
+    void shouldGetUserWorkspaces() throws Exception {
+        // given
+        Long firstWorkspaceId = TestUtil.generateRandomId();
+        String firstWorkspaceName = TestUtil.generateRandomName();
+        int firstMemberCount = 2;
+        int firstFolderCount = 5;
+        WorkspaceResponse firstWorkspaceResponse = new WorkspaceResponse(
+                firstWorkspaceId, firstWorkspaceName, now, firstMemberCount, firstFolderCount
+        );
+
+        Long secondWorkspaceId = TestUtil.generateRandomId();
+        String secondWorkspaceName = TestUtil.generateRandomName();
+        int secondMemberCount = 1;
+        int secondFolderCount = 0;
+        WorkspaceResponse secondWorkspaceResponse = new WorkspaceResponse(
+                secondWorkspaceId, secondWorkspaceName, now, secondMemberCount, secondFolderCount
+        );
+
+        when(workspaceService.getUserWorkspaces(anyString()))
+                .thenReturn(List.of(firstWorkspaceResponse, secondWorkspaceResponse));
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.getJsonAuth(WORKSPACES_URL, token));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpectAll(
+                        jsonPath("$[0].id").value(firstWorkspaceId.intValue()),
+                        jsonPath("$[0].name").value(firstWorkspaceName),
+                        jsonPath("$[0].createdAt").value(now.toString()),
+                        jsonPath("$[0].memberCount").value(firstMemberCount),
+                        jsonPath("$[0].folderCount").value(firstFolderCount)
+                )
+                .andExpectAll(
+                        jsonPath("$[1].id").value(secondWorkspaceId.intValue()),
+                        jsonPath("$[1].name").value(secondWorkspaceName),
+                        jsonPath("$[1].createdAt").value(now.toString()),
+                        jsonPath("$[1].memberCount").value(secondMemberCount),
+                        jsonPath("$[1].folderCount").value(secondFolderCount)
+                );
+
+        verify(workspaceService).getUserWorkspaces(anyString());
+    }
+
+    @Test
+    void shouldGetWorkspaceById() throws Exception {
+        // given
+        Long workspaceId = TestUtil.generateRandomId();
+        String workspaceName = TestUtil.generateRandomName();
+        int memberCount = 3;
+        int folderCount = 7;
+        WorkspaceResponse workspaceResponse = new WorkspaceResponse(
+                workspaceId, workspaceName, now, memberCount, folderCount
+        );
+
+        when(workspaceService.getWorkspace(eq(workspaceId), anyString()))
+                .thenReturn(workspaceResponse);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.getJsonAuth(WORKSPACES_URL + "/" + workspaceId, token));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(workspaceId.intValue()),
+                        jsonPath("$.name").value(workspaceName),
+                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.memberCount").value(memberCount),
+                        jsonPath("$.folderCount").value(folderCount)
+                );
+
+        verify(workspaceService).getWorkspace(eq(workspaceId), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenGetWorkspaceThrows() throws Exception {
+        when(workspaceService.getWorkspace(anyLong(), anyString()))
+                .thenThrow(new RuntimeException("forbidden"));
+
+        mockMvc.perform(JsonTestUtil.getJsonAuth(WORKSPACES_URL + "/" + TestUtil.generateRandomId(), token))
+                .andExpect(status().isForbidden());
+
+        verify(workspaceService).getWorkspace(anyLong(), anyString());
+    }
+
+    @Test
+    void shouldCreateWorkspace() throws Exception {
+        // given
+        String workspaceName = TestUtil.generateRandomName();
+        WorkspaceRequest request = new WorkspaceRequest(workspaceName);
+
+        Long workspaceId = TestUtil.generateRandomId();
+        int memberCount = 1;
+        int folderCount = 0;
+        WorkspaceResponse response = new WorkspaceResponse(
+                workspaceId, workspaceName, now, memberCount, folderCount
+        );
+
+        when(workspaceService.createWorkspace(any(WorkspaceRequest.class), anyString()))
+                .thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.postJsonAuth(WORKSPACES_URL, request, token));
+
+        // then
+        res.andExpect(status().isCreated())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(workspaceId),
+                        jsonPath("$.name").value(workspaceName),
+                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.memberCount").value(memberCount),
+                        jsonPath("$.folderCount").value(folderCount)
+                );
+
+        verify(workspaceService).createWorkspace(any(WorkspaceRequest.class), anyString());
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidWorkspaceRequests")
+    void shouldFailValidationForInvalidCreateWorkspace(WorkspaceRequest request) throws Exception {
+        mockMvc.perform(JsonTestUtil.postJsonAuth(WORKSPACES_URL, request, token))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(workspaceService);
+    }
+
+    private static Stream<WorkspaceRequest> invalidWorkspaceRequests() {
+        return Stream.of(
+                new WorkspaceRequest(null),
+                new WorkspaceRequest(""),
+                new WorkspaceRequest("   ")
+        );
+    }
+
+    @Test
+    void shouldUpdateWorkspace() throws Exception {
+        // given
+        WorkspaceRequest request = new WorkspaceRequest(TestUtil.generateRandomName());
+
+        Long workspaceId = TestUtil.generateRandomId();
+        String updatedWorkspaceName = TestUtil.generateRandomName();
+        int memberCount = 2;
+        int folderCount = 4;
+        WorkspaceResponse response = new WorkspaceResponse(
+                workspaceId, updatedWorkspaceName, now, memberCount, folderCount
+        );
+
+        when(workspaceService.updateWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString()))
+                .thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.putJsonAuth(
+                WORKSPACES_URL + "/" + workspaceId, request, token
+        ));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(workspaceId.intValue()),
+                        jsonPath("$.name").value(updatedWorkspaceName),
+                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.memberCount").value(memberCount),
+                        jsonPath("$.folderCount").value(folderCount)
+                );
+
+        verify(workspaceService).updateWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenUpdateWorkspaceThrows() throws Exception {
+        // given
+        when(workspaceService.updateWorkspace(anyLong(), any(), anyString()))
+                .thenThrow(new RuntimeException("forbidden"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.putJsonAuth(
+                        WORKSPACES_URL + "/" + TestUtil.generateRandomId(), new WorkspaceRequest("X"), token
+                ))
+                .andExpect(status().isForbidden());
+
+        verify(workspaceService).updateWorkspace(anyLong(), any(), anyString());
+    }
+
+    @Test
+    void shouldDeleteWorkspace() throws Exception {
+        // given
+        doNothing().when(workspaceService).deleteWorkspace(anyLong(), anyString());
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.deleteAuth(WORKSPACES_URL + "/" + TestUtil.generateRandomId(), token))
+                .andExpect(status().isNoContent());
+
+        verify(workspaceService).deleteWorkspace(anyLong(), anyString());
+    }
+
+    @Test
+    void shouldAddMember() throws Exception {
+        // given
+        AddMemberRequest request = new AddMemberRequest(TestUtil.generateRandomEmail());
+
+        Long workspaceId = TestUtil.generateRandomId();
+        String workspaceName = TestUtil.generateRandomName();
+        int memberCount = 2;
+        int folderCount = 1;
+        WorkspaceResponse response = new WorkspaceResponse(
+                workspaceId, workspaceName, now, memberCount, folderCount
+        );
+
+        when(workspaceService.addMember(eq(workspaceId), any(AddMemberRequest.class), anyString()))
+                .thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.postJsonAuth(
+                WORKSPACES_URL + "/" + workspaceId + "/members", request, token
+        ));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(workspaceId.intValue()),
+                        jsonPath("$.name").value(workspaceName),
+                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.memberCount").value(memberCount),
+                        jsonPath("$.folderCount").value(folderCount)
+                );
+
+        verify(workspaceService).addMember(eq(workspaceId), any(AddMemberRequest.class), anyString());
+    }
+
+    @Test
+    void shouldRemoveMember() throws Exception {
+        // given
+        Long userId = TestUtil.generateRandomId();
+
+        Long workspaceId = TestUtil.generateRandomId();
+        String workspaceName = TestUtil.generateRandomName();
+        int memberCount = 1;
+        int folderCount = 1;
+        WorkspaceResponse response = new WorkspaceResponse(
+                workspaceId, workspaceName, now, memberCount, folderCount
+        );
+
+        when(workspaceService.removeMember(eq(workspaceId), eq(userId), anyString()))
+                .thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.deleteAuth(
+                WORKSPACES_URL + "/" + workspaceId + "/members/" + userId, token
+        ));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(workspaceId.intValue()),
+                        jsonPath("$.name").value(workspaceName),
+                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.memberCount").value(memberCount),
+                        jsonPath("$.folderCount").value(folderCount)
+                );
+
+        verify(workspaceService).removeMember(eq(workspaceId), eq(userId), anyString());
+    }
+
+}

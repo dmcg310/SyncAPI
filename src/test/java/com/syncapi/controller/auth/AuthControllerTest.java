@@ -1,133 +1,167 @@
 package com.syncapi.controller.auth;
 
-import com.syncapi.AbstractIntegrationTest;
+import com.syncapi.JsonTestUtil;
+import com.syncapi.TestUtil;
+import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
-import com.syncapi.entity.User;
 import com.syncapi.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
+import com.syncapi.security.JwtUtil;
+import com.syncapi.service.auth.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.stream.Stream;
 
-import static com.syncapi.TestUtil.*;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@AutoConfigureMockMvc
-class AuthControllerTest extends AbstractIntegrationTest {
+@WebMvcTest(controllers = AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
+class AuthControllerTest {
     private static final String AUTH_URL = "/api/auth";
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private UserRepository userRepository;
+    @MockitoBean
+    private AuthService authService;
 
-    @BeforeEach
-    void setUp() {
-        userRepository.deleteAll();
-    }
+    // required as JwtAuthenticationFilter dependency
+    @MockitoBean
+    private JwtUtil jwtUtil;
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Test
     void shouldRegisterNewUser() throws Exception {
         // given
-        String name = generateRandomName();
-        String email = generateRandomEmail();
-        RegisterRequest request = new RegisterRequest(name, email, generateRandomPassword());
+        String name = TestUtil.generateRandomName();
+        String email = TestUtil.generateRandomEmail();
+        RegisterRequest request = new RegisterRequest(name, email, TestUtil.generateRandomPassword());
+
+        String token = TestUtil.generateRandomToken();
+        AuthResponse response = new AuthResponse(token, email, name);
+
+        when(authService.register(any(RegisterRequest.class)))
+                .thenReturn(response);
 
         // when
-        ResultActions res = mockMvc.perform(postJson(AUTH_URL + "/register", request));
+        ResultActions res = mockMvc.perform(JsonTestUtil.postJson(AUTH_URL + "/register", request));
 
         // then
         res.andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.token").isString())
-                .andExpect(jsonPath("$.token").isNotEmpty())
-                .andExpect(jsonPath("$.email").value(email))
-                .andExpect(jsonPath("$.name").value(name));
+                .andExpectAll(
+                        jsonPath("$.token").value(token),
+                        jsonPath("$.email").value(email),
+                        jsonPath("$.name").value(name)
+                );
 
-        User user = userRepository.findByEmail(email).orElseThrow();
-        assertThat(user.getName()).isEqualTo(name);
-        assertThat(user.getPasswordHash()).isNotBlank();
+        verify(authService).register(any(RegisterRequest.class));
     }
 
     @Test
     void shouldFailWhenEmailAlreadyExists() throws Exception {
         // given
-        String email = generateRandomEmail();
-        RegisterRequest first = new RegisterRequest(generateRandomName(), email, generateRandomPassword());
-        RegisterRequest second = new RegisterRequest(generateRandomName(), email, generateRandomPassword());
+        RegisterRequest request = new RegisterRequest(
+                TestUtil.generateRandomName(), TestUtil.generateRandomEmail(), TestUtil.generateRandomPassword()
+        );
+
+        when(authService.register(any(RegisterRequest.class)))
+                .thenThrow(new RuntimeException("email already exists"));
 
         // when / then
-        mockMvc.perform(postJson(AUTH_URL + "/register", first))
-                .andExpect(status().isOk());
-        mockMvc.perform(postJson(AUTH_URL + "/register", second))
+        mockMvc.perform(JsonTestUtil.postJson(AUTH_URL + "/register", request))
                 .andExpect(status().isBadRequest());
+
+        verify(authService).register(any(RegisterRequest.class));
     }
 
     @ParameterizedTest(name = "[{index}] invalid register request -> 400")
     @MethodSource("invalidRegisterRequests")
     void shouldFailValidationForInvalidRegisterRequest(RegisterRequest request) throws Exception {
         // when / then
-        mockMvc.perform(postJson(AUTH_URL + "/register", request))
+        mockMvc.perform(JsonTestUtil.postJson(AUTH_URL + "/register", request))
                 .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(authService);
     }
 
     private static Stream<RegisterRequest> invalidRegisterRequests() {
         return Stream.of(
-                new RegisterRequest("", generateRandomEmail(), generateRandomPassword()), // blank name
-                new RegisterRequest(null, generateRandomEmail(), generateRandomPassword()), // null name
-                new RegisterRequest("John", "not-an-email", generateRandomPassword()), // invalid email
-                new RegisterRequest("John", "", generateRandomPassword()), // blank email
-                new RegisterRequest("John", generateRandomEmail(), "123") // short password
+                new RegisterRequest("", TestUtil.generateRandomEmail(), TestUtil.generateRandomPassword()),
+                new RegisterRequest(null, TestUtil.generateRandomEmail(), TestUtil.generateRandomPassword()),
+                new RegisterRequest("John", "not-an-email", TestUtil.generateRandomPassword()),
+                new RegisterRequest("John", "", TestUtil.generateRandomPassword()),
+                new RegisterRequest("John", TestUtil.generateRandomEmail(), "123")
         );
     }
 
     @Test
     void shouldLoginSuccessfully() throws Exception {
         // given
-        String email = generateRandomEmail();
-        String password = generateRandomPassword();
-        RegisterRequest register = new RegisterRequest("Login User", email, password);
+        String email = TestUtil.generateRandomEmail();
+        String token = TestUtil.generateRandomToken();
 
-        mockMvc.perform(postJson(AUTH_URL + "/register", register))
-                .andExpect(status().isOk());
+        LoginRequest request = new LoginRequest(email, TestUtil.generateRandomPassword());
+        AuthResponse response = new AuthResponse(token, email, TestUtil.generateRandomName());
 
-        LoginRequest login = new LoginRequest(email, password);
+        when(authService.login(any(LoginRequest.class)))
+                .thenReturn(response);
 
         // when
-        ResultActions res = mockMvc.perform(postJson(AUTH_URL + "/login", login));
+        ResultActions res = mockMvc.perform(JsonTestUtil.postJson(AUTH_URL + "/login", request));
 
         // then
         res.andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.token").isString())
-                .andExpect(jsonPath("$.token").isNotEmpty())
-                .andExpect(jsonPath("$.email").value(email));
+                .andExpectAll(
+                        jsonPath("$.token").value(token),
+                        jsonPath("$.email").value(email)
+                );
+
+        verify(authService).login(any(LoginRequest.class));
     }
 
     @ParameterizedTest(name = "[{index}] invalid login -> 400")
     @MethodSource("invalidLoginRequests")
     void shouldFailLoginForInvalidCredentials(LoginRequest request) throws Exception {
-        // when / then
-        mockMvc.perform(postJson(AUTH_URL + "/login", request))
+        boolean passesValidation = request.getEmail() != null
+                && !request.getEmail().isBlank()
+                && request.getEmail().contains("@")
+                && request.getPassword() != null
+                && !request.getPassword().isBlank();
+        if (passesValidation) {
+            when(authService.login(any(LoginRequest.class)))
+                    .thenThrow(new RuntimeException("invalid credentials"));
+        }
+
+        mockMvc.perform(JsonTestUtil.postJson(AUTH_URL + "/login", request))
                 .andExpect(status().isBadRequest());
+
+        if (passesValidation) {
+            verify(authService).login(any(LoginRequest.class));
+        } else {
+            verifyNoInteractions(authService);
+        }
     }
 
     private static Stream<LoginRequest> invalidLoginRequests() {
         return Stream.of(
-                new LoginRequest("not-an-email", "password"), // invalid email
-                new LoginRequest("", "password"), // blank email
-                new LoginRequest(generateRandomEmail(), ""), // blank password
-                new LoginRequest(generateRandomEmail(), "wrong-password") // wrong password
+                new LoginRequest("not-an-email", "password"),
+                new LoginRequest("", "password"),
+                new LoginRequest(TestUtil.generateRandomEmail(), ""),
+                new LoginRequest(TestUtil.generateRandomEmail(), "wrong-password")
         );
     }
 }
