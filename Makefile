@@ -1,4 +1,4 @@
-.PHONY: setup start stop restart logs clean dev rebuild test
+.PHONY: setup start stop restart logs clean dev rebuild test coverage lint check
 
 # Full Docker setup (database + app)
 setup:
@@ -67,3 +67,13 @@ shell-db:
 coverage:
 	@./gradlew test jacocoTestReport
 	@echo "Coverage report: build/reports/jacoco/test/html/index.html"
+
+# Run static analysis
+lint:
+	@./gradlew checkstyleMain spotbugsMain
+	@echo "Checkstyle report: build/reports/checkstyle/main.html"
+	@echo "SpotBugs report: build/reports/spotbugs/main.html"
+
+# Run the full verification lifecycle
+check:
+	@./gradlew check
