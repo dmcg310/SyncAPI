@@ -77,3 +77,9 @@ lint:
 # Run the full verification lifecycle
 check:
 	@./gradlew check
+
+hooks:
+	@mkdir -p .git/hooks
+	@cp scripts/hooks/pre-commit .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit
+	@echo "Git pre-commit hook installed."

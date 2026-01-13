@@ -5,6 +5,13 @@
 - **dev** - Local development (app on host, DB in Docker)
 - **docker** - Full Docker (app + DB in containers)
 
+### Pre-commit Hooks
+
+```bash
+# Will install pre-commit hooks
+make hooks
+```
+
 ### Common Tasks
 
 ```bash
@@ -30,4 +37,7 @@ make test
 
 # Coverage report
 make coverage
+
+# Lint code
+make lint
 ```
