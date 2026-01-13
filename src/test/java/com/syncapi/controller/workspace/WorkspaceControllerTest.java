@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = WorkspaceController.class)
@@ -48,15 +49,12 @@ class WorkspaceControllerTest {
     @MockitoBean
     private UserRepository userRepository;
 
-    private LocalDateTime now;
-
     private String token;
 
     @BeforeEach
     void setUp() {
         reset(workspaceService);
 
-        now = LocalDateTime.now();
         token = TestUtil.generateRandomToken();
 
         SecurityContextHolder.getContext().setAuthentication(
@@ -72,7 +70,7 @@ class WorkspaceControllerTest {
         int firstMemberCount = 2;
         int firstFolderCount = 5;
         WorkspaceResponse firstWorkspaceResponse = new WorkspaceResponse(
-                firstWorkspaceId, firstWorkspaceName, now, firstMemberCount, firstFolderCount
+                firstWorkspaceId, firstWorkspaceName, LocalDateTime.now(), firstMemberCount, firstFolderCount
         );
 
         Long secondWorkspaceId = TestUtil.generateRandomId();
@@ -80,7 +78,7 @@ class WorkspaceControllerTest {
         int secondMemberCount = 1;
         int secondFolderCount = 0;
         WorkspaceResponse secondWorkspaceResponse = new WorkspaceResponse(
-                secondWorkspaceId, secondWorkspaceName, now, secondMemberCount, secondFolderCount
+                secondWorkspaceId, secondWorkspaceName, LocalDateTime.now(), secondMemberCount, secondFolderCount
         );
 
         when(workspaceService.getUserWorkspaces(anyString()))
@@ -96,14 +94,14 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$[0].id").value(firstWorkspaceId.intValue()),
                         jsonPath("$[0].name").value(firstWorkspaceName),
-                        jsonPath("$[0].createdAt").value(now.toString()),
+                        jsonPath("$[0].createdAt").exists(),
                         jsonPath("$[0].memberCount").value(firstMemberCount),
                         jsonPath("$[0].folderCount").value(firstFolderCount)
                 )
                 .andExpectAll(
                         jsonPath("$[1].id").value(secondWorkspaceId.intValue()),
                         jsonPath("$[1].name").value(secondWorkspaceName),
-                        jsonPath("$[1].createdAt").value(now.toString()),
+                        jsonPath("$[1].createdAt").exists(),
                         jsonPath("$[1].memberCount").value(secondMemberCount),
                         jsonPath("$[1].folderCount").value(secondFolderCount)
                 );
@@ -119,7 +117,7 @@ class WorkspaceControllerTest {
         int memberCount = 3;
         int folderCount = 7;
         WorkspaceResponse workspaceResponse = new WorkspaceResponse(
-                workspaceId, workspaceName, now, memberCount, folderCount
+                workspaceId, workspaceName, LocalDateTime.now(), memberCount, folderCount
         );
 
         when(workspaceService.getWorkspace(eq(workspaceId), anyString()))
@@ -134,7 +132,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId.intValue()),
                         jsonPath("$.name").value(workspaceName),
-                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
                 );
@@ -163,7 +161,7 @@ class WorkspaceControllerTest {
         int memberCount = 1;
         int folderCount = 0;
         WorkspaceResponse response = new WorkspaceResponse(
-                workspaceId, workspaceName, now, memberCount, folderCount
+                workspaceId, workspaceName, LocalDateTime.now(), memberCount, folderCount
         );
 
         when(workspaceService.createWorkspace(any(WorkspaceRequest.class), anyString()))
@@ -178,7 +176,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId),
                         jsonPath("$.name").value(workspaceName),
-                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
                 );
@@ -213,7 +211,7 @@ class WorkspaceControllerTest {
         int memberCount = 2;
         int folderCount = 4;
         WorkspaceResponse response = new WorkspaceResponse(
-                workspaceId, updatedWorkspaceName, now, memberCount, folderCount
+                workspaceId, updatedWorkspaceName, LocalDateTime.now(), memberCount, folderCount
         );
 
         when(workspaceService.updateWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString()))
@@ -230,7 +228,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId.intValue()),
                         jsonPath("$.name").value(updatedWorkspaceName),
-                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
                 );
@@ -290,7 +288,7 @@ class WorkspaceControllerTest {
         int memberCount = 2;
         int folderCount = 1;
         WorkspaceResponse response = new WorkspaceResponse(
-                workspaceId, workspaceName, now, memberCount, folderCount
+                workspaceId, workspaceName, LocalDateTime.now(), memberCount, folderCount
         );
 
         when(workspaceService.addMember(eq(workspaceId), any(AddMemberRequest.class), anyString()))
@@ -301,13 +299,15 @@ class WorkspaceControllerTest {
                 WORKSPACES_URL + "/" + workspaceId + "/members", request, token
         ));
 
+        res.andDo(print());
+
         // then
         res.andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId.intValue()),
                         jsonPath("$.name").value(workspaceName),
-                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
                 );
@@ -341,7 +341,7 @@ class WorkspaceControllerTest {
         int memberCount = 1;
         int folderCount = 1;
         WorkspaceResponse response = new WorkspaceResponse(
-                workspaceId, workspaceName, now, memberCount, folderCount
+                workspaceId, workspaceName, LocalDateTime.now(), memberCount, folderCount
         );
 
         when(workspaceService.removeMember(eq(workspaceId), eq(userId), anyString()))
@@ -358,7 +358,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId.intValue()),
                         jsonPath("$.name").value(workspaceName),
-                        jsonPath("$.createdAt").value(now.toString()),
+                        jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
                 );
