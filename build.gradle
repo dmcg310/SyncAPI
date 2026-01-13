@@ -49,9 +49,10 @@ checkstyle {
 }
 
 spotbugs {
-	toolVersion = '4.8.6'
+	toolVersion = '4.9.8'
 	effort = 'max'
 	reportLevel = 'medium'
+	excludeFilter = file('spotbugs-exclude.xml')
 }
 
 tasks.withType(SpotBugsTask).configureEach {

@@ -4,7 +4,7 @@ import com.syncapi.dto.workspace.AddMemberRequest;
 import com.syncapi.dto.workspace.WorkspaceRequest;
 import com.syncapi.dto.workspace.WorkspaceResponse;
 import com.syncapi.service.workspace.WorkspaceService;
-import com.syncapi.util.AuthUtil;
+import com.syncapi.util.Util;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,7 +28,7 @@ public class WorkspaceController {
 
     @GetMapping
     public ResponseEntity<List<WorkspaceResponse>> getUserWorkspaces() {
-        List<WorkspaceResponse> workspaces = workspaceService.getUserWorkspaces(AuthUtil.getCurrentUserEmail());
+        List<WorkspaceResponse> workspaces = workspaceService.getUserWorkspaces(Util.getCurrentUserEmail());
 
         return ResponseEntity.ok(workspaces);
     }
@@ -36,7 +36,7 @@ public class WorkspaceController {
     @GetMapping("/{id}")
     public ResponseEntity<WorkspaceResponse> getWorkspace(@PathVariable Long id) {
         try {
-            WorkspaceResponse workspace = workspaceService.getWorkspace(id, AuthUtil.getCurrentUserEmail());
+            WorkspaceResponse workspace = workspaceService.getWorkspace(id, Util.getCurrentUserEmail());
 
             return ResponseEntity.ok(workspace);
         } catch (RuntimeException e) {
@@ -46,7 +46,7 @@ public class WorkspaceController {
 
     @PostMapping
     public ResponseEntity<WorkspaceResponse> createWorkspace(@Valid @RequestBody WorkspaceRequest request) {
-        WorkspaceResponse workspace = workspaceService.createWorkspace(request, AuthUtil.getCurrentUserEmail());
+        WorkspaceResponse workspace = workspaceService.createWorkspace(request, Util.getCurrentUserEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(workspace);
     }
@@ -56,7 +56,7 @@ public class WorkspaceController {
     public ResponseEntity<WorkspaceResponse> updateWorkspace(@PathVariable Long id,
                                                              @Valid @RequestBody WorkspaceRequest request) {
         try {
-            WorkspaceResponse workspace = workspaceService.updateWorkspace(id, request, AuthUtil.getCurrentUserEmail());
+            WorkspaceResponse workspace = workspaceService.updateWorkspace(id, request, Util.getCurrentUserEmail());
 
             return ResponseEntity.ok(workspace);
         } catch (RuntimeException e) {
@@ -67,7 +67,7 @@ public class WorkspaceController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteWorkspace(@PathVariable Long id) {
         try {
-            workspaceService.deleteWorkspace(id, AuthUtil.getCurrentUserEmail());
+            workspaceService.deleteWorkspace(id, Util.getCurrentUserEmail());
 
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
@@ -79,7 +79,7 @@ public class WorkspaceController {
     public ResponseEntity<WorkspaceResponse> addMember(@PathVariable Long id,
                                                        @Valid @RequestBody AddMemberRequest request) {
         try {
-            WorkspaceResponse workspace = workspaceService.addMember(id, request, AuthUtil.getCurrentUserEmail());
+            WorkspaceResponse workspace = workspaceService.addMember(id, request, Util.getCurrentUserEmail());
 
             return ResponseEntity.ok(workspace);
         } catch (RuntimeException e) {
@@ -90,7 +90,7 @@ public class WorkspaceController {
     @DeleteMapping("/{id}/members/{userId}")
     public ResponseEntity<WorkspaceResponse> removeMember(@PathVariable Long id, @PathVariable Long userId) {
         try {
-            WorkspaceResponse workspace = workspaceService.removeMember(id, userId, AuthUtil.getCurrentUserEmail());
+            WorkspaceResponse workspace = workspaceService.removeMember(id, userId, Util.getCurrentUserEmail());
 
             return ResponseEntity.ok(workspace);
         } catch (RuntimeException e) {
