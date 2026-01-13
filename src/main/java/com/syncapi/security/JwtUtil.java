@@ -39,7 +39,11 @@ public class JwtUtil {
     }
 
     public Boolean validateToken(String token, String email) {
-        return (extractUsername(token).equals(email) && !isTokenExpired(token));
+        try {
+            return extractUsername(token).equals(email) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private SecretKey getSigningKey() {
@@ -55,7 +59,11 @@ public class JwtUtil {
     }
 
     private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        try {
+            return extractExpiration(token).before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     private String createToken(Map<String, Object> claims, String subject) {

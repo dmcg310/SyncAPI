@@ -30,4 +30,8 @@ public class TestUtil {
     public static String generateRandomToken() {
         return generateRandomValue("token");
     }
+
+    public static String generateRandomSecret() {
+        return generateRandomValue("secret");
+    }
 }
