@@ -8,7 +8,6 @@ import com.syncapi.entity.Workspace;
 import com.syncapi.repository.WorkspaceRepository;
 import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,11 +15,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class WorkspaceService {
-    @Autowired
-    private WorkspaceRepository workspaceRepository;
+    private final WorkspaceRepository workspaceRepository;
+    private final Util util;
 
-    @Autowired
-    private Util util;
+    public WorkspaceService(WorkspaceRepository workspaceRepository, Util util) {
+        this.workspaceRepository = workspaceRepository;
+        this.util = util;
+    }
 
     public List<WorkspaceResponse> getUserWorkspaces(String email) {
         User user = util.getUserByEmail(email);
