@@ -51,7 +51,6 @@ public class WorkspaceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(workspace);
     }
 
-    // PUT /api/workspaces/{id} - Update workspace
     @PutMapping("/{id}")
     public ResponseEntity<WorkspaceResponse> updateWorkspace(@PathVariable Long id,
                                                              @Valid @RequestBody WorkspaceRequest request) {
