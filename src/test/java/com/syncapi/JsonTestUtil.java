@@ -10,6 +10,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public class JsonTestUtil {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    public static final String AUTH_HEADER = "Authorization";
+    public static final String BEARER_PREFIX = "Bearer ";
+
     private JsonTestUtil() {
     }
 
@@ -29,13 +32,13 @@ public class JsonTestUtil {
 
     public static MockHttpServletRequestBuilder getJsonAuth(String url, String token) {
         return get(url)
-                .header("Authorization", "Bearer " + token)
+                .header(AUTH_HEADER, BEARER_PREFIX + token)
                 .accept(MediaType.APPLICATION_JSON);
     }
 
     public static MockHttpServletRequestBuilder postJsonAuth(String url, Object body, String token) {
         return post(url)
-                .header("Authorization", "Bearer " + token)
+                .header(AUTH_HEADER, BEARER_PREFIX + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(toJson(body));
@@ -43,7 +46,7 @@ public class JsonTestUtil {
 
     public static MockHttpServletRequestBuilder putJsonAuth(String url, Object body, String token) {
         return put(url)
-                .header("Authorization", "Bearer " + token)
+                .header(AUTH_HEADER, BEARER_PREFIX + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(toJson(body));
@@ -51,7 +54,7 @@ public class JsonTestUtil {
 
     public static MockHttpServletRequestBuilder deleteAuth(String url, String token) {
         return delete(url)
-                .header("Authorization", "Bearer " + token)
+                .header(AUTH_HEADER, BEARER_PREFIX + token)
                 .accept(MediaType.APPLICATION_JSON);
     }
 }

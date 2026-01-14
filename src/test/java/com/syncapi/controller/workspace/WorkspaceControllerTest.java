@@ -5,8 +5,7 @@ import com.syncapi.TestUtil;
 import com.syncapi.dto.workspace.AddMemberRequest;
 import com.syncapi.dto.workspace.WorkspaceRequest;
 import com.syncapi.dto.workspace.WorkspaceResponse;
-import com.syncapi.repository.UserRepository;
-import com.syncapi.security.JwtUtil;
+import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.workspace.WorkspaceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,11 +42,8 @@ class WorkspaceControllerTest {
     @MockitoBean
     private WorkspaceService workspaceService;
 
-    // required as JwtAuthenticationFilter dependency
     @MockitoBean
-    private JwtUtil jwtUtil;
-    @MockitoBean
-    private UserRepository userRepository;
+    private JwtService jwtService;
 
     private String token;
 

@@ -11,6 +11,10 @@ public class TestUtil {
         return generateRandomValue("name");
     }
 
+    public static int generateRandomInt() {
+        return Math.abs(UUID.randomUUID().hashCode());
+    }
+
     public static String generateRandomPasswordHash() {
         return generateRandomValue("hash");
     }

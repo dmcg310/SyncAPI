@@ -5,8 +5,7 @@ import com.syncapi.TestUtil;
 import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
-import com.syncapi.repository.UserRepository;
-import com.syncapi.security.JwtUtil;
+import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.auth.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,11 +35,8 @@ class AuthControllerTest {
     @MockitoBean
     private AuthService authService;
 
-    // required as JwtAuthenticationFilter dependency
     @MockitoBean
-    private JwtUtil jwtUtil;
-    @MockitoBean
-    private UserRepository userRepository;
+    private JwtService jwtService;
 
     @Test
     void shouldRegisterNewUser() throws Exception {

@@ -1,6 +1,7 @@
 package com.syncapi.repository;
 
 import com.syncapi.AbstractIntegrationTest;
+import com.syncapi.TestUtil;
 import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
 import com.syncapi.entity.User;
@@ -18,6 +19,11 @@ import static com.syncapi.TestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class RequestRepositoryTest extends AbstractIntegrationTest {
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String CONTENT_TYPE_HEADER = "Content-Type";
+    private static final String APPLICATION_JSON = "application/json";
+
     @Autowired
     private RequestRepository requestRepository;
 
@@ -43,11 +49,11 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         User user = userRepository.save(new User(generateRandomEmail(), generateRandomPasswordHash(),
                 generateRandomName()));
 
-        Workspace workspace = new Workspace("Test Workspace");
+        Workspace workspace = new Workspace(TestUtil.generateRandomName());
         workspace.getMembers().add(user);
         workspace = workspaceRepository.save(workspace);
 
-        folder = new Folder("Test Folder", workspace);
+        folder = new Folder(TestUtil.generateRandomName(), workspace);
         folder = folderRepository.save(folder);
 
         request1 = new Request("Get Users", "GET", "https://api.example.com/users", folder);
@@ -56,12 +62,12 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         request2 = new Request("Create User", "POST", "https://api.example.com/users", folder);
 
         Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json");
+        headers.put(CONTENT_TYPE_HEADER, APPLICATION_JSON);
         request2.setHeaders(headers);
 
         Map<String, Object> body = new HashMap<>();
-        body.put("name", "John");
-        body.put("email", "john@example.com");
+        body.put("name", TestUtil.generateRandomName());
+        body.put("email", TestUtil.generateRandomEmail());
         request2.setBody(body);
 
         requestRepository.save(request2);
@@ -90,30 +96,23 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldSaveRequestWithJsonFields() {
         // given
-        String name = "Update User";
-        String method = "PUT";
-        String url = "https://api.example.com/users/1";
-        Request request = new Request(name, method, url, folder);
+        Request request = new Request("Update User", "PUT", "https://api.example.com/users/1", folder);
 
-        String authorizationValue = "Bearer token";
-        String contentTypeValue = "application/json";
-
+        String authorizationValue = BEARER_PREFIX + TestUtil.generateRandomToken();
         Map<String, String> headers = new HashMap<>();
-        headers.put("Authorization", authorizationValue);
-        headers.put("Content-Type", contentTypeValue);
+        headers.put(AUTH_HEADER, authorizationValue);
+        headers.put(CONTENT_TYPE_HEADER, APPLICATION_JSON);
         request.setHeaders(headers);
 
-        String bodyNameValue = "Jane";
-        int bodyAgeValue = 25;
-
+        String bodyNameValue = TestUtil.generateRandomName();
+        int bodyAgeValue = TestUtil.generateRandomInt();
         Map<String, Object> body = new HashMap<>();
         body.put("name", bodyNameValue);
         body.put("age", bodyAgeValue);
         request.setBody(body);
 
-        String authTypeValue = "bearer";
-        String authTokenValue = "secret-token";
-
+        String authTypeValue = TestUtil.generateRandomValue("authType");
+        String authTokenValue = TestUtil.generateRandomToken();
         Map<String, String> authConfig = new HashMap<>();
         authConfig.put("type", authTypeValue);
         authConfig.put("token", authTokenValue);
@@ -123,13 +122,15 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         Request saved = requestRepository.save(request);
 
         // then
-        assertThat(saved.getHeaders()).hasSize(2);
+        assertThat(saved.getHeaders()).hasSize(headers.size());
         assertThat(saved.getHeaders().get("Authorization")).isEqualTo(authorizationValue);
-        assertThat(saved.getHeaders().get("Content-Type")).isEqualTo(contentTypeValue);
-        assertThat(saved.getBody()).hasSize(2);
+        assertThat(saved.getHeaders().get("Content-Type")).isEqualTo(APPLICATION_JSON);
+
+        assertThat(saved.getBody()).hasSize(body.size());
         assertThat(saved.getBody().get("name")).isEqualTo(bodyNameValue);
         assertThat(saved.getBody().get("age")).isEqualTo(bodyAgeValue);
-        assertThat(saved.getAuthConfig()).hasSize(2);
+
+        assertThat(saved.getAuthConfig()).hasSize(authConfig.size());
         assertThat(saved.getAuthConfig().get("type")).isEqualTo(authTypeValue);
         assertThat(saved.getAuthConfig().get("token")).isEqualTo(authTokenValue);
     }
@@ -148,7 +149,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldReturnEmptyListWhenFolderHasNoRequests() {
         // given
-        Folder emptyFolder = folderRepository.save(new Folder("Empty Folder", folder.getWorkspace()));
+        Folder emptyFolder = folderRepository.save(new Folder(TestUtil.generateRandomName(), folder.getWorkspace()));
 
         // when
         List<Request> requests = requestRepository.findByFolderId(emptyFolder.getId());
@@ -170,7 +171,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldReturnNullWhenRequestNotInFolder() {
         // given
-        Folder anotherFolder = folderRepository.save(new Folder("Another Folder", folder.getWorkspace()));
+        Folder anotherFolder = folderRepository.save(new Folder(TestUtil.generateRandomName(), folder.getWorkspace()));
 
         // when
         Request found = requestRepository.findByIdAndFolderId(request1.getId(), anotherFolder.getId());
@@ -188,7 +189,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         Thread.sleep(10); // ensure time difference
 
         // when
-        request.setName("Updated Name");
+        request.setName(TestUtil.generateRandomName());
         Request updated = requestRepository.save(request);
 
         // then
