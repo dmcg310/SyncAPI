@@ -60,7 +60,7 @@ class WorkspaceServiceTest {
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getId()).isEqualTo(workspace1.getId());
+        assertThat(result.getFirst().getId()).isEqualTo(workspace1.getId());
         assertThat(result.get(1).getId()).isEqualTo(workspace2.getId());
 
         verify(util).getUserByEmail(testEmail);

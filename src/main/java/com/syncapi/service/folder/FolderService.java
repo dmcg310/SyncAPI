@@ -1,0 +1,106 @@
+package com.syncapi.service.folder;
+
+import com.syncapi.dto.folder.FolderRequest;
+import com.syncapi.dto.folder.FolderResponse;
+import com.syncapi.entity.Folder;
+import com.syncapi.entity.User;
+import com.syncapi.entity.Workspace;
+import com.syncapi.repository.FolderRepository;
+import com.syncapi.repository.WorkspaceRepository;
+import com.syncapi.util.Util;
+import jakarta.transaction.Transactional;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class FolderService {
+    private final FolderRepository folderRepository;
+    private final WorkspaceRepository workspaceRepository;
+    private final Util util;
+
+    public FolderService(FolderRepository folderRepository,
+                         WorkspaceRepository workspaceRepository,
+                         Util util) {
+        this.folderRepository = folderRepository;
+        this.workspaceRepository = workspaceRepository;
+        this.util = util;
+    }
+
+    public List<FolderResponse> getFoldersByWorkspace(Long workspaceId, String email) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new RuntimeException("Workspace not found or access denied"));
+        User user = util.getUserByEmail(email);
+        if (!workspace.getMembers().contains(user)) {
+            throw new RuntimeException("Workspace not found or access denied");
+        }
+
+        List<Folder> folders = folderRepository.findByWorkspaceId(workspaceId);
+
+        return folders.stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public FolderResponse getFolderById(Long folderId, String email) {
+        return toResponse(getFolderWithAccessCheck(folderId, email));
+    }
+
+    @Transactional
+    public FolderResponse createFolder(Long workspaceId, FolderRequest request, String email) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new RuntimeException("Workspace not found or access denied"));
+        User user = util.getUserByEmail(email);
+        if (!workspace.getMembers().contains(user)) {
+            throw new RuntimeException("Workspace not found or access denied");
+        }
+
+        Folder folder = new Folder();
+        folder.setName(request.getName());
+        folder.setDescription(request.getDescription());
+        folder.setWorkspace(workspace);
+
+        Folder savedFolder = folderRepository.save(folder);
+
+        return toResponse(savedFolder);
+    }
+
+    @Transactional
+    public FolderResponse updateFolder(Long folderId, FolderRequest request, String email) {
+        Folder folder = getFolderWithAccessCheck(folderId, email);
+        folder.setName(request.getName());
+        folder.setDescription(request.getDescription());
+
+        Folder updatedFolder = folderRepository.save(folder);
+
+        return toResponse(updatedFolder);
+    }
+
+    @Transactional
+    public void deleteFolder(Long folderId, String email) {
+        folderRepository.delete(getFolderWithAccessCheck(folderId, email));
+    }
+
+    private Folder getFolderWithAccessCheck(Long folderId, String email) {
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new RuntimeException("Folder not found with Id: " + folderId));
+
+        User user = util.getUserByEmail(email);
+        if (!folder.getWorkspace().getMembers().contains(user)) {
+            throw new RuntimeException("Folder workspace not found or access denied");
+        }
+
+        return folder;
+    }
+
+    private FolderResponse toResponse(Folder folder) {
+        return new FolderResponse(
+                folder.getId(),
+                folder.getName(),
+                folder.getDescription(),
+                folder.getCreatedAt(),
+                folder.getWorkspace().getId(),
+                folder.getRequests().size()
+        );
+    }
+}
