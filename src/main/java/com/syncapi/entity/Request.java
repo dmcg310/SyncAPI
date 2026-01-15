@@ -1,7 +1,10 @@
 package com.syncapi.entity;
 
+import com.syncapi.util.RequestMethod;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,8 +30,12 @@ public class Request {
     @Column(nullable = false)
     private String name;
 
+    @Column(length = 1024)
+    private String description;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String method;
+    private RequestMethod method;
 
     @Column(nullable = false, length = 2048)
     private String url;
@@ -79,7 +86,7 @@ public class Request {
     public Request() {
     }
 
-    public Request(String name, String method, String url, Folder folder) {
+    public Request(String name, RequestMethod method, String url, Folder folder) {
         this.name = name;
         this.method = method;
         this.url = url;
@@ -102,11 +109,19 @@ public class Request {
         this.name = name;
     }
 
-    public String getMethod() {
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public RequestMethod getMethod() {
         return method;
     }
 
-    public void setMethod(String method) {
+    public void setMethod(RequestMethod method) {
         this.method = method;
     }
 
