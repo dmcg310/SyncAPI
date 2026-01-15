@@ -27,6 +27,9 @@ public class Workspace {
     @Column(nullable = false)
     private String name;
 
+    @Column(length = 1024)
+    private String description;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -73,6 +76,14 @@ public class Workspace {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -6,7 +6,9 @@ public class FolderResponse {
     private Long id;
     private String name;
     private String description;
+
     private LocalDateTime createdAt;
+
     private Long workspaceId;
     private int requestCount;
 

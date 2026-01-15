@@ -6,6 +6,7 @@ import java.util.List;
 public class WorkspaceResponse {
     private Long id;
     private String name;
+    private String description;
 
     private LocalDateTime createdAt;
 
@@ -17,9 +18,11 @@ public class WorkspaceResponse {
     public WorkspaceResponse() {
     }
 
-    public WorkspaceResponse(Long id, String name, LocalDateTime createdAt, int memberCount, int folderCount) {
+    public WorkspaceResponse(Long id, String name, String description, LocalDateTime createdAt,
+                             int memberCount, int folderCount) {
         this.id = id;
         this.name = name;
+        this.description = description;
         this.createdAt = createdAt;
         this.memberCount = memberCount;
         this.folderCount = folderCount;
@@ -39,6 +42,14 @@ public class WorkspaceResponse {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public LocalDateTime getCreatedAt() {

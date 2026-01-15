@@ -52,6 +52,14 @@ public class JsonTestUtil {
                 .content(toJson(body));
     }
 
+    public static MockHttpServletRequestBuilder patchJsonAuth(String url, Object body, String token) {
+        return patch(url)
+                .header(AUTH_HEADER, BEARER_PREFIX + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(toJson(body));
+    }
+
     public static MockHttpServletRequestBuilder deleteAuth(String url, String token) {
         return delete(url)
                 .header(AUTH_HEADER, BEARER_PREFIX + token)

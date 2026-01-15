@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -56,6 +57,18 @@ public class WorkspaceController {
                                                              @Valid @RequestBody WorkspaceRequest request) {
         try {
             WorkspaceResponse workspace = workspaceService.updateWorkspace(id, request, Util.getCurrentUserEmail());
+
+            return ResponseEntity.ok(workspace);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<WorkspaceResponse> patchWorkspace(@PathVariable Long id,
+                                                            @RequestBody WorkspaceRequest request) {
+        try {
+            WorkspaceResponse workspace = workspaceService.patchWorkspace(id, request, Util.getCurrentUserEmail());
 
             return ResponseEntity.ok(workspace);
         } catch (RuntimeException e) {

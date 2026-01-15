@@ -33,15 +33,7 @@ public class WorkspaceService {
     }
 
     public WorkspaceResponse getWorkspace(Long workspaceId, String email) {
-        Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new RuntimeException("Workspace not found or access denied"));
-
-        User user = util.getUserByEmail(email);
-        if (!workspace.getMembers().contains(user)) {
-            throw new RuntimeException("Workspace not found or access denied");
-        }
-
-        return toDetailedResponse(workspace);
+        return toDetailedResponse(getWorkspaceWithAccessCheck(workspaceId, email));
     }
 
     @Transactional
@@ -59,43 +51,41 @@ public class WorkspaceService {
 
     @Transactional
     public WorkspaceResponse updateWorkspace(Long workspaceId, WorkspaceRequest request, String email) {
-        Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new RuntimeException("Workspace not found or access denied"));
-
-        User user = util.getUserByEmail(email);
-        if (!workspace.getMembers().contains(user)) {
-            throw new RuntimeException("Workspace not found or access denied");
-        }
-
+        Workspace workspace = getWorkspaceWithAccessCheck(workspaceId, email);
         workspace.setName(request.getName());
+        workspace.setDescription(request.getDescription());
+
         Workspace updatedWorkspace = workspaceRepository.save(workspace);
 
         return toResponse(updatedWorkspace);
     }
 
     @Transactional
-    public void deleteWorkspace(Long workspaceId, String email) {
-        Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new RuntimeException("Workspace not found or access denied"));
+    public WorkspaceResponse patchWorkspace(Long workspaceId, WorkspaceRequest request, String email) {
+        Workspace workspace = getWorkspaceWithAccessCheck(workspaceId, email);
 
-        User user = util.getUserByEmail(email);
-        if (!workspace.getMembers().contains(user)) {
-            throw new RuntimeException("Workspace not found or access denied");
+        if (request.getName() != null) {
+            workspace.setName(request.getName());
+        }
+        if (request.getDescription() != null) {
+            String description = request.getDescription().isBlank()
+                    ? null
+                    : request.getDescription();
+
+            workspace.setDescription(description);
         }
 
-        workspaceRepository.delete(workspace);
+        return toResponse(workspaceRepository.save(workspace));
+    }
+
+    @Transactional
+    public void deleteWorkspace(Long workspaceId, String email) {
+        workspaceRepository.delete(getWorkspaceWithAccessCheck(workspaceId, email));
     }
 
     @Transactional
     public WorkspaceResponse addMember(Long workspaceId, AddMemberRequest request, String email) {
-        Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new RuntimeException("Workspace not found or access denied"));
-
-        User currentUser = util.getUserByEmail(email);
-        if (!workspace.getMembers().contains(currentUser)) {
-            throw new RuntimeException("Workspace not found or access denied");
-        }
-
+        Workspace workspace = getWorkspaceWithAccessCheck(workspaceId, email);
         User userToAdd = util.getUserByEmail(request.getEmail());
         if (workspace.getMembers().contains(userToAdd)) {
             throw new RuntimeException("User is already a member of the workspace");
@@ -110,14 +100,7 @@ public class WorkspaceService {
 
     @Transactional
     public WorkspaceResponse removeMember(Long workspaceId, Long userId, String email) {
-        Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new RuntimeException("Workspace not found or access denied"));
-
-        User currentUser = util.getUserByEmail(email);
-        if (!workspace.getMembers().contains(currentUser)) {
-            throw new RuntimeException("Workspace not found or access denied");
-        }
-
+        Workspace workspace = getWorkspaceWithAccessCheck(workspaceId, email);
         User userToRemove = util.getUserById(userId);
         if (!workspace.getMembers().contains(userToRemove)) {
             throw new RuntimeException("User is not a member of the workspace");
@@ -134,10 +117,23 @@ public class WorkspaceService {
         return toDetailedResponse(updatedWorkspace);
     }
 
+    private Workspace getWorkspaceWithAccessCheck(Long workspaceId, String email) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new RuntimeException("Workspace not found with Id: " + workspaceId));
+
+        User user = util.getUserByEmail(email);
+        if (!workspace.getMembers().contains(user)) {
+            throw new RuntimeException("Workspace not found or access denied");
+        }
+
+        return workspace;
+    }
+
     private WorkspaceResponse toResponse(Workspace workspace) {
         return new WorkspaceResponse(
                 workspace.getId(),
                 workspace.getName(),
+                workspace.getDescription(),
                 workspace.getCreatedAt(),
                 workspace.getMembers().size(),
                 workspace.getFolders().size()

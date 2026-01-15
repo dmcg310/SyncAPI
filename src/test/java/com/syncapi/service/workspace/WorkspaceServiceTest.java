@@ -108,7 +108,7 @@ class WorkspaceServiceTest {
         // when / then
         assertThatThrownBy(() -> workspaceService.getWorkspace(workspaceId, testEmail))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
     }
 
     @Test
@@ -160,7 +160,8 @@ class WorkspaceServiceTest {
     void shouldUpdateWorkspace() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(),
+                TestUtil.generateRandomValue("description"), testUser);
 
         String newName = TestUtil.generateRandomName();
         WorkspaceRequest request = new WorkspaceRequest(newName);
@@ -174,6 +175,7 @@ class WorkspaceServiceTest {
 
         // then
         assertThat(result.getName()).isEqualTo(newName);
+        assertThat(result.getDescription()).isNull(); // description should be cleared as PUT
 
         verify(workspaceRepository).save(workspace);
     }
@@ -190,7 +192,7 @@ class WorkspaceServiceTest {
         // when / then
         assertThatThrownBy(() -> workspaceService.updateWorkspace(workspaceId, request, testEmail))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
 
         verify(workspaceRepository).findById(workspaceId);
     }
@@ -213,6 +215,141 @@ class WorkspaceServiceTest {
         assertThatThrownBy(() -> workspaceService.updateWorkspace(workspaceId, request, testEmail))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Workspace not found or access denied");
+    }
+
+    @Test
+    void shouldPatchWorkspaceName() {
+        // given
+        Long workspaceId = TestUtil.generateRandomId();
+        String workspaceDescription = TestUtil.generateRandomValue("description");
+        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), workspaceDescription,
+                testUser);
+
+        String newName = TestUtil.generateRandomName();
+        WorkspaceRequest request = new WorkspaceRequest(newName);
+
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(workspaceRepository.save(any(Workspace.class))).thenReturn(workspace);
+
+        // when
+        WorkspaceResponse result = workspaceService.patchWorkspace(workspaceId, request, testEmail);
+
+        // then
+        assertThat(result.getName()).isEqualTo(newName);
+        assertThat(result.getDescription()).isEqualTo(workspaceDescription);
+
+        verify(workspaceRepository).save(workspace);
+    }
+
+    @Test
+    void shouldPatchWorkspaceDescription() {
+        // given
+        Long workspaceId = TestUtil.generateRandomId();
+        String originalName = TestUtil.generateRandomName();
+        Workspace workspace = createWorkspace(workspaceId, originalName, testUser);
+
+        String newDescription = TestUtil.generateRandomValue("description");
+        WorkspaceRequest request = new WorkspaceRequest();
+        request.setDescription(newDescription);
+
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(workspaceRepository.save(any(Workspace.class))).thenReturn(workspace);
+
+        // when
+        WorkspaceResponse result = workspaceService.patchWorkspace(workspaceId, request, testEmail);
+
+        // then
+        assertThat(result.getDescription()).isEqualTo(newDescription);
+        assertThat(result.getName()).isEqualTo(originalName);
+
+        verify(workspaceRepository).save(workspace);
+    }
+
+    @Test
+    void shouldPatchWorkspaceBothFields() {
+        // given
+        Long workspaceId = TestUtil.generateRandomId();
+        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+
+        String newName = TestUtil.generateRandomName();
+        String newDescription = TestUtil.generateRandomValue("description");
+        WorkspaceRequest request = new WorkspaceRequest(newName, newDescription);
+
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(workspaceRepository.save(any(Workspace.class))).thenReturn(workspace);
+
+        // when
+        WorkspaceResponse result = workspaceService.patchWorkspace(workspaceId, request, testEmail);
+
+        // then
+        assertThat(result.getName()).isEqualTo(newName);
+        assertThat(result.getDescription()).isEqualTo(newDescription);
+
+        verify(workspaceRepository).save(workspace);
+    }
+
+    @Test
+    void shouldClearDescriptionWithEmptyString() {
+        // given
+        Long workspaceId = TestUtil.generateRandomId();
+        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(),
+                TestUtil.generateRandomValue("description"), testUser);
+
+        WorkspaceRequest request = new WorkspaceRequest();
+        request.setDescription(""); // empty string should clear (set to null)
+
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(workspaceRepository.save(any(Workspace.class))).thenReturn(workspace);
+
+        // when
+        WorkspaceResponse result = workspaceService.patchWorkspace(workspaceId, request, testEmail);
+
+        // then
+        assertThat(result.getDescription()).isNull();
+
+        verify(workspaceRepository).save(workspace);
+    }
+
+    @Test
+    void shouldThrowWhenPatchingNonExistentWorkspace() {
+        // given
+        Long workspaceId = TestUtil.generateRandomId();
+        WorkspaceRequest request = new WorkspaceRequest(TestUtil.generateRandomName());
+
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> workspaceService.patchWorkspace(workspaceId, request, testEmail))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
+
+        verify(workspaceRepository).findById(workspaceId);
+        verify(workspaceRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowWhenPatchingWorkspaceByNonMember() {
+        // given
+        Long workspaceId = TestUtil.generateRandomId();
+        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
+                TestUtil.generateRandomName());
+        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
+
+        WorkspaceRequest request = new WorkspaceRequest(TestUtil.generateRandomName());
+
+        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+
+        // when / then
+        assertThatThrownBy(() -> workspaceService.patchWorkspace(workspaceId, request, testEmail))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Workspace not found or access denied");
+
+        verify(workspaceRepository, never()).save(any());
     }
 
     @Test
@@ -241,7 +378,7 @@ class WorkspaceServiceTest {
         // when / then
         assertThatThrownBy(() -> workspaceService.deleteWorkspace(workspaceId, testEmail))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
 
         verify(workspaceRepository).findById(workspaceId);
         verify(workspaceRepository, never()).delete(any());
@@ -304,7 +441,7 @@ class WorkspaceServiceTest {
         // when / then
         assertThatThrownBy(() -> workspaceService.addMember(workspaceId, request, testEmail))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
 
         verify(workspaceRepository).findById(workspaceId);
         verify(workspaceRepository, never()).save(any());
@@ -384,7 +521,7 @@ class WorkspaceServiceTest {
         // when / then
         assertThatThrownBy(() -> workspaceService.removeMember(workspaceId, TestUtil.generateRandomId(), testEmail))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
 
         verify(workspaceRepository).findById(workspaceId);
         verify(workspaceRepository, never()).save(any());
@@ -458,6 +595,16 @@ class WorkspaceServiceTest {
         Workspace workspace = new Workspace(name);
         setField(workspace, "id", id);
 
+        workspace.setMembers(new ArrayList<>(List.of(member)));
+
+        return workspace;
+    }
+
+    private Workspace createWorkspace(Long id, String name, String description, User member) {
+        Workspace workspace = new Workspace(name);
+        setField(workspace, "id", id);
+
+        workspace.setDescription(description);
         workspace.setMembers(new ArrayList<>(List.of(member)));
 
         return workspace;

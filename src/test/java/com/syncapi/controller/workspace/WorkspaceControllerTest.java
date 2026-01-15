@@ -63,19 +63,19 @@ class WorkspaceControllerTest {
         // given
         Long firstWorkspaceId = TestUtil.generateRandomId();
         String firstWorkspaceName = TestUtil.generateRandomName();
+        String firstWorkspaceDescription = TestUtil.generateRandomValue("description");
         int firstMemberCount = 2;
         int firstFolderCount = 5;
-        WorkspaceResponse firstWorkspaceResponse = new WorkspaceResponse(
-                firstWorkspaceId, firstWorkspaceName, LocalDateTime.now(), firstMemberCount, firstFolderCount
-        );
+        WorkspaceResponse firstWorkspaceResponse = new WorkspaceResponse(firstWorkspaceId, firstWorkspaceName,
+                firstWorkspaceDescription, LocalDateTime.now(), firstMemberCount, firstFolderCount);
 
         Long secondWorkspaceId = TestUtil.generateRandomId();
         String secondWorkspaceName = TestUtil.generateRandomName();
+        String secondWorkspaceDescription = TestUtil.generateRandomValue("description");
         int secondMemberCount = 1;
         int secondFolderCount = 0;
-        WorkspaceResponse secondWorkspaceResponse = new WorkspaceResponse(
-                secondWorkspaceId, secondWorkspaceName, LocalDateTime.now(), secondMemberCount, secondFolderCount
-        );
+        WorkspaceResponse secondWorkspaceResponse = new WorkspaceResponse(secondWorkspaceId, secondWorkspaceName,
+                secondWorkspaceDescription, LocalDateTime.now(), secondMemberCount, secondFolderCount);
 
         when(workspaceService.getUserWorkspaces(anyString()))
                 .thenReturn(List.of(firstWorkspaceResponse, secondWorkspaceResponse));
@@ -90,6 +90,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$[0].id").value(firstWorkspaceId.intValue()),
                         jsonPath("$[0].name").value(firstWorkspaceName),
+                        jsonPath("$[0].description").value(firstWorkspaceDescription),
                         jsonPath("$[0].createdAt").exists(),
                         jsonPath("$[0].memberCount").value(firstMemberCount),
                         jsonPath("$[0].folderCount").value(firstFolderCount)
@@ -97,6 +98,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$[1].id").value(secondWorkspaceId.intValue()),
                         jsonPath("$[1].name").value(secondWorkspaceName),
+                        jsonPath("$[1].description").value(secondWorkspaceDescription),
                         jsonPath("$[1].createdAt").exists(),
                         jsonPath("$[1].memberCount").value(secondMemberCount),
                         jsonPath("$[1].folderCount").value(secondFolderCount)
@@ -110,11 +112,11 @@ class WorkspaceControllerTest {
         // given
         Long workspaceId = TestUtil.generateRandomId();
         String workspaceName = TestUtil.generateRandomName();
+        String workspaceDescription = TestUtil.generateRandomValue("description");
         int memberCount = 3;
         int folderCount = 7;
-        WorkspaceResponse workspaceResponse = new WorkspaceResponse(
-                workspaceId, workspaceName, LocalDateTime.now(), memberCount, folderCount
-        );
+        WorkspaceResponse workspaceResponse = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
+                LocalDateTime.now(), memberCount, folderCount);
 
         when(workspaceService.getWorkspace(eq(workspaceId), anyString()))
                 .thenReturn(workspaceResponse);
@@ -128,6 +130,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId.intValue()),
                         jsonPath("$.name").value(workspaceName),
+                        jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
@@ -154,11 +157,11 @@ class WorkspaceControllerTest {
         WorkspaceRequest request = new WorkspaceRequest(workspaceName);
 
         Long workspaceId = TestUtil.generateRandomId();
+        String workspaceDescription = TestUtil.generateRandomValue("description");
         int memberCount = 1;
         int folderCount = 0;
-        WorkspaceResponse response = new WorkspaceResponse(
-                workspaceId, workspaceName, LocalDateTime.now(), memberCount, folderCount
-        );
+        WorkspaceResponse response = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
+                LocalDateTime.now(), memberCount, folderCount);
 
         when(workspaceService.createWorkspace(any(WorkspaceRequest.class), anyString()))
                 .thenReturn(response);
@@ -172,6 +175,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId),
                         jsonPath("$.name").value(workspaceName),
+                        jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
@@ -204,11 +208,11 @@ class WorkspaceControllerTest {
 
         Long workspaceId = TestUtil.generateRandomId();
         String updatedWorkspaceName = TestUtil.generateRandomName();
+        String workspaceDescription = TestUtil.generateRandomValue("description");
         int memberCount = 2;
         int folderCount = 4;
-        WorkspaceResponse response = new WorkspaceResponse(
-                workspaceId, updatedWorkspaceName, LocalDateTime.now(), memberCount, folderCount
-        );
+        WorkspaceResponse response = new WorkspaceResponse(workspaceId, updatedWorkspaceName, workspaceDescription,
+                LocalDateTime.now(), memberCount, folderCount);
 
         when(workspaceService.updateWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString()))
                 .thenReturn(response);
@@ -224,6 +228,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId.intValue()),
                         jsonPath("$.name").value(updatedWorkspaceName),
+                        jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
@@ -245,6 +250,57 @@ class WorkspaceControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(workspaceService).updateWorkspace(anyLong(), any(), anyString());
+    }
+
+    @Test
+    void shouldPatchWorkspace() throws Exception {
+        // given
+        WorkspaceRequest request = new WorkspaceRequest(TestUtil.generateRandomName());
+
+        Long workspaceId = TestUtil.generateRandomId();
+        String updatedWorkspaceName = TestUtil.generateRandomName();
+        String workspaceDescription = TestUtil.generateRandomValue("description");
+        int memberCount = 2;
+        int folderCount = 4;
+        WorkspaceResponse response = new WorkspaceResponse(workspaceId, updatedWorkspaceName, workspaceDescription,
+                LocalDateTime.now(), memberCount, folderCount);
+
+        when(workspaceService.patchWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString()))
+                .thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                WORKSPACES_URL + "/" + workspaceId, request, token
+        ));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(workspaceId.intValue()),
+                        jsonPath("$.name").value(updatedWorkspaceName),
+                        jsonPath("$.description").value(workspaceDescription),
+                        jsonPath("$.createdAt").exists(),
+                        jsonPath("$.memberCount").value(memberCount),
+                        jsonPath("$.folderCount").value(folderCount)
+                );
+
+        verify(workspaceService).patchWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenPatchWorkspaceThrows() throws Exception {
+        // given
+        when(workspaceService.patchWorkspace(anyLong(), any(), anyString()))
+                .thenThrow(new RuntimeException("forbidden"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                        WORKSPACES_URL + "/" + TestUtil.generateRandomId(), new WorkspaceRequest("X"), token
+                ))
+                .andExpect(status().isForbidden());
+
+        verify(workspaceService).patchWorkspace(anyLong(), any(), anyString());
     }
 
     @Test
@@ -281,11 +337,11 @@ class WorkspaceControllerTest {
 
         Long workspaceId = TestUtil.generateRandomId();
         String workspaceName = TestUtil.generateRandomName();
+        String workspaceDescription = TestUtil.generateRandomValue("description");
         int memberCount = 2;
         int folderCount = 1;
-        WorkspaceResponse response = new WorkspaceResponse(
-                workspaceId, workspaceName, LocalDateTime.now(), memberCount, folderCount
-        );
+        WorkspaceResponse response = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
+                LocalDateTime.now(), memberCount, folderCount);
 
         when(workspaceService.addMember(eq(workspaceId), any(AddMemberRequest.class), anyString()))
                 .thenReturn(response);
@@ -303,6 +359,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId.intValue()),
                         jsonPath("$.name").value(workspaceName),
+                        jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
@@ -334,11 +391,11 @@ class WorkspaceControllerTest {
 
         Long workspaceId = TestUtil.generateRandomId();
         String workspaceName = TestUtil.generateRandomName();
+        String workspaceDescription = TestUtil.generateRandomValue("description");
         int memberCount = 1;
         int folderCount = 1;
-        WorkspaceResponse response = new WorkspaceResponse(
-                workspaceId, workspaceName, LocalDateTime.now(), memberCount, folderCount
-        );
+        WorkspaceResponse response = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
+                LocalDateTime.now(), memberCount, folderCount);
 
         when(workspaceService.removeMember(eq(workspaceId), eq(userId), anyString()))
                 .thenReturn(response);
@@ -354,6 +411,7 @@ class WorkspaceControllerTest {
                 .andExpectAll(
                         jsonPath("$.id").value(workspaceId.intValue()),
                         jsonPath("$.name").value(workspaceName),
+                        jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
                         jsonPath("$.folderCount").value(folderCount)
