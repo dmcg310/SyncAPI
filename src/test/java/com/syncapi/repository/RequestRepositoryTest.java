@@ -6,6 +6,7 @@ import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
+import com.syncapi.util.RequestMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,10 +57,10 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         folder = new Folder(TestUtil.generateRandomName(), workspace);
         folder = folderRepository.save(folder);
 
-        request1 = new Request("Get Users", "GET", "https://api.example.com/users", folder);
+        request1 = new Request("Get Users", RequestMethod.GET, "https://api.example.com/users", folder);
         requestRepository.save(request1);
 
-        request2 = new Request("Create User", "POST", "https://api.example.com/users", folder);
+        request2 = new Request("Create User", RequestMethod.POST, "https://api.example.com/users", folder);
 
         Map<String, String> headers = new HashMap<>();
         headers.put(CONTENT_TYPE_HEADER, APPLICATION_JSON);
@@ -77,7 +78,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
     void shouldSaveRequest() {
         // given
         String name = "Delete User";
-        String method = "DELETE";
+        RequestMethod method = RequestMethod.DELETE;
         String url = "https://api.example.com/users/1";
         Request request = new Request(name, method, url, folder);
 
@@ -96,7 +97,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldSaveRequestWithJsonFields() {
         // given
-        Request request = new Request("Update User", "PUT", "https://api.example.com/users/1", folder);
+        Request request = new Request("Update User", RequestMethod.PUT, "https://api.example.com/users/1", folder);
 
         String authorizationValue = BEARER_PREFIX + TestUtil.generateRandomToken();
         Map<String, String> headers = new HashMap<>();
