@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -64,6 +65,18 @@ public class FolderController {
                                                        @Valid @RequestBody FolderRequest request) {
         try {
             FolderResponse folder = folderService.updateFolder(folderId, request, Util.getCurrentUserEmail());
+
+            return ResponseEntity.ok(folder);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @PatchMapping("/{folderId}")
+    public ResponseEntity<FolderResponse> patchFolder(@PathVariable Long folderId,
+                                                      @RequestBody FolderRequest request) {
+        try {
+            FolderResponse folder = folderService.patchFolder(folderId, request, Util.getCurrentUserEmail());
 
             return ResponseEntity.ok(folder);
         } catch (RuntimeException e) {

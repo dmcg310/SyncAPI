@@ -312,7 +312,7 @@ class FolderServiceTest {
 
         // then
         assertThat(result.getName()).isEqualTo(newName);
-        assertThat(result.getDescription()).isNull(); // description is replaced, not merged
+        assertThat(result.getDescription()).isNull(); // description should be cleared as PUT
     }
 
     @Test
@@ -347,6 +347,140 @@ class FolderServiceTest {
 
         // when / then
         assertThatThrownBy(() -> folderService.updateFolder(folder.getId(), request, testEmail))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("access denied");
+
+        verify(folderRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldPatchFolderName() {
+        // given
+        String folderDescription = TestUtil.generateRandomValue("description");
+        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), folderDescription,
+                testWorkspace);
+
+        String newName = TestUtil.generateRandomName();
+        FolderRequest request = new FolderRequest();
+        request.setName(newName);
+
+        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(folderRepository.save(any(Folder.class))).thenReturn(folder);
+
+        // when
+        FolderResponse result = folderService.patchFolder(folder.getId(), request, testEmail);
+
+        // then
+        assertThat(result.getName()).isEqualTo(newName);
+        assertThat(result.getDescription()).isEqualTo(folderDescription);
+
+        verify(folderRepository).save(folder);
+    }
+
+    @Test
+    void shouldPatchFolderDescription() {
+        // given
+        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
+        String originalName = folder.getName();
+
+        String newDescription = TestUtil.generateRandomValue("description");
+        FolderRequest request = new FolderRequest();
+        request.setDescription(newDescription);
+
+        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(folderRepository.save(any(Folder.class))).thenReturn(folder);
+
+        // when
+        FolderResponse result = folderService.patchFolder(folder.getId(), request, testEmail);
+
+        // then
+        assertThat(result.getDescription()).isEqualTo(newDescription);
+        assertThat(result.getName()).isEqualTo(originalName);
+
+        verify(folderRepository).save(folder);
+    }
+
+    @Test
+    void shouldPatchFolderBothFields() {
+        // given
+        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
+
+        String newName = TestUtil.generateRandomName();
+        String newDescription = TestUtil.generateRandomValue("description");
+        FolderRequest request = new FolderRequest();
+        request.setName(newName);
+        request.setDescription(newDescription);
+
+        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(folderRepository.save(any(Folder.class))).thenReturn(folder);
+
+        // when
+        FolderResponse result = folderService.patchFolder(folder.getId(), request, testEmail);
+
+        // then
+        assertThat(result.getName()).isEqualTo(newName);
+        assertThat(result.getDescription()).isEqualTo(newDescription);
+
+        verify(folderRepository).save(folder);
+    }
+
+    @Test
+    void shouldClearDescriptionWithEmptyString() {
+        // given
+        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
+        folder.setDescription(TestUtil.generateRandomValue("description"));
+
+        FolderRequest request = new FolderRequest();
+        request.setDescription(""); // empty string should clear (set to null)
+
+        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(folderRepository.save(any(Folder.class))).thenReturn(folder);
+
+        // when
+        FolderResponse result = folderService.patchFolder(folder.getId(), request, testEmail);
+
+        // then
+        assertThat(result.getDescription()).isNull();
+
+        verify(folderRepository).save(folder);
+    }
+
+    @Test
+    void shouldThrowWhenPatchingNonExistentFolder() {
+        // given
+        Long folderId = TestUtil.generateRandomId();
+        FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
+
+        when(folderRepository.findById(folderId)).thenReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> folderService.patchFolder(folderId, request, testEmail))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Folder not found");
+
+        verify(folderRepository).findById(folderId);
+        verify(folderRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowWhenPatchingFolderByNonMember() {
+        // given
+        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
+                TestUtil.generateRandomName());
+        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherUser);
+        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
+
+        FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
+
+        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
+        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+
+        // when / then
+        assertThatThrownBy(() -> folderService.patchFolder(folder.getId(), request, testEmail))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("access denied");
 
@@ -423,6 +557,16 @@ class FolderServiceTest {
         Folder folder = new Folder(name, workspace);
         setField(folder, "id", id);
 
+        folder.setRequests(new ArrayList<>());
+
+        return folder;
+    }
+
+    private Folder createFolder(Long id, String name, String description, Workspace workspace) {
+        Folder folder = new Folder(name, workspace);
+        setField(folder, "id", id);
+
+        folder.setDescription(description);
         folder.setRequests(new ArrayList<>());
 
         return folder;

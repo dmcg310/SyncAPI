@@ -77,6 +77,24 @@ public class FolderService {
     }
 
     @Transactional
+    public FolderResponse patchFolder(Long folderId, FolderRequest request, String email) {
+        Folder folder = getFolderWithAccessCheck(folderId, email);
+
+        if (request.getName() != null) {
+            folder.setName(request.getName());
+        }
+        if (request.getDescription() != null) {
+            String description = request.getDescription().isBlank()
+                    ? null
+                    : request.getDescription();
+
+            folder.setDescription(description);
+        }
+
+        return toResponse(folderRepository.save(folder));
+    }
+
+    @Transactional
     public void deleteFolder(Long folderId, String email) {
         folderRepository.delete(getFolderWithAccessCheck(folderId, email));
     }

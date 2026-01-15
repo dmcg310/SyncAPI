@@ -329,6 +329,56 @@ class FolderControllerTest {
     }
 
     @Test
+    void shouldPatchFolder() throws Exception {
+        // given
+        String newName = TestUtil.generateRandomName();
+        FolderRequest request = new FolderRequest();
+        request.setName(newName);
+
+        Long folderId = TestUtil.generateRandomId();
+        FolderResponse response = new FolderResponse(folderId, newName,
+                TestUtil.generateRandomValue("description"), LocalDateTime.now(), workspaceId, 5);
+
+        when(folderService.patchFolder(eq(folderId), any(FolderRequest.class), anyString()))
+                .thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                FOLDERS_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()) + "/" + folderId, request, token
+        ));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(folderId),
+                        jsonPath("$.name").value(newName)
+                );
+
+        verify(folderService).patchFolder(eq(folderId), any(FolderRequest.class), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenPatchFolderThrows() throws Exception {
+        // given
+        FolderRequest request = new FolderRequest();
+        request.setName(TestUtil.generateRandomName());
+
+        Long folderId = TestUtil.generateRandomId();
+
+        when(folderService.patchFolder(eq(folderId), any(FolderRequest.class), anyString()))
+                .thenThrow(new RuntimeException("access denied"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                        FOLDERS_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()) + "/" + folderId, request, token
+                ))
+                .andExpect(status().isForbidden());
+
+        verify(folderService).patchFolder(eq(folderId), any(FolderRequest.class), anyString());
+    }
+
+    @Test
     void shouldDeleteFolder() throws Exception {
         // given
         Long folderId = TestUtil.generateRandomId();
