@@ -28,12 +28,7 @@ public class FolderService {
     }
 
     public List<FolderResponse> getFoldersByWorkspace(Long workspaceId, String email) {
-        Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new RuntimeException("Workspace not found or access denied"));
-        User user = util.getUserByEmail(email);
-        if (!workspace.getMembers().contains(user)) {
-            throw new RuntimeException("Workspace not found or access denied");
-        }
+        getWorkspaceWithAccessCheck(workspaceId, email);
 
         List<Folder> folders = folderRepository.findByWorkspaceId(workspaceId);
 
@@ -48,21 +43,14 @@ public class FolderService {
 
     @Transactional
     public FolderResponse createFolder(Long workspaceId, FolderRequest request, String email) {
-        Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new RuntimeException("Workspace not found or access denied"));
-        User user = util.getUserByEmail(email);
-        if (!workspace.getMembers().contains(user)) {
-            throw new RuntimeException("Workspace not found or access denied");
-        }
+        Workspace workspace = getWorkspaceWithAccessCheck(workspaceId, email);
 
         Folder folder = new Folder();
         folder.setName(request.getName());
         folder.setDescription(request.getDescription());
         folder.setWorkspace(workspace);
 
-        Folder savedFolder = folderRepository.save(folder);
-
-        return toResponse(savedFolder);
+        return toResponse(folderRepository.save(folder));
     }
 
     @Transactional
@@ -71,9 +59,7 @@ public class FolderService {
         folder.setName(request.getName());
         folder.setDescription(request.getDescription());
 
-        Folder updatedFolder = folderRepository.save(folder);
-
-        return toResponse(updatedFolder);
+        return toResponse(folderRepository.save(folder));
     }
 
     @Transactional
@@ -99,13 +85,25 @@ public class FolderService {
         folderRepository.delete(getFolderWithAccessCheck(folderId, email));
     }
 
+    private Workspace getWorkspaceWithAccessCheck(Long workspaceId, String email) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new RuntimeException("Workspace not found with Id: " + workspaceId));
+
+        User user = util.getUserByEmail(email);
+        if (!workspace.getMembers().contains(user)) {
+            throw new RuntimeException("Workspace not found or access denied");
+        }
+
+        return workspace;
+    }
+
     private Folder getFolderWithAccessCheck(Long folderId, String email) {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new RuntimeException("Folder not found with Id: " + folderId));
 
         User user = util.getUserByEmail(email);
         if (!folder.getWorkspace().getMembers().contains(user)) {
-            throw new RuntimeException("Folder workspace not found or access denied");
+            throw new RuntimeException("Folder not found or access denied");
         }
 
         return folder;

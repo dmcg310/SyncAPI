@@ -98,7 +98,7 @@ class FolderServiceTest {
         // when / then
         assertThatThrownBy(() -> folderService.getFoldersByWorkspace(workspaceId, testEmail))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
 
         verify(workspaceRepository).findById(workspaceId);
         verifyNoInteractions(folderRepository);
@@ -245,7 +245,7 @@ class FolderServiceTest {
         // when / then
         assertThatThrownBy(() -> folderService.createFolder(workspaceId, request, testEmail))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
 
         verify(workspaceRepository).findById(workspaceId);
         verifyNoInteractions(folderRepository);
