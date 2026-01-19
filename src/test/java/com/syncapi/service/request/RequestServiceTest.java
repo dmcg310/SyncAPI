@@ -1,5 +1,6 @@
 package com.syncapi.service.request;
 
+import com.syncapi.JsonTestUtil;
 import com.syncapi.TestUtil;
 import com.syncapi.dto.request.RequestRequest;
 import com.syncapi.dto.request.RequestResponse;
@@ -18,7 +19,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,11 +31,6 @@ import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @ExtendWith(MockitoExtension.class)
 class RequestServiceTest {
-    private static final String AUTH_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-    private static final String CONTENT_TYPE_HEADER = "Content-Type";
-    private static final String APPLICATION_JSON = "application/json";
-
     @Mock
     private RequestRepository requestRepository;
 
@@ -56,18 +51,19 @@ class RequestServiceTest {
         requestService = new RequestService(requestRepository, folderRepository, util);
 
         testEmail = TestUtil.generateRandomEmail();
-        testUser = createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
-        Workspace testWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testUser);
-        testFolder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
+        testUser = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+        Workspace testWorkspace = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                testUser);
+        testFolder = TestUtil.createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
     }
 
     @Test
     void shouldGetRequestsByFolder() {
         // given
-        Request request1 = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com/1", testFolder);
-        Request request2 = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.POST, "https://api.example.com/2", testFolder);
+        Request request1 = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
+        Request request2 = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.POST, TestUtil.generateRandomUrl(), testFolder);
 
         when(folderRepository.findById(testFolder.getId())).thenReturn(Optional.of(testFolder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -116,11 +112,12 @@ class RequestServiceTest {
     @Test
     void shouldThrowWhenGettingRequestsByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
+        User otherUser = TestUtil.createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
                 TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+        Workspace otherWorkspace = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 otherUser);
-        Folder otherFolder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
+        Folder otherFolder = TestUtil.createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                otherWorkspace);
 
         when(folderRepository.findById(otherFolder.getId())).thenReturn(Optional.of(otherFolder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -136,10 +133,10 @@ class RequestServiceTest {
     @Test
     void shouldGetRequestById() {
         // given
-        Request request = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", testFolder);
-        request.setDescription(TestUtil.generateRandomValue("description"));
-        request.setHeaders(Map.of(AUTH_HEADER, BEARER_PREFIX + "token"));
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
+        request.setDescription(TestUtil.generateRandomDescription());
+        request.setHeaders(JsonTestUtil.authHeader(TestUtil.generateRandomToken()));
 
         when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -174,13 +171,13 @@ class RequestServiceTest {
     @Test
     void shouldThrowWhenGettingRequestByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
+        User otherUser = TestUtil.createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
                 TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+        Workspace otherWorkspace = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 otherUser);
-        Folder otherFolder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
-        Request request = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", otherFolder);
+        Folder otherFolder = TestUtil.createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), otherFolder);
 
         when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -195,9 +192,9 @@ class RequestServiceTest {
     void shouldCreateRequest() {
         // given
         String requestName = TestUtil.generateRandomName();
-        String requestDescription = TestUtil.generateRandomValue("description");
-        String url = "https://api.example.com/users";
-        Map<String, String> headers = Map.of(CONTENT_TYPE_HEADER, APPLICATION_JSON);
+        String requestDescription = TestUtil.generateRandomDescription();
+        String url = TestUtil.generateRandomUrl();
+        Map<String, String> headers = JsonTestUtil.jsonContentTypeHeader();
         Map<String, Object> body = Map.of("name", "John", "age", 30);
         String authType = "bearer";
 
@@ -238,7 +235,7 @@ class RequestServiceTest {
     void shouldCreateMinimalRequest() {
         // given
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
-                "https://api.example.com");
+                TestUtil.generateRandomUrl());
 
         when(folderRepository.findById(testFolder.getId())).thenReturn(Optional.of(testFolder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -264,7 +261,7 @@ class RequestServiceTest {
         // given
         Long folderId = TestUtil.generateRandomId();
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
-                "https://api.example.com");
+                TestUtil.generateRandomUrl());
 
         when(folderRepository.findById(folderId)).thenReturn(Optional.empty());
 
@@ -279,14 +276,15 @@ class RequestServiceTest {
     @Test
     void shouldThrowWhenCreatingRequestByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
+        User otherUser = TestUtil.createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
                 TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+        Workspace otherWorkspace = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 otherUser);
-        Folder otherFolder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
+        Folder otherFolder = TestUtil.createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                otherWorkspace);
 
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
-                "https://api.example.com");
+                TestUtil.generateRandomUrl());
 
         when(folderRepository.findById(otherFolder.getId())).thenReturn(Optional.of(otherFolder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -302,13 +300,13 @@ class RequestServiceTest {
     @Test
     void shouldUpdateRequest() {
         // given
-        Request existingRequest = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://old.example.com", testFolder);
-        existingRequest.setDescription(TestUtil.generateRandomValue("description"));
+        Request existingRequest = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
+        existingRequest.setDescription(TestUtil.generateRandomDescription());
 
         String newName = TestUtil.generateRandomName();
-        String newUrl = "https://new.example.com";
-        String newDescription = TestUtil.generateRandomValue("description");
+        String newUrl = TestUtil.generateRandomUrl();
+        String newDescription = TestUtil.generateRandomDescription();
         RequestRequest updateRequest = new RequestRequest(newName, RequestMethod.POST, newUrl);
         updateRequest.setDescription(newDescription);
         updateRequest.setHeaders(Map.of("X-Custom", "value"));
@@ -333,15 +331,14 @@ class RequestServiceTest {
     @Test
     void shouldClearOptionalFieldsOnUpdate() {
         // given
-        Request existingRequest = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.POST, "https://api.example.com", testFolder);
-        existingRequest.setDescription(TestUtil.generateRandomValue("description"));
-        existingRequest.setHeaders(Map.of(AUTH_HEADER, BEARER_PREFIX + "token"));
+        Request existingRequest = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.POST, TestUtil.generateRandomUrl(), testFolder);
+        existingRequest.setDescription(TestUtil.generateRandomDescription());
+        existingRequest.setHeaders(JsonTestUtil.authHeader(TestUtil.generateRandomToken()));
         existingRequest.setBody(Map.of("key", "value"));
 
         RequestRequest updateRequest = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
-                "https://api.example.com");
-        // Not setting description, headers, body - should clear them
+                TestUtil.generateRandomUrl());
 
         when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -361,7 +358,7 @@ class RequestServiceTest {
         // given
         Long requestId = TestUtil.generateRandomId();
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
-                "https://api.example.com");
+                TestUtil.generateRandomUrl());
 
         when(requestRepository.findById(requestId)).thenReturn(Optional.empty());
 
@@ -376,16 +373,17 @@ class RequestServiceTest {
     @Test
     void shouldThrowWhenUpdatingRequestByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
+        User otherUser = TestUtil.createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
                 TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+        Workspace otherWorkspace = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 otherUser);
-        Folder otherFolder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
-        Request request = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", otherFolder);
+        Folder otherFolder = TestUtil.createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                otherWorkspace);
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), otherFolder);
 
         RequestRequest updateRequest = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.POST,
-                "https://new.example.com");
+                TestUtil.generateRandomUrl());
 
         when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -401,9 +399,9 @@ class RequestServiceTest {
     @Test
     void shouldPatchRequestName() {
         // given
-        String existingDescription = TestUtil.generateRandomValue("description");
-        Request existingRequest = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", testFolder);
+        String existingDescription = TestUtil.generateRandomDescription();
+        Request existingRequest = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
         existingRequest.setDescription(existingDescription);
         String originalUrl = existingRequest.getUrl();
 
@@ -430,8 +428,8 @@ class RequestServiceTest {
     @Test
     void shouldPatchRequestMethod() {
         // given
-        Request existingRequest = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", testFolder);
+        Request existingRequest = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
         String originalName = existingRequest.getName();
 
         RequestRequest patchRequest = new RequestRequest();
@@ -452,10 +450,10 @@ class RequestServiceTest {
     @Test
     void shouldPatchRequestUrl() {
         // given
-        Request existingRequest = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://old.example.com", testFolder);
+        Request existingRequest = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
 
-        String newUrl = "https://new.example.com";
+        String newUrl = TestUtil.generateRandomUrl();
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setUrl(newUrl);
 
@@ -473,10 +471,10 @@ class RequestServiceTest {
     @Test
     void shouldPatchRequestHeaders() {
         // given
-        Request existingRequest = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", testFolder);
+        Request existingRequest = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
 
-        Map<String, String> newHeaders = Map.of(AUTH_HEADER, BEARER_PREFIX + "newtoken");
+        Map<String, String> newHeaders = JsonTestUtil.authHeader(TestUtil.generateRandomToken());
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setHeaders(newHeaders);
 
@@ -494,8 +492,8 @@ class RequestServiceTest {
     @Test
     void shouldPatchRequestBody() {
         // given
-        Request existingRequest = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.POST, "https://api.example.com", testFolder);
+        Request existingRequest = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.POST, TestUtil.generateRandomUrl(), testFolder);
 
         Map<String, Object> newBody = Map.of("userId", 123, "action", "update");
         RequestRequest patchRequest = new RequestRequest();
@@ -515,11 +513,11 @@ class RequestServiceTest {
     @Test
     void shouldPatchMultipleFields() {
         // given
-        Request existingRequest = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://old.example.com", testFolder);
+        Request existingRequest = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
 
         String newName = TestUtil.generateRandomName();
-        String newUrl = "https://new.example.com";
+        String newUrl = TestUtil.generateRandomUrl();
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setName(newName);
         patchRequest.setMethod(RequestMethod.PUT);
@@ -541,9 +539,9 @@ class RequestServiceTest {
     @Test
     void shouldClearDescriptionWithEmptyString() {
         // given
-        Request existingRequest = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", testFolder);
-        existingRequest.setDescription("Original description");
+        Request existingRequest = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
+        existingRequest.setDescription(TestUtil.generateRandomDescription());
 
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setDescription("");
@@ -579,13 +577,14 @@ class RequestServiceTest {
     @Test
     void shouldThrowWhenPatchingRequestByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
+        User otherUser = TestUtil.createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
                 TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+        Workspace otherWorkspace = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 otherUser);
-        Folder otherFolder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
-        Request request = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", otherFolder);
+        Folder otherFolder = TestUtil.createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                otherWorkspace);
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), otherFolder);
 
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setName(TestUtil.generateRandomName());
@@ -604,8 +603,8 @@ class RequestServiceTest {
     @Test
     void shouldDeleteRequest() {
         // given
-        Request request = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", testFolder);
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
 
         when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -635,13 +634,14 @@ class RequestServiceTest {
     @Test
     void shouldThrowWhenDeletingRequestByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
+        User otherUser = TestUtil.createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
                 TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+        Workspace otherWorkspace = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 otherUser);
-        Folder otherFolder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
-        Request request = createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                RequestMethod.GET, "https://api.example.com", otherFolder);
+        Folder otherFolder = TestUtil.createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                otherWorkspace);
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                RequestMethod.GET, TestUtil.generateRandomUrl(), otherFolder);
 
         when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -652,35 +652,5 @@ class RequestServiceTest {
                 .hasMessageContaining("Request not found or access denied");
 
         verify(requestRepository, never()).delete(any());
-    }
-
-    private User createUser(Long id, String email, String name) {
-        User user = new User(email, TestUtil.generateRandomPasswordHash(), name);
-        setField(user, "id", id);
-
-        return user;
-    }
-
-    private Workspace createWorkspace(Long id, String name, User member) {
-        Workspace workspace = new Workspace(name);
-        setField(workspace, "id", id);
-
-        workspace.setMembers(new ArrayList<>(List.of(member)));
-
-        return workspace;
-    }
-
-    private Folder createFolder(Long id, String name, Workspace workspace) {
-        Folder folder = new Folder(name, workspace);
-        setField(folder, "id", id);
-
-        return folder;
-    }
-
-    private Request createRequest(Long id, String name, RequestMethod method, String url, Folder folder) {
-        Request request = new Request(name, method, url, folder);
-        setField(request, "id", id);
-
-        return request;
     }
 }

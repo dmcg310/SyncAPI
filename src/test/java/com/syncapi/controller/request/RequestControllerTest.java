@@ -23,7 +23,6 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -33,8 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = RequestController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class RequestControllerTest {
-    private static final String CONTENT_TYPE_HEADER = "Content-Type";
-    private static final String APPLICATION_JSON = "application/json";
     private static final String REQUESTS_URL = "/api/folders/{folderId}/requests";
     private static final String FOLDER_ID_PLACEHOLDER = "{folderId}";
 
@@ -170,18 +167,15 @@ class RequestControllerTest {
     void shouldCreateRequest() throws Exception {
         // given
         String requestName = TestUtil.generateRandomName();
-        String url = "https://api.example.com/users";
-        String description = TestUtil.generateRandomValue("description");
+        String url = TestUtil.generateRandomUrl();
         RequestRequest request = new RequestRequest(requestName, RequestMethod.POST, url);
-        request.setDescription(description);
-        request.setHeaders(Map.of(CONTENT_TYPE_HEADER, APPLICATION_JSON));
+        request.setDescription(TestUtil.generateRandomDescription());
+        request.setHeaders(JsonTestUtil.jsonContentTypeHeader());
 
         Long requestId = TestUtil.generateRandomId();
-        RequestResponse response = new RequestResponse(
-                requestId, requestName, description, RequestMethod.POST, url,
-                Map.of(CONTENT_TYPE_HEADER, APPLICATION_JSON), null, null, null,
-                null, null, LocalDateTime.now(), folderId
-        );
+        RequestResponse response = new RequestResponse(requestId, requestName, TestUtil.generateRandomDescription(),
+                RequestMethod.POST, url, JsonTestUtil.jsonContentTypeHeader(), null, null, null,
+                null, null, LocalDateTime.now(), folderId);
 
         when(requestService.createRequest(eq(folderId), any(RequestRequest.class), anyString()))
                 .thenReturn(response);
@@ -218,11 +212,13 @@ class RequestControllerTest {
     }
 
     private static Stream<RequestRequest> invalidRequestRequests() {
+        String url = TestUtil.generateRandomUrl();
+
         return Stream.of(
-                new RequestRequest(null, RequestMethod.GET, "https://api.example.com"),
-                new RequestRequest("", RequestMethod.GET, "https://api.example.com"),
-                new RequestRequest("   ", RequestMethod.GET, "https://api.example.com"),
-                new RequestRequest("Test", null, "https://api.example.com"),
+                new RequestRequest(null, RequestMethod.GET, url),
+                new RequestRequest("", RequestMethod.GET, url),
+                new RequestRequest("   ", RequestMethod.GET, url),
+                new RequestRequest("Test", null, url),
                 new RequestRequest("Test", RequestMethod.GET, null),
                 new RequestRequest("Test", RequestMethod.GET, ""),
                 new RequestRequest("Test", RequestMethod.GET, "   ")
@@ -233,7 +229,7 @@ class RequestControllerTest {
     void shouldReturnForbiddenWhenCreateRequestThrows() throws Exception {
         // given
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
-                "https://api.example.com");
+                TestUtil.generateRandomUrl());
 
         when(requestService.createRequest(eq(folderId), any(RequestRequest.class), anyString()))
                 .thenThrow(new RuntimeException("access denied"));
@@ -250,13 +246,12 @@ class RequestControllerTest {
         // given
         Long requestId = TestUtil.generateRandomId();
         String newName = TestUtil.generateRandomName();
-        String newUrl = "https://new.example.com";
+        String newUrl = TestUtil.generateRandomUrl();
         RequestRequest request = new RequestRequest(newName, RequestMethod.PUT, newUrl);
 
-        RequestResponse response = new RequestResponse(
-                requestId, newName, null, RequestMethod.PUT, newUrl,
-                null, null, null, null, null, null, LocalDateTime.now(), folderId
-        );
+        RequestResponse response = new RequestResponse(requestId, newName, null, RequestMethod.PUT, newUrl,
+                null, null, null, null, null, null, LocalDateTime.now(),
+                folderId);
 
         when(requestService.updateRequest(eq(requestId), any(RequestRequest.class), anyString()))
                 .thenReturn(response);
@@ -299,7 +294,7 @@ class RequestControllerTest {
         // given
         Long requestId = TestUtil.generateRandomId();
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
-                "https://api.example.com");
+                TestUtil.generateRandomUrl());
 
         when(requestService.updateRequest(eq(requestId), any(RequestRequest.class), anyString()))
                 .thenThrow(new RuntimeException("access denied"));
@@ -393,10 +388,10 @@ class RequestControllerTest {
         return new RequestResponse(
                 requestId,
                 TestUtil.generateRandomName(),
-                TestUtil.generateRandomValue("description"),
-                RequestMethod.values()[TestUtil.generateRandomInt() % RequestMethod.values().length],
-                "https://api.example.com/" + TestUtil.generateRandomValue("path"),
-                Map.of(CONTENT_TYPE_HEADER, APPLICATION_JSON),
+                TestUtil.generateRandomDescription(),
+                TestUtil.generateRandomRequestMethod(),
+                TestUtil.generateRandomUrl(),
+                JsonTestUtil.jsonContentTypeHeader(),
                 null,
                 null,
                 null,

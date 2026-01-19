@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.syncapi.TestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class RequestRepositoryTest extends AbstractIntegrationTest {
@@ -47,8 +46,8 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         workspaceRepository.deleteAll();
         userRepository.deleteAll();
 
-        User user = userRepository.save(new User(generateRandomEmail(), generateRandomPasswordHash(),
-                generateRandomName()));
+        User user = userRepository.save(new User(TestUtil.generateRandomEmail(), TestUtil.generateRandomPasswordHash(),
+                TestUtil.generateRandomName()));
 
         Workspace workspace = new Workspace(TestUtil.generateRandomName());
         workspace.getMembers().add(user);
@@ -57,10 +56,10 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         folder = new Folder(TestUtil.generateRandomName(), workspace);
         folder = folderRepository.save(folder);
 
-        request1 = new Request("Get Users", RequestMethod.GET, "https://api.example.com/users", folder);
+        request1 = new Request(TestUtil.generateRandomName(), RequestMethod.GET, TestUtil.generateRandomUrl(), folder);
         requestRepository.save(request1);
 
-        request2 = new Request("Create User", RequestMethod.POST, "https://api.example.com/users", folder);
+        request2 = new Request(TestUtil.generateRandomName(), RequestMethod.POST, TestUtil.generateRandomUrl(), folder);
 
         Map<String, String> headers = new HashMap<>();
         headers.put(CONTENT_TYPE_HEADER, APPLICATION_JSON);
@@ -77,9 +76,9 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldSaveRequest() {
         // given
-        String name = "Delete User";
+        String name = TestUtil.generateRandomName();
         RequestMethod method = RequestMethod.DELETE;
-        String url = "https://api.example.com/users/1";
+        String url = TestUtil.generateRandomUrl();
         Request request = new Request(name, method, url, folder);
 
         // when
@@ -97,7 +96,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldSaveRequestWithJsonFields() {
         // given
-        Request request = new Request("Update User", RequestMethod.PUT, "https://api.example.com/users/1", folder);
+        Request request = new Request(TestUtil.generateRandomName(), RequestMethod.PUT, TestUtil.generateRandomUrl(), folder);
 
         String authorizationValue = BEARER_PREFIX + TestUtil.generateRandomToken();
         Map<String, String> headers = new HashMap<>();
@@ -112,7 +111,7 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
         body.put("age", bodyAgeValue);
         request.setBody(body);
 
-        String authTypeValue = TestUtil.generateRandomValue("authType");
+        String authTypeValue = TestUtil.generateRandomValue();
         String authTokenValue = TestUtil.generateRandomToken();
         Map<String, String> authConfig = new HashMap<>();
         authConfig.put("type", authTypeValue);
@@ -124,8 +123,8 @@ class RequestRepositoryTest extends AbstractIntegrationTest {
 
         // then
         assertThat(saved.getHeaders()).hasSize(headers.size());
-        assertThat(saved.getHeaders().get("Authorization")).isEqualTo(authorizationValue);
-        assertThat(saved.getHeaders().get("Content-Type")).isEqualTo(APPLICATION_JSON);
+        assertThat(saved.getHeaders().get(AUTH_HEADER)).isEqualTo(authorizationValue);
+        assertThat(saved.getHeaders().get(CONTENT_TYPE_HEADER)).isEqualTo(APPLICATION_JSON);
 
         assertThat(saved.getBody()).hasSize(body.size());
         assertThat(saved.getBody().get("name")).isEqualTo(bodyNameValue);

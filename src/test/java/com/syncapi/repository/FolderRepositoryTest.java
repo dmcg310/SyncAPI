@@ -1,6 +1,7 @@
 package com.syncapi.repository;
 
 import com.syncapi.AbstractIntegrationTest;
+import com.syncapi.TestUtil;
 import com.syncapi.entity.Folder;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-import static com.syncapi.TestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class FolderRepositoryTest extends AbstractIntegrationTest {
@@ -32,24 +32,24 @@ class FolderRepositoryTest extends AbstractIntegrationTest {
         workspaceRepository.deleteAll();
         userRepository.deleteAll();
 
-        User user = userRepository.save(new User(generateRandomEmail(), generateRandomPasswordHash(),
-                generateRandomName()));
+        User user = userRepository.save(new User(TestUtil.generateRandomEmail(), TestUtil.generateRandomPasswordHash(),
+                TestUtil.generateRandomName()));
 
-        workspace = new Workspace("Test Workspace");
+        workspace = new Workspace(TestUtil.generateRandomName());
         workspace.getMembers().add(user);
         workspace = workspaceRepository.save(workspace);
 
-        folder1 = new Folder("Folder 1", workspace);
+        folder1 = new Folder(TestUtil.generateRandomName(), workspace);
         folderRepository.save(folder1);
 
-        folder2 = new Folder("Folder 2", workspace);
+        folder2 = new Folder(TestUtil.generateRandomName(), workspace);
         folderRepository.save(folder2);
     }
 
     @Test
     void shouldSaveFolder() {
         // given
-        String folderName = "New Folder";
+        String folderName = TestUtil.generateRandomName();
 
         // when
         Folder saved = folderRepository.save(new Folder(folderName, workspace));
@@ -75,7 +75,7 @@ class FolderRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldReturnEmptyListWhenWorkspaceHasNoFolders() {
         // given
-        Workspace emptyWorkspace = workspaceRepository.save(new Workspace("Empty Workspace"));
+        Workspace emptyWorkspace = workspaceRepository.save(new Workspace(TestUtil.generateRandomName()));
 
         // when
         List<Folder> folders = folderRepository.findByWorkspaceId(emptyWorkspace.getId());
@@ -91,13 +91,13 @@ class FolderRepositoryTest extends AbstractIntegrationTest {
 
         // then
         assertThat(found).isNotNull();
-        assertThat(found.getName()).isEqualTo("Folder 1");
+        assertThat(found.getName()).isEqualTo(folder1.getName());
     }
 
     @Test
     void shouldReturnNullWhenFolderNotInWorkspace() {
         // given
-        Workspace anotherWorkspace = workspaceRepository.save(new Workspace("Another Workspace"));
+        Workspace anotherWorkspace = workspaceRepository.save(new Workspace(TestUtil.generateRandomName()));
 
         // when
         Folder found = folderRepository.findByIdAndWorkspaceId(folder1.getId(), anotherWorkspace.getId());

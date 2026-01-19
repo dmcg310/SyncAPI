@@ -63,7 +63,7 @@ class UtilTest {
     void shouldGetUserByEmail() {
         // given
         String email = TestUtil.generateRandomEmail();
-        User user = new User(email, TestUtil.generateRandomPasswordHash(), TestUtil.generateRandomName());
+        User user = TestUtil.createUser(TestUtil.generateRandomId(), email, TestUtil.generateRandomName());
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
         // when
@@ -95,8 +95,7 @@ class UtilTest {
     void shouldGetUserById() {
         // given
         Long userId = TestUtil.generateRandomId();
-        User user = new User(TestUtil.generateRandomEmail(), TestUtil.generateRandomPasswordHash(),
-                TestUtil.generateRandomName());
+        User user = TestUtil.createRandomUser();
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // when
@@ -124,8 +123,8 @@ class UtilTest {
     }
 
     private void setAuthentication(String email) {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(email, null, List.of());
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null,
+                List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

@@ -169,13 +169,13 @@ class FolderControllerTest {
     void shouldCreateFolder() throws Exception {
         // given
         String folderName = TestUtil.generateRandomName();
-        String folderDescription = TestUtil.generateRandomValue("description");
+        String folderDescription = TestUtil.generateRandomDescription();
         FolderRequest request = new FolderRequest(folderName, folderDescription);
 
         Long folderId = TestUtil.generateRandomId();
-        FolderResponse response = new FolderResponse(
-                folderId, folderName, folderDescription, LocalDateTime.now(), workspaceId, 0
-        );
+        int requestCount = TestUtil.generateRandomInt();
+        FolderResponse response = new FolderResponse(folderId, folderName, folderDescription, LocalDateTime.now(),
+                workspaceId, requestCount);
 
         when(folderService.createFolder(eq(workspaceId), any(FolderRequest.class), anyString()))
                 .thenReturn(response);
@@ -193,7 +193,7 @@ class FolderControllerTest {
                         jsonPath("$.name").value(folderName),
                         jsonPath("$.description").value(folderDescription),
                         jsonPath("$.workspaceId").value(workspaceId),
-                        jsonPath("$.requestCount").value(0)
+                        jsonPath("$.requestCount").value(requestCount)
                 );
 
         verify(folderService).createFolder(eq(workspaceId), any(FolderRequest.class), anyString());
@@ -206,9 +206,8 @@ class FolderControllerTest {
         FolderRequest request = new FolderRequest(folderName);
 
         Long folderId = TestUtil.generateRandomId();
-        FolderResponse response = new FolderResponse(
-                folderId, folderName, null, LocalDateTime.now(), workspaceId, 0
-        );
+        FolderResponse response = new FolderResponse(folderId, folderName, null, LocalDateTime.now(),
+                workspaceId, TestUtil.generateRandomInt());
 
         when(folderService.createFolder(eq(workspaceId), any(FolderRequest.class), anyString()))
                 .thenReturn(response);
@@ -268,12 +267,11 @@ class FolderControllerTest {
         // given
         Long folderId = TestUtil.generateRandomId();
         String newName = TestUtil.generateRandomName();
-        String newDescription = TestUtil.generateRandomValue("description");
+        String newDescription = TestUtil.generateRandomDescription();
         FolderRequest request = new FolderRequest(newName, newDescription);
 
-        FolderResponse response = new FolderResponse(
-                folderId, newName, newDescription, LocalDateTime.now(), workspaceId, 3
-        );
+        FolderResponse response = new FolderResponse(folderId, newName, newDescription, LocalDateTime.now(),
+                workspaceId, TestUtil.generateRandomInt());
 
         when(folderService.updateFolder(eq(folderId), any(FolderRequest.class), anyString()))
                 .thenReturn(response);
@@ -336,8 +334,8 @@ class FolderControllerTest {
         request.setName(newName);
 
         Long folderId = TestUtil.generateRandomId();
-        FolderResponse response = new FolderResponse(folderId, newName,
-                TestUtil.generateRandomValue("description"), LocalDateTime.now(), workspaceId, 5);
+        FolderResponse response = new FolderResponse(folderId, newName, TestUtil.generateRandomDescription(),
+                LocalDateTime.now(), workspaceId, TestUtil.generateRandomInt());
 
         when(folderService.patchFolder(eq(folderId), any(FolderRequest.class), anyString()))
                 .thenReturn(response);
@@ -419,10 +417,10 @@ class FolderControllerTest {
         return new FolderResponse(
                 folderId,
                 TestUtil.generateRandomName(),
-                TestUtil.generateRandomValue("description"),
+                TestUtil.generateRandomDescription(),
                 LocalDateTime.now(),
                 workspaceId,
-                TestUtil.generateRandomInt() % 10
+                TestUtil.generateRandomInt()
         );
     }
 }

@@ -21,11 +21,8 @@ class JwtServiceTest {
 
     @Test
     void shouldGenerateToken() {
-        // given
-        String email = TestUtil.generateRandomEmail();
-
         // when
-        String token = jwtService.generateToken(email);
+        String token = jwtService.generateToken(TestUtil.generateRandomEmail());
 
         // then
         assertThat(token).isNotBlank();
@@ -108,7 +105,7 @@ class JwtServiceTest {
     @Test
     void shouldRejectTokenSignedWithDifferentSecret() {
         // given
-        JwtService otherService = new JwtService(TestUtil.generateRandomSecret(), ONE_HOUR_MS);
+        JwtService otherService = new JwtService(TestUtil.generateRandomSecretKey(), ONE_HOUR_MS);
         String email = TestUtil.generateRandomEmail();
         String token = otherService.generateToken(email);
 
@@ -121,10 +118,7 @@ class JwtServiceTest {
 
     @Test
     void shouldRejectInvalidTokenInValidation() {
-        // when
-        boolean valid = jwtService.isValid(TestUtil.generateRandomToken(), TestUtil.generateRandomEmail());
-
-        // then
-        assertThat(valid).isFalse();
+        // when / then
+        assertThat(jwtService.isValid(TestUtil.generateRandomToken(), TestUtil.generateRandomEmail())).isFalse();
     }
 }

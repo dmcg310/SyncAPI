@@ -63,17 +63,17 @@ class WorkspaceControllerTest {
         // given
         Long firstWorkspaceId = TestUtil.generateRandomId();
         String firstWorkspaceName = TestUtil.generateRandomName();
-        String firstWorkspaceDescription = TestUtil.generateRandomValue("description");
-        int firstMemberCount = 2;
-        int firstFolderCount = 5;
+        String firstWorkspaceDescription = TestUtil.generateRandomDescription();
+        int firstMemberCount = TestUtil.generateRandomInt();
+        int firstFolderCount = TestUtil.generateRandomInt();
         WorkspaceResponse firstWorkspaceResponse = new WorkspaceResponse(firstWorkspaceId, firstWorkspaceName,
                 firstWorkspaceDescription, LocalDateTime.now(), firstMemberCount, firstFolderCount);
 
         Long secondWorkspaceId = TestUtil.generateRandomId();
         String secondWorkspaceName = TestUtil.generateRandomName();
-        String secondWorkspaceDescription = TestUtil.generateRandomValue("description");
-        int secondMemberCount = 1;
-        int secondFolderCount = 0;
+        String secondWorkspaceDescription = TestUtil.generateRandomDescription();
+        int secondMemberCount = TestUtil.generateRandomInt();
+        int secondFolderCount = TestUtil.generateRandomInt();
         WorkspaceResponse secondWorkspaceResponse = new WorkspaceResponse(secondWorkspaceId, secondWorkspaceName,
                 secondWorkspaceDescription, LocalDateTime.now(), secondMemberCount, secondFolderCount);
 
@@ -112,9 +112,9 @@ class WorkspaceControllerTest {
         // given
         Long workspaceId = TestUtil.generateRandomId();
         String workspaceName = TestUtil.generateRandomName();
-        String workspaceDescription = TestUtil.generateRandomValue("description");
-        int memberCount = 3;
-        int folderCount = 7;
+        String workspaceDescription = TestUtil.generateRandomDescription();
+        int memberCount = TestUtil.generateRandomInt();
+        int folderCount = TestUtil.generateRandomInt();
         WorkspaceResponse workspaceResponse = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
                 LocalDateTime.now(), memberCount, folderCount);
 
@@ -157,9 +157,9 @@ class WorkspaceControllerTest {
         WorkspaceRequest request = new WorkspaceRequest(workspaceName);
 
         Long workspaceId = TestUtil.generateRandomId();
-        String workspaceDescription = TestUtil.generateRandomValue("description");
-        int memberCount = 1;
-        int folderCount = 0;
+        String workspaceDescription = TestUtil.generateRandomDescription();
+        int memberCount = TestUtil.generateRandomInt();
+        int folderCount = TestUtil.generateRandomInt();
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
                 LocalDateTime.now(), memberCount, folderCount);
 
@@ -208,7 +208,7 @@ class WorkspaceControllerTest {
 
         Long workspaceId = TestUtil.generateRandomId();
         String updatedWorkspaceName = TestUtil.generateRandomName();
-        String workspaceDescription = TestUtil.generateRandomValue("description");
+        String workspaceDescription = TestUtil.generateRandomDescription();
         int memberCount = 2;
         int folderCount = 4;
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, updatedWorkspaceName, workspaceDescription,
@@ -259,9 +259,9 @@ class WorkspaceControllerTest {
 
         Long workspaceId = TestUtil.generateRandomId();
         String updatedWorkspaceName = TestUtil.generateRandomName();
-        String workspaceDescription = TestUtil.generateRandomValue("description");
-        int memberCount = 2;
-        int folderCount = 4;
+        String workspaceDescription = TestUtil.generateRandomDescription();
+        int memberCount = TestUtil.generateRandomInt();
+        int folderCount = TestUtil.generateRandomInt();
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, updatedWorkspaceName, workspaceDescription,
                 LocalDateTime.now(), memberCount, folderCount);
 
@@ -337,9 +337,9 @@ class WorkspaceControllerTest {
 
         Long workspaceId = TestUtil.generateRandomId();
         String workspaceName = TestUtil.generateRandomName();
-        String workspaceDescription = TestUtil.generateRandomValue("description");
-        int memberCount = 2;
-        int folderCount = 1;
+        String workspaceDescription = TestUtil.generateRandomDescription();
+        int memberCount = TestUtil.generateRandomInt();
+        int folderCount = TestUtil.generateRandomInt();
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
                 LocalDateTime.now(), memberCount, folderCount);
 
@@ -391,7 +391,7 @@ class WorkspaceControllerTest {
 
         Long workspaceId = TestUtil.generateRandomId();
         String workspaceName = TestUtil.generateRandomName();
-        String workspaceDescription = TestUtil.generateRandomValue("description");
+        String workspaceDescription = TestUtil.generateRandomDescription();
         int memberCount = 1;
         int folderCount = 1;
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,

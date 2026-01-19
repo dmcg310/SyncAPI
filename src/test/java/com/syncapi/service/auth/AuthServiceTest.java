@@ -82,8 +82,8 @@ class AuthServiceTest {
     void shouldThrowWhenEmailAlreadyExists() {
         // given
         String email = TestUtil.generateRandomEmail();
-        RegisterRequest request =
-                new RegisterRequest(TestUtil.generateRandomName(), email, TestUtil.generateRandomPassword());
+        RegisterRequest request = new RegisterRequest(TestUtil.generateRandomName(), email,
+                TestUtil.generateRandomPassword());
 
         when(userRepository.existsByEmail(email)).thenReturn(true);
 
@@ -149,7 +149,7 @@ class AuthServiceTest {
     void shouldThrowWhenPasswordDoesNotMatch() {
         // given
         String email = TestUtil.generateRandomEmail();
-        User user = new User(email, TestUtil.generateRandomPasswordHash(), TestUtil.generateRandomName());
+        User user = TestUtil.createUser(TestUtil.generateRandomId(), email, TestUtil.generateRandomName());
 
         String wrongPassword = TestUtil.generateRandomPassword();
         LoginRequest request = new LoginRequest(email, wrongPassword);

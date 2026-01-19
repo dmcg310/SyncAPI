@@ -1,6 +1,7 @@
 package com.syncapi.repository;
 
 import com.syncapi.AbstractIntegrationTest;
+import com.syncapi.TestUtil;
 import com.syncapi.entity.Environment;
 import com.syncapi.entity.EnvironmentVariable;
 import com.syncapi.entity.User;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Optional;
 
-import static com.syncapi.TestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
@@ -34,18 +34,18 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
         workspaceRepository.deleteAll();
         userRepository.deleteAll();
 
-        User user = userRepository.save(new User(generateRandomEmail(), generateRandomPasswordHash(),
-                generateRandomName()));
+        User user = userRepository.save(new User(TestUtil.generateRandomEmail(), TestUtil.generateRandomPasswordHash(),
+                TestUtil.generateRandomName()));
 
-        workspace = new Workspace("Test Workspace");
+        workspace = new Workspace(TestUtil.generateRandomName());
         workspace.getMembers().add(user);
         workspace = workspaceRepository.save(workspace);
 
-        environment1 = new Environment("Development", workspace);
+        environment1 = new Environment(TestUtil.generateRandomName(), workspace);
         environment1.setActive(true);
         environmentRepository.save(environment1);
 
-        environment2 = new Environment("Production", workspace);
+        environment2 = new Environment(TestUtil.generateRandomName(), workspace);
         environment2.setActive(false);
         environmentRepository.save(environment2);
     }
@@ -53,7 +53,7 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldSaveEnvironment() {
         // given
-        String environmentName = "Staging";
+        String environmentName = TestUtil.generateRandomName();
         Environment environment = new Environment(environmentName, workspace);
 
         // when
@@ -80,7 +80,7 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldReturnEmptyListWhenWorkspaceHasNoEnvironments() {
         // given
-        Workspace emptyWorkspace = workspaceRepository.save(new Workspace("Empty Workspace"));
+        Workspace emptyWorkspace = workspaceRepository.save(new Workspace(TestUtil.generateRandomName()));
 
         // when
         List<Environment> environments = environmentRepository.findByWorkspaceId(emptyWorkspace.getId());
@@ -116,14 +116,15 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldSaveEnvironmentWithVariables() {
         // given
-        Environment environment = new Environment("Test Env", workspace);
+        Environment environment = new Environment(TestUtil.generateRandomName(), workspace);
 
-        EnvironmentVariable var1 = new EnvironmentVariable("API_URL", "https://api.example.com", environment);
+        EnvironmentVariable var1 = new EnvironmentVariable(TestUtil.generateRandomKey(), TestUtil.generateRandomValue(),
+                environment);
         environment.getVariables().add(var1);
 
-        EnvironmentVariable var2 = new EnvironmentVariable("API_KEY", "secret-key", environment);
+        EnvironmentVariable var2 = new EnvironmentVariable(TestUtil.generateRandomKey(), TestUtil.generateRandomValue(),
+                environment);
         environment.getVariables().add(var2);
-
 
         // when
         Environment saved = environmentRepository.save(environment);
@@ -135,9 +136,10 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
     @Test
     void shouldCascadeDeleteVariables() {
         // given
-        Environment environment = new Environment("Test Env", workspace);
+        Environment environment = new Environment(TestUtil.generateRandomName(), workspace);
 
-        EnvironmentVariable var = new EnvironmentVariable("KEY", "value", environment);
+        EnvironmentVariable var = new EnvironmentVariable(TestUtil.generateRandomKey(), TestUtil.generateRandomValue(),
+                environment);
         environment.getVariables().add(var);
 
         environment = environmentRepository.save(environment);

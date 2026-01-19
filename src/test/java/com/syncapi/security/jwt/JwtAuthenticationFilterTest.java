@@ -1,8 +1,10 @@
 package com.syncapi.security.jwt;
 
+import com.syncapi.JsonTestUtil;
 import com.syncapi.TestUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,9 +26,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationFilterTest {
-    private static final String AUTH_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-
     @Mock
     private JwtService jwtService;
 
@@ -55,7 +54,8 @@ class JwtAuthenticationFilterTest {
     void shouldAuthenticateWithValidToken() throws ServletException, IOException {
         // given
         String token = TestUtil.generateRandomToken();
-        request.addHeader(AUTH_HEADER, BEARER_PREFIX + token);
+        Pair<String, String> authHeader = JsonTestUtil.authHeaderPair(token);
+        request.addHeader(authHeader.getKey(), authHeader.getValue());
 
         String email = TestUtil.generateRandomEmail();
         when(jwtService.extractEmail(token)).thenReturn(Optional.of(email));
@@ -75,7 +75,8 @@ class JwtAuthenticationFilterTest {
     void shouldNotAuthenticateWithInvalidToken() throws ServletException, IOException {
         // given
         String token = TestUtil.generateRandomToken();
-        request.addHeader(AUTH_HEADER, BEARER_PREFIX + token);
+        Pair<String, String> authHeader = JsonTestUtil.authHeaderPair(token);
+        request.addHeader(authHeader.getKey(), authHeader.getValue());
 
         when(jwtService.extractEmail(token)).thenReturn(Optional.empty());
 
@@ -94,7 +95,8 @@ class JwtAuthenticationFilterTest {
     void shouldNotAuthenticateWhenTokenValidationFails() throws ServletException, IOException {
         // given
         String token = TestUtil.generateRandomToken();
-        request.addHeader(AUTH_HEADER, BEARER_PREFIX + token);
+        Pair<String, String> authHeader = JsonTestUtil.authHeaderPair(token);
+        request.addHeader(authHeader.getKey(), authHeader.getValue());
 
         String email = TestUtil.generateRandomEmail();
         when(jwtService.extractEmail(token)).thenReturn(Optional.of(email));
@@ -124,7 +126,7 @@ class JwtAuthenticationFilterTest {
     @Test
     void shouldIgnoreNonBearerAuthHeader() throws ServletException, IOException {
         // given
-        request.addHeader(AUTH_HEADER, "Basic " + TestUtil.generateRandomToken());
+        request.addHeader(JsonTestUtil.AUTH_HEADER, JsonTestUtil.BASIC_PREFIX + TestUtil.generateRandomToken());
 
         // when
         filter.doFilterInternal(request, response, filterChain);
@@ -140,13 +142,14 @@ class JwtAuthenticationFilterTest {
     void shouldNotReauthenticateIfAlreadyAuthenticated() throws ServletException, IOException {
         // given
         String token = TestUtil.generateRandomToken();
-        request.addHeader(AUTH_HEADER, BEARER_PREFIX + token);
+        Pair<String, String> authHeader = JsonTestUtil.authHeaderPair(token);
+        request.addHeader(authHeader.getKey(), authHeader.getValue());
 
         String unchangedEmail = TestUtil.generateRandomEmail();
 
         // pre-authenticate
-        UsernamePasswordAuthenticationToken existingAuth =
-                new UsernamePasswordAuthenticationToken(unchangedEmail, null, List.of());
+        UsernamePasswordAuthenticationToken existingAuth = new UsernamePasswordAuthenticationToken(unchangedEmail,
+                null, List.of());
         SecurityContextHolder.getContext().setAuthentication(existingAuth);
 
         when(jwtService.extractEmail(token)).thenReturn(Optional.of(TestUtil.generateRandomEmail()));
@@ -155,6 +158,7 @@ class JwtAuthenticationFilterTest {
         filter.doFilterInternal(request, response, filterChain);
 
         // then
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo(unchangedEmail);
 
         verify(jwtService, never()).isValid(anyString(), anyString());

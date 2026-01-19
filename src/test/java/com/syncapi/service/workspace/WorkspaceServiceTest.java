@@ -15,7 +15,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,14 +42,16 @@ class WorkspaceServiceTest {
         workspaceService = new WorkspaceService(workspaceRepository, util);
 
         testEmail = TestUtil.generateRandomEmail();
-        testUser = createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+        testUser = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
     }
 
     @Test
     void shouldGetUserWorkspaces() {
         // given
-        Workspace workspace1 = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testUser);
-        Workspace workspace2 = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testUser);
+        Workspace workspace1 = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                testUser);
+        Workspace workspace2 = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
+                testUser);
 
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
         when(workspaceRepository.findByMemberId(testUser.getId())).thenReturn(List.of(workspace1, workspace2));
@@ -84,7 +85,7 @@ class WorkspaceServiceTest {
     void shouldGetWorkspaceById() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -115,9 +116,8 @@ class WorkspaceServiceTest {
     void shouldThrowWhenUserNotMemberOfWorkspace() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -160,8 +160,8 @@ class WorkspaceServiceTest {
     void shouldUpdateWorkspace() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(),
-                TestUtil.generateRandomValue("description"), testUser);
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        workspace.setDescription(TestUtil.generateRandomDescription());
 
         String newName = TestUtil.generateRandomName();
         WorkspaceRequest request = new WorkspaceRequest(newName);
@@ -201,9 +201,8 @@ class WorkspaceServiceTest {
     void shouldThrowWhenUpdatingWorkspaceByNonMember() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -221,9 +220,9 @@ class WorkspaceServiceTest {
     void shouldPatchWorkspaceName() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        String workspaceDescription = TestUtil.generateRandomValue("description");
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), workspaceDescription,
-                testUser);
+        String workspaceDescription = TestUtil.generateRandomDescription();
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        workspace.setDescription(workspaceDescription);
 
         String newName = TestUtil.generateRandomName();
         WorkspaceRequest request = new WorkspaceRequest(newName);
@@ -247,9 +246,9 @@ class WorkspaceServiceTest {
         // given
         Long workspaceId = TestUtil.generateRandomId();
         String originalName = TestUtil.generateRandomName();
-        Workspace workspace = createWorkspace(workspaceId, originalName, testUser);
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, originalName, testUser);
 
-        String newDescription = TestUtil.generateRandomValue("description");
+        String newDescription = TestUtil.generateRandomDescription();
         WorkspaceRequest request = new WorkspaceRequest();
         request.setDescription(newDescription);
 
@@ -271,10 +270,10 @@ class WorkspaceServiceTest {
     void shouldPatchWorkspaceBothFields() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
 
         String newName = TestUtil.generateRandomName();
-        String newDescription = TestUtil.generateRandomValue("description");
+        String newDescription = TestUtil.generateRandomDescription();
         WorkspaceRequest request = new WorkspaceRequest(newName, newDescription);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
@@ -295,8 +294,8 @@ class WorkspaceServiceTest {
     void shouldClearDescriptionWithEmptyString() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(),
-                TestUtil.generateRandomValue("description"), testUser);
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        workspace.setDescription(TestUtil.generateRandomDescription());
 
         WorkspaceRequest request = new WorkspaceRequest();
         request.setDescription(""); // empty string should clear (set to null)
@@ -335,9 +334,8 @@ class WorkspaceServiceTest {
     void shouldThrowWhenPatchingWorkspaceByNonMember() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
 
         WorkspaceRequest request = new WorkspaceRequest(TestUtil.generateRandomName());
 
@@ -356,7 +354,7 @@ class WorkspaceServiceTest {
     void shouldDeleteWorkspace() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -388,9 +386,8 @@ class WorkspaceServiceTest {
     void shouldThrowWhenDeletingWorkspaceByNonMember() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -406,12 +403,11 @@ class WorkspaceServiceTest {
     @Test
     void shouldAddMember() {
         // given
-        Long workspaceId = TestUtil.generateRandomId();
-
         String newMemberEmail = TestUtil.generateRandomEmail();
-        User newMember = createUser(TestUtil.generateRandomId(), newMemberEmail, TestUtil.generateRandomName());
+        User newMember = TestUtil.createUser(TestUtil.generateRandomId(), newMemberEmail, TestUtil.generateRandomName());
 
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        Long workspaceId = TestUtil.generateRandomId();
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -451,9 +447,8 @@ class WorkspaceServiceTest {
     void shouldThrowWhenAddingMemberByNonMember() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -472,8 +467,7 @@ class WorkspaceServiceTest {
     void shouldThrowWhenAddingExistingMember() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
         AddMemberRequest request = new AddMemberRequest(testEmail);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
@@ -491,10 +485,9 @@ class WorkspaceServiceTest {
     void shouldRemoveMember() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        User otherMember = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace workspace = createWorkspaceWithMembers(workspaceId, TestUtil.generateRandomName(),
-                testUser, otherMember);
+        User otherMember = TestUtil.createRandomUser();
+        Workspace workspace = TestUtil.createWorkspaceWithMembers(workspaceId, TestUtil.generateRandomName(), testUser,
+                otherMember);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -531,8 +524,8 @@ class WorkspaceServiceTest {
     void shouldThrowWhenRemovingMemberByNonMember() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(), TestUtil.generateRandomName());
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), otherUser);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -549,10 +542,9 @@ class WorkspaceServiceTest {
     void shouldThrowWhenRemovingNonMember() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
 
-        User nonMember = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
+        User nonMember = TestUtil.createRandomUser();
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -570,7 +562,7 @@ class WorkspaceServiceTest {
     void shouldThrowWhenRemovingLastMember() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        Workspace workspace = createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
+        Workspace workspace = TestUtil.createWorkspace(workspaceId, TestUtil.generateRandomName(), testUser);
 
         when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.of(workspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -582,40 +574,5 @@ class WorkspaceServiceTest {
                 .hasMessageContaining("Cannot remove the last member");
 
         verify(workspaceRepository, never()).save(any());
-    }
-
-    private User createUser(Long id, String email, String name) {
-        User user = new User(email, TestUtil.generateRandomPasswordHash(), name);
-        setField(user, "id", id);
-
-        return user;
-    }
-
-    private Workspace createWorkspace(Long id, String name, User member) {
-        Workspace workspace = new Workspace(name);
-        setField(workspace, "id", id);
-
-        workspace.setMembers(new ArrayList<>(List.of(member)));
-
-        return workspace;
-    }
-
-    private Workspace createWorkspace(Long id, String name, String description, User member) {
-        Workspace workspace = new Workspace(name);
-        setField(workspace, "id", id);
-
-        workspace.setDescription(description);
-        workspace.setMembers(new ArrayList<>(List.of(member)));
-
-        return workspace;
-    }
-
-    private Workspace createWorkspaceWithMembers(Long id, String name, User... members) {
-        Workspace workspace = new Workspace(name);
-        setField(workspace, "id", id);
-
-        workspace.setMembers(new ArrayList<>(List.of(members)));
-
-        return workspace;
     }
 }

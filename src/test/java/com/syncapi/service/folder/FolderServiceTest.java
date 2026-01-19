@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,15 +48,15 @@ class FolderServiceTest {
         folderService = new FolderService(folderRepository, workspaceRepository, util);
 
         testEmail = TestUtil.generateRandomEmail();
-        testUser = createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
-        testWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testUser);
+        testUser = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+        testWorkspace = TestUtil.createRandomWorkspace(testUser);
     }
 
     @Test
     void shouldGetFoldersByWorkspace() {
         // given
-        Folder folder1 = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
-        Folder folder2 = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
+        Folder folder1 = TestUtil.createRandomFolder(testWorkspace);
+        Folder folder2 = TestUtil.createRandomFolder(testWorkspace);
 
         when(workspaceRepository.findById(testWorkspace.getId())).thenReturn(Optional.of(testWorkspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -107,10 +107,8 @@ class FolderServiceTest {
     @Test
     void shouldThrowWhenGettingFoldersByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                otherUser);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
 
         when(workspaceRepository.findById(otherWorkspace.getId())).thenReturn(Optional.of(otherWorkspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -126,8 +124,8 @@ class FolderServiceTest {
     @Test
     void shouldGetFolderById() {
         // given
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
-        folder.setDescription(TestUtil.generateRandomValue("description"));
+        Folder folder = TestUtil.createRandomFolder(testWorkspace);
+        folder.setDescription(TestUtil.generateRandomDescription());
 
         when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -163,11 +161,9 @@ class FolderServiceTest {
     @Test
     void shouldThrowWhenGettingFolderByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                otherUser);
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
+        Folder folder = TestUtil.createRandomFolder(otherWorkspace);
 
         when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -184,16 +180,12 @@ class FolderServiceTest {
     void shouldCreateFolder() {
         // given
         String folderName = TestUtil.generateRandomName();
-        String folderDescription = TestUtil.generateRandomValue("description");
+        String folderDescription = TestUtil.generateRandomDescription();
         FolderRequest request = new FolderRequest(folderName, folderDescription);
 
         when(workspaceRepository.findById(testWorkspace.getId())).thenReturn(Optional.of(testWorkspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
-        when(folderRepository.save(any(Folder.class))).thenAnswer(invocation -> {
-            Folder folder = invocation.getArgument(0);
-            setField(folder, "id", TestUtil.generateRandomId());
-            return folder;
-        });
+        when(folderRepository.save(any(Folder.class))).thenAnswer(this::saveFolderStubbing);
 
         // when
         FolderResponse result = folderService.createFolder(testWorkspace.getId(), request, testEmail);
@@ -220,11 +212,7 @@ class FolderServiceTest {
 
         when(workspaceRepository.findById(testWorkspace.getId())).thenReturn(Optional.of(testWorkspace));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
-        when(folderRepository.save(any(Folder.class))).thenAnswer(invocation -> {
-            Folder folder = invocation.getArgument(0);
-            setField(folder, "id", TestUtil.generateRandomId());
-            return folder;
-        });
+        when(folderRepository.save(any(Folder.class))).thenAnswer(this::saveFolderStubbing);
 
         // when
         FolderResponse result = folderService.createFolder(testWorkspace.getId(), request, testEmail);
@@ -254,10 +242,8 @@ class FolderServiceTest {
     @Test
     void shouldThrowWhenCreatingFolderByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                otherUser);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
         when(workspaceRepository.findById(otherWorkspace.getId())).thenReturn(Optional.of(otherWorkspace));
@@ -275,10 +261,10 @@ class FolderServiceTest {
     void shouldUpdateFolder() {
         // given
         String newName = TestUtil.generateRandomName();
-        String newDescription = TestUtil.generateRandomValue("description");
+        String newDescription = TestUtil.generateRandomDescription();
         FolderRequest request = new FolderRequest(newName, newDescription);
 
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
+        Folder folder = TestUtil.createRandomFolder(testWorkspace);
 
         when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -297,8 +283,8 @@ class FolderServiceTest {
     @Test
     void shouldUpdateFolderNameOnly() {
         // given
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
-        folder.setDescription(TestUtil.generateRandomValue("old-description"));
+        Folder folder = TestUtil.createRandomFolder(testWorkspace);
+        folder.setDescription(TestUtil.generateRandomDescription());
 
         when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -334,11 +320,9 @@ class FolderServiceTest {
     @Test
     void shouldThrowWhenUpdatingFolderByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                otherUser);
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
+        Folder folder = TestUtil.createRandomFolder(otherWorkspace);
 
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
@@ -356,9 +340,9 @@ class FolderServiceTest {
     @Test
     void shouldPatchFolderName() {
         // given
-        String folderDescription = TestUtil.generateRandomValue("description");
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), folderDescription,
-                testWorkspace);
+        String folderDescription = TestUtil.generateRandomDescription();
+        Folder folder = TestUtil.createRandomFolder(testWorkspace);
+        folder.setDescription(folderDescription);
 
         String newName = TestUtil.generateRandomName();
         FolderRequest request = new FolderRequest();
@@ -381,10 +365,10 @@ class FolderServiceTest {
     @Test
     void shouldPatchFolderDescription() {
         // given
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
+        Folder folder = TestUtil.createRandomFolder(testWorkspace);
         String originalName = folder.getName();
 
-        String newDescription = TestUtil.generateRandomValue("description");
+        String newDescription = TestUtil.generateRandomDescription();
         FolderRequest request = new FolderRequest();
         request.setDescription(newDescription);
 
@@ -405,10 +389,10 @@ class FolderServiceTest {
     @Test
     void shouldPatchFolderBothFields() {
         // given
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
+        Folder folder = TestUtil.createRandomFolder(testWorkspace);
 
         String newName = TestUtil.generateRandomName();
-        String newDescription = TestUtil.generateRandomValue("description");
+        String newDescription = TestUtil.generateRandomDescription();
         FolderRequest request = new FolderRequest();
         request.setName(newName);
         request.setDescription(newDescription);
@@ -430,8 +414,8 @@ class FolderServiceTest {
     @Test
     void shouldClearDescriptionWithEmptyString() {
         // given
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
-        folder.setDescription(TestUtil.generateRandomValue("description"));
+        Folder folder = TestUtil.createRandomFolder(testWorkspace);
+        folder.setDescription(TestUtil.generateRandomDescription());
 
         FolderRequest request = new FolderRequest();
         request.setDescription(""); // empty string should clear (set to null)
@@ -469,10 +453,9 @@ class FolderServiceTest {
     @Test
     void shouldThrowWhenPatchingFolderByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherUser);
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
+        Folder folder = TestUtil.createRandomFolder(otherWorkspace);
 
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
@@ -490,7 +473,7 @@ class FolderServiceTest {
     @Test
     void shouldDeleteFolder() {
         // given
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
+        Folder folder = TestUtil.createRandomFolder(testWorkspace);
 
         when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -520,11 +503,9 @@ class FolderServiceTest {
     @Test
     void shouldThrowWhenDeletingFolderByNonMember() {
         // given
-        User otherUser = createUser(TestUtil.generateRandomId(), TestUtil.generateRandomEmail(),
-                TestUtil.generateRandomName());
-        Workspace otherWorkspace = createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
-                otherUser);
-        Folder folder = createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), otherWorkspace);
+        User otherUser = TestUtil.createRandomUser();
+        Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
+        Folder folder = TestUtil.createRandomFolder(otherWorkspace);
 
         when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
         when(util.getUserByEmail(testEmail)).thenReturn(testUser);
@@ -537,37 +518,9 @@ class FolderServiceTest {
         verify(folderRepository, never()).delete(any());
     }
 
-    private User createUser(Long id, String email, String name) {
-        User user = new User(email, TestUtil.generateRandomPasswordHash(), name);
-        setField(user, "id", id);
-
-        return user;
-    }
-
-    private Workspace createWorkspace(Long id, String name, User member) {
-        Workspace workspace = new Workspace(name);
-        setField(workspace, "id", id);
-
-        workspace.setMembers(new ArrayList<>(List.of(member)));
-
-        return workspace;
-    }
-
-    private Folder createFolder(Long id, String name, Workspace workspace) {
-        Folder folder = new Folder(name, workspace);
-        setField(folder, "id", id);
-
-        folder.setRequests(new ArrayList<>());
-
-        return folder;
-    }
-
-    private Folder createFolder(Long id, String name, String description, Workspace workspace) {
-        Folder folder = new Folder(name, workspace);
-        setField(folder, "id", id);
-
-        folder.setDescription(description);
-        folder.setRequests(new ArrayList<>());
+    private Folder saveFolderStubbing(InvocationOnMock invocation) {
+        Folder folder = invocation.getArgument(0);
+        setField(folder, "id", TestUtil.generateRandomId());
 
         return folder;
     }

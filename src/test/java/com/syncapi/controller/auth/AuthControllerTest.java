@@ -69,9 +69,8 @@ class AuthControllerTest {
     @Test
     void shouldFailWhenEmailAlreadyExists() throws Exception {
         // given
-        RegisterRequest request = new RegisterRequest(
-                TestUtil.generateRandomName(), TestUtil.generateRandomEmail(), TestUtil.generateRandomPassword()
-        );
+        RegisterRequest request = new RegisterRequest(TestUtil.generateRandomName(), TestUtil.generateRandomEmail(),
+                TestUtil.generateRandomPassword());
 
         when(authService.register(any(RegisterRequest.class)))
                 .thenThrow(new RuntimeException("email already exists"));
@@ -83,7 +82,7 @@ class AuthControllerTest {
         verify(authService).register(any(RegisterRequest.class));
     }
 
-    @ParameterizedTest(name = "[{index}] invalid register request -> 400")
+    @ParameterizedTest
     @MethodSource("invalidRegisterRequests")
     void shouldFailValidationForInvalidRegisterRequest(RegisterRequest request) throws Exception {
         // when / then
@@ -129,7 +128,7 @@ class AuthControllerTest {
         verify(authService).login(any(LoginRequest.class));
     }
 
-    @ParameterizedTest(name = "[{index}] invalid login -> 400")
+    @ParameterizedTest
     @MethodSource("invalidLoginRequests")
     void shouldFailLoginForInvalidCredentials(LoginRequest request) throws Exception {
         boolean passesValidation = request.getEmail() != null
