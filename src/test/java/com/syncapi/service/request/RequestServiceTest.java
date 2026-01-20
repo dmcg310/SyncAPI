@@ -8,7 +8,6 @@ import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
-import com.syncapi.repository.FolderRepository;
 import com.syncapi.repository.RequestRepository;
 import com.syncapi.util.RequestMethod;
 import com.syncapi.util.Util;
@@ -21,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,23 +33,19 @@ class RequestServiceTest {
     private RequestRepository requestRepository;
 
     @Mock
-    private FolderRepository folderRepository;
-
-    @Mock
     private Util util;
 
     private RequestService requestService;
 
-    private User testUser;
     private String testEmail;
     private Folder testFolder;
 
     @BeforeEach
     void setUp() {
-        requestService = new RequestService(requestRepository, folderRepository, util);
+        requestService = new RequestService(requestRepository, util);
 
         testEmail = TestUtil.generateRandomEmail();
-        testUser = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+        User testUser = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
         Workspace testWorkspace = TestUtil.createWorkspace(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 testUser);
         testFolder = TestUtil.createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(), testWorkspace);
@@ -65,8 +59,7 @@ class RequestServiceTest {
         Request request2 = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 RequestMethod.POST, TestUtil.generateRandomUrl(), testFolder);
 
-        when(folderRepository.findById(testFolder.getId())).thenReturn(Optional.of(testFolder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(testFolder.getId(), testEmail)).thenReturn(testFolder);
         when(requestRepository.findByFolderId(testFolder.getId())).thenReturn(List.of(request1, request2));
 
         // when
@@ -77,15 +70,14 @@ class RequestServiceTest {
         assertThat(result.getFirst().getId()).isEqualTo(request1.getId());
         assertThat(result.get(1).getId()).isEqualTo(request2.getId());
 
-        verify(folderRepository).findById(testFolder.getId());
+        verify(util).getFolderWithAccessCheck(testFolder.getId(), testEmail);
         verify(requestRepository).findByFolderId(testFolder.getId());
     }
 
     @Test
     void shouldReturnEmptyListWhenFolderHasNoRequests() {
         // given
-        when(folderRepository.findById(testFolder.getId())).thenReturn(Optional.of(testFolder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(testFolder.getId(), testEmail)).thenReturn(testFolder);
         when(requestRepository.findByFolderId(testFolder.getId())).thenReturn(List.of());
 
         // when
@@ -99,7 +91,8 @@ class RequestServiceTest {
     void shouldThrowWhenGettingRequestsFromNonExistentFolder() {
         // given
         Long folderId = TestUtil.generateRandomId();
-        when(folderRepository.findById(folderId)).thenReturn(Optional.empty());
+        when(util.getFolderWithAccessCheck(folderId, testEmail))
+                .thenThrow(new RuntimeException("Folder not found with Id: " + folderId));
 
         // when / then
         assertThatThrownBy(() -> requestService.getRequestsByFolder(folderId, testEmail))
@@ -119,8 +112,8 @@ class RequestServiceTest {
         Folder otherFolder = TestUtil.createFolder(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 otherWorkspace);
 
-        when(folderRepository.findById(otherFolder.getId())).thenReturn(Optional.of(otherFolder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(otherFolder.getId(), testEmail))
+                .thenThrow(new RuntimeException("Folder not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> requestService.getRequestsByFolder(otherFolder.getId(), testEmail))
@@ -138,8 +131,7 @@ class RequestServiceTest {
         request.setDescription(TestUtil.generateRandomDescription());
         request.setHeaders(JsonTestUtil.authHeader(TestUtil.generateRandomToken()));
 
-        when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail)).thenReturn(request);
 
         // when
         RequestResponse result = requestService.getRequestById(request.getId(), testEmail);
@@ -153,14 +145,15 @@ class RequestServiceTest {
         assertThat(result.getHeaders()).isEqualTo(request.getHeaders());
         assertThat(result.getFolderId()).isEqualTo(testFolder.getId());
 
-        verify(requestRepository).findById(request.getId());
+        verify(util).getRequestWithAccessCheck(request.getId(), testEmail);
     }
 
     @Test
     void shouldThrowWhenGettingNonExistentRequest() {
         // given
         Long requestId = TestUtil.generateRandomId();
-        when(requestRepository.findById(requestId)).thenReturn(Optional.empty());
+        when(util.getRequestWithAccessCheck(requestId, testEmail))
+                .thenThrow(new RuntimeException("Request not found with Id: " + requestId));
 
         // when / then
         assertThatThrownBy(() -> requestService.getRequestById(requestId, testEmail))
@@ -179,8 +172,8 @@ class RequestServiceTest {
         Request request = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 RequestMethod.GET, TestUtil.generateRandomUrl(), otherFolder);
 
-        when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail))
+                .thenThrow(new RuntimeException("Request not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> requestService.getRequestById(request.getId(), testEmail))
@@ -205,8 +198,7 @@ class RequestServiceTest {
         request.setAuthType(authType);
         request.setAuthConfig(Map.of("token", "abc123"));
 
-        when(folderRepository.findById(testFolder.getId())).thenReturn(Optional.of(testFolder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(testFolder.getId(), testEmail)).thenReturn(testFolder);
         when(requestRepository.save(any(Request.class))).thenAnswer(invocation -> {
             Request saved = invocation.getArgument(0);
             setField(saved, "id", TestUtil.generateRandomId());
@@ -237,8 +229,7 @@ class RequestServiceTest {
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
                 TestUtil.generateRandomUrl());
 
-        when(folderRepository.findById(testFolder.getId())).thenReturn(Optional.of(testFolder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(testFolder.getId(), testEmail)).thenReturn(testFolder);
         when(requestRepository.save(any(Request.class))).thenAnswer(invocation -> {
             Request saved = invocation.getArgument(0);
             setField(saved, "id", TestUtil.generateRandomId());
@@ -263,7 +254,8 @@ class RequestServiceTest {
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
                 TestUtil.generateRandomUrl());
 
-        when(folderRepository.findById(folderId)).thenReturn(Optional.empty());
+        when(util.getFolderWithAccessCheck(folderId, testEmail))
+                .thenThrow(new RuntimeException("Folder not found with Id: " + folderId));
 
         // when / then
         assertThatThrownBy(() -> requestService.createRequest(folderId, request, testEmail))
@@ -286,8 +278,8 @@ class RequestServiceTest {
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
                 TestUtil.generateRandomUrl());
 
-        when(folderRepository.findById(otherFolder.getId())).thenReturn(Optional.of(otherFolder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(otherFolder.getId(), testEmail))
+                .thenThrow(new RuntimeException("Folder not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> requestService.createRequest(otherFolder.getId(), request, testEmail))
@@ -311,8 +303,7 @@ class RequestServiceTest {
         updateRequest.setDescription(newDescription);
         updateRequest.setHeaders(Map.of("X-Custom", "value"));
 
-        when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(existingRequest.getId(), testEmail)).thenReturn(existingRequest);
         when(requestRepository.save(any(Request.class))).thenReturn(existingRequest);
 
         // when
@@ -340,8 +331,7 @@ class RequestServiceTest {
         RequestRequest updateRequest = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
                 TestUtil.generateRandomUrl());
 
-        when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(existingRequest.getId(), testEmail)).thenReturn(existingRequest);
         when(requestRepository.save(any(Request.class))).thenReturn(existingRequest);
 
         // when
@@ -360,7 +350,8 @@ class RequestServiceTest {
         RequestRequest request = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.GET,
                 TestUtil.generateRandomUrl());
 
-        when(requestRepository.findById(requestId)).thenReturn(Optional.empty());
+        when(util.getRequestWithAccessCheck(requestId, testEmail))
+                .thenThrow(new RuntimeException("Request not found with Id: " + requestId));
 
         // when / then
         assertThatThrownBy(() -> requestService.updateRequest(requestId, request, testEmail))
@@ -385,8 +376,8 @@ class RequestServiceTest {
         RequestRequest updateRequest = new RequestRequest(TestUtil.generateRandomName(), RequestMethod.POST,
                 TestUtil.generateRandomUrl());
 
-        when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail))
+                .thenThrow(new RuntimeException("Request not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> requestService.updateRequest(request.getId(), updateRequest, testEmail))
@@ -409,8 +400,7 @@ class RequestServiceTest {
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setName(newName);
 
-        when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(existingRequest.getId(), testEmail)).thenReturn(existingRequest);
         when(requestRepository.save(any(Request.class))).thenReturn(existingRequest);
 
         // when
@@ -435,8 +425,7 @@ class RequestServiceTest {
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setMethod(RequestMethod.POST);
 
-        when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(existingRequest.getId(), testEmail)).thenReturn(existingRequest);
         when(requestRepository.save(any(Request.class))).thenReturn(existingRequest);
 
         // when
@@ -457,8 +446,7 @@ class RequestServiceTest {
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setUrl(newUrl);
 
-        when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(existingRequest.getId(), testEmail)).thenReturn(existingRequest);
         when(requestRepository.save(any(Request.class))).thenReturn(existingRequest);
 
         // when
@@ -478,8 +466,7 @@ class RequestServiceTest {
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setHeaders(newHeaders);
 
-        when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(existingRequest.getId(), testEmail)).thenReturn(existingRequest);
         when(requestRepository.save(any(Request.class))).thenReturn(existingRequest);
 
         // when
@@ -499,8 +486,7 @@ class RequestServiceTest {
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setBody(newBody);
 
-        when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(existingRequest.getId(), testEmail)).thenReturn(existingRequest);
         when(requestRepository.save(any(Request.class))).thenReturn(existingRequest);
 
         // when
@@ -523,8 +509,7 @@ class RequestServiceTest {
         patchRequest.setMethod(RequestMethod.PUT);
         patchRequest.setUrl(newUrl);
 
-        when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(existingRequest.getId(), testEmail)).thenReturn(existingRequest);
         when(requestRepository.save(any(Request.class))).thenReturn(existingRequest);
 
         // when
@@ -546,8 +531,7 @@ class RequestServiceTest {
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setDescription("");
 
-        when(requestRepository.findById(existingRequest.getId())).thenReturn(Optional.of(existingRequest));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(existingRequest.getId(), testEmail)).thenReturn(existingRequest);
         when(requestRepository.save(any(Request.class))).thenReturn(existingRequest);
 
         // when
@@ -564,7 +548,8 @@ class RequestServiceTest {
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setName(TestUtil.generateRandomName());
 
-        when(requestRepository.findById(requestId)).thenReturn(Optional.empty());
+        when(util.getRequestWithAccessCheck(requestId, testEmail))
+                .thenThrow(new RuntimeException("Request not found with Id: " + requestId));
 
         // when / then
         assertThatThrownBy(() -> requestService.patchRequest(requestId, patchRequest, testEmail))
@@ -589,8 +574,8 @@ class RequestServiceTest {
         RequestRequest patchRequest = new RequestRequest();
         patchRequest.setName(TestUtil.generateRandomName());
 
-        when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail))
+                .thenThrow(new RuntimeException("Request not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> requestService.patchRequest(request.getId(), patchRequest, testEmail))
@@ -606,8 +591,7 @@ class RequestServiceTest {
         Request request = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 RequestMethod.GET, TestUtil.generateRandomUrl(), testFolder);
 
-        when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail)).thenReturn(request);
 
         // when
         requestService.deleteRequest(request.getId(), testEmail);
@@ -621,7 +605,8 @@ class RequestServiceTest {
         // given
         Long requestId = TestUtil.generateRandomId();
 
-        when(requestRepository.findById(requestId)).thenReturn(Optional.empty());
+        when(util.getRequestWithAccessCheck(requestId, testEmail))
+                .thenThrow(new RuntimeException("Request not found with Id: " + requestId));
 
         // when / then
         assertThatThrownBy(() -> requestService.deleteRequest(requestId, testEmail))
@@ -643,8 +628,8 @@ class RequestServiceTest {
         Request request = TestUtil.createRequest(TestUtil.generateRandomId(), TestUtil.generateRandomName(),
                 RequestMethod.GET, TestUtil.generateRandomUrl(), otherFolder);
 
-        when(requestRepository.findById(request.getId())).thenReturn(Optional.of(request));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail))
+                .thenThrow(new RuntimeException("Request not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> requestService.deleteRequest(request.getId(), testEmail))

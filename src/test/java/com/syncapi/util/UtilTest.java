@@ -2,7 +2,10 @@ package com.syncapi.util;
 
 import com.syncapi.TestUtil;
 import com.syncapi.entity.User;
+import com.syncapi.repository.FolderRepository;
+import com.syncapi.repository.RequestRepository;
 import com.syncapi.repository.UserRepository;
+import com.syncapi.repository.WorkspaceRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,11 +28,20 @@ class UtilTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private WorkspaceRepository workspaceRepository;
+
+    @Mock
+    private FolderRepository folderRepository;
+
+    @Mock
+    private RequestRepository requestRepository;
+
     private Util util;
 
     @BeforeEach
     void setUp() {
-        util = new Util(userRepository);
+        util = new Util(userRepository, workspaceRepository, folderRepository, requestRepository);
         SecurityContextHolder.clearContext();
     }
 

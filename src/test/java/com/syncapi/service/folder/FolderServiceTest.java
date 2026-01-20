@@ -7,7 +7,6 @@ import com.syncapi.entity.Folder;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
 import com.syncapi.repository.FolderRepository;
-import com.syncapi.repository.WorkspaceRepository;
 import com.syncapi.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,23 +30,19 @@ class FolderServiceTest {
     private FolderRepository folderRepository;
 
     @Mock
-    private WorkspaceRepository workspaceRepository;
-
-    @Mock
     private Util util;
 
     private FolderService folderService;
 
-    private User testUser;
     private String testEmail;
     private Workspace testWorkspace;
 
     @BeforeEach
     void setUp() {
-        folderService = new FolderService(folderRepository, workspaceRepository, util);
+        folderService = new FolderService(folderRepository, util);
 
         testEmail = TestUtil.generateRandomEmail();
-        testUser = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+        User testUser = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
         testWorkspace = TestUtil.createRandomWorkspace(testUser);
     }
 
@@ -58,8 +52,7 @@ class FolderServiceTest {
         Folder folder1 = TestUtil.createRandomFolder(testWorkspace);
         Folder folder2 = TestUtil.createRandomFolder(testWorkspace);
 
-        when(workspaceRepository.findById(testWorkspace.getId())).thenReturn(Optional.of(testWorkspace));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getWorkspaceWithAccessCheck(testWorkspace.getId(), testEmail)).thenReturn(testWorkspace);
         when(folderRepository.findByWorkspaceId(testWorkspace.getId())).thenReturn(List.of(folder1, folder2));
 
         // when
@@ -70,16 +63,14 @@ class FolderServiceTest {
         assertThat(result.getFirst().getId()).isEqualTo(folder1.getId());
         assertThat(result.get(1).getId()).isEqualTo(folder2.getId());
 
-        verify(workspaceRepository).findById(testWorkspace.getId());
-        verify(util).getUserByEmail(testEmail);
+        verify(util).getWorkspaceWithAccessCheck(testWorkspace.getId(), testEmail);
         verify(folderRepository).findByWorkspaceId(testWorkspace.getId());
     }
 
     @Test
     void shouldReturnEmptyListWhenWorkspaceHasNoFolders() {
         // given
-        when(workspaceRepository.findById(testWorkspace.getId())).thenReturn(Optional.of(testWorkspace));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getWorkspaceWithAccessCheck(testWorkspace.getId(), testEmail)).thenReturn(testWorkspace);
         when(folderRepository.findByWorkspaceId(testWorkspace.getId())).thenReturn(List.of());
 
         // when
@@ -93,14 +84,15 @@ class FolderServiceTest {
     void shouldThrowWhenGettingFoldersFromNonExistentWorkspace() {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.empty());
+        when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
+                .thenThrow(new RuntimeException("Workspace not found with Id: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> folderService.getFoldersByWorkspace(workspaceId, testEmail))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Workspace not found with Id: " + workspaceId);
 
-        verify(workspaceRepository).findById(workspaceId);
+        verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verifyNoInteractions(folderRepository);
     }
 
@@ -110,8 +102,8 @@ class FolderServiceTest {
         User otherUser = TestUtil.createRandomUser();
         Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
 
-        when(workspaceRepository.findById(otherWorkspace.getId())).thenReturn(Optional.of(otherWorkspace));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getWorkspaceWithAccessCheck(otherWorkspace.getId(), testEmail))
+                .thenThrow(new RuntimeException("Workspace not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> folderService.getFoldersByWorkspace(otherWorkspace.getId(), testEmail))
@@ -127,8 +119,7 @@ class FolderServiceTest {
         Folder folder = TestUtil.createRandomFolder(testWorkspace);
         folder.setDescription(TestUtil.generateRandomDescription());
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail)).thenReturn(folder);
 
         // when
         FolderResponse result = folderService.getFolderById(folder.getId(), testEmail);
@@ -139,23 +130,22 @@ class FolderServiceTest {
         assertThat(result.getDescription()).isEqualTo(folder.getDescription());
         assertThat(result.getWorkspaceId()).isEqualTo(testWorkspace.getId());
 
-        verify(folderRepository).findById(folder.getId());
-        verify(util).getUserByEmail(testEmail);
+        verify(util).getFolderWithAccessCheck(folder.getId(), testEmail);
     }
 
     @Test
     void shouldThrowWhenGettingNonExistentFolder() {
         // given
         Long folderId = TestUtil.generateRandomId();
-        when(folderRepository.findById(folderId)).thenReturn(Optional.empty());
+        when(util.getFolderWithAccessCheck(folderId, testEmail))
+                .thenThrow(new RuntimeException("Folder not found with Id: " + folderId));
 
         // when / then
         assertThatThrownBy(() -> folderService.getFolderById(folderId, testEmail))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Folder not found");
 
-        verify(folderRepository).findById(folderId);
-        verifyNoInteractions(util);
+        verify(util).getFolderWithAccessCheck(folderId, testEmail);
     }
 
     @Test
@@ -165,15 +155,15 @@ class FolderServiceTest {
         Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
         Folder folder = TestUtil.createRandomFolder(otherWorkspace);
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail))
+                .thenThrow(new RuntimeException("Folder not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> folderService.getFolderById(folder.getId(), testEmail))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("access denied");
 
-        verify(folderRepository).findById(folder.getId());
+        verify(util).getFolderWithAccessCheck(folder.getId(), testEmail);
     }
 
     @Test
@@ -183,8 +173,7 @@ class FolderServiceTest {
         String folderDescription = TestUtil.generateRandomDescription();
         FolderRequest request = new FolderRequest(folderName, folderDescription);
 
-        when(workspaceRepository.findById(testWorkspace.getId())).thenReturn(Optional.of(testWorkspace));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getWorkspaceWithAccessCheck(testWorkspace.getId(), testEmail)).thenReturn(testWorkspace);
         when(folderRepository.save(any(Folder.class))).thenAnswer(this::saveFolderStubbing);
 
         // when
@@ -210,8 +199,7 @@ class FolderServiceTest {
         String folderName = TestUtil.generateRandomName();
         FolderRequest request = new FolderRequest(folderName);
 
-        when(workspaceRepository.findById(testWorkspace.getId())).thenReturn(Optional.of(testWorkspace));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getWorkspaceWithAccessCheck(testWorkspace.getId(), testEmail)).thenReturn(testWorkspace);
         when(folderRepository.save(any(Folder.class))).thenAnswer(this::saveFolderStubbing);
 
         // when
@@ -228,14 +216,15 @@ class FolderServiceTest {
         Long workspaceId = TestUtil.generateRandomId();
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
-        when(workspaceRepository.findById(workspaceId)).thenReturn(Optional.empty());
+        when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
+                .thenThrow(new RuntimeException("Workspace not found with Id: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> folderService.createFolder(workspaceId, request, testEmail))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Workspace not found with Id: " + workspaceId);
 
-        verify(workspaceRepository).findById(workspaceId);
+        verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verifyNoInteractions(folderRepository);
     }
 
@@ -246,8 +235,8 @@ class FolderServiceTest {
         Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
-        when(workspaceRepository.findById(otherWorkspace.getId())).thenReturn(Optional.of(otherWorkspace));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getWorkspaceWithAccessCheck(otherWorkspace.getId(), testEmail))
+                .thenThrow(new RuntimeException("Workspace not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> folderService.createFolder(otherWorkspace.getId(), request, testEmail))
@@ -266,8 +255,7 @@ class FolderServiceTest {
 
         Folder folder = TestUtil.createRandomFolder(testWorkspace);
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail)).thenReturn(folder);
         when(folderRepository.save(any(Folder.class))).thenReturn(folder);
 
         // when
@@ -286,8 +274,7 @@ class FolderServiceTest {
         Folder folder = TestUtil.createRandomFolder(testWorkspace);
         folder.setDescription(TestUtil.generateRandomDescription());
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail)).thenReturn(folder);
         when(folderRepository.save(any(Folder.class))).thenReturn(folder);
 
         String newName = TestUtil.generateRandomName();
@@ -307,7 +294,8 @@ class FolderServiceTest {
         Long folderId = TestUtil.generateRandomId();
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
-        when(folderRepository.findById(folderId)).thenReturn(Optional.empty());
+        when(util.getFolderWithAccessCheck(folderId, testEmail))
+                .thenThrow(new RuntimeException("Folder not found with Id: " + folderId));
 
         // when / then
         assertThatThrownBy(() -> folderService.updateFolder(folderId, request, testEmail))
@@ -326,8 +314,8 @@ class FolderServiceTest {
 
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail))
+                .thenThrow(new RuntimeException("Folder not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> folderService.updateFolder(folder.getId(), request, testEmail))
@@ -348,8 +336,7 @@ class FolderServiceTest {
         FolderRequest request = new FolderRequest();
         request.setName(newName);
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail)).thenReturn(folder);
         when(folderRepository.save(any(Folder.class))).thenReturn(folder);
 
         // when
@@ -372,8 +359,7 @@ class FolderServiceTest {
         FolderRequest request = new FolderRequest();
         request.setDescription(newDescription);
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail)).thenReturn(folder);
         when(folderRepository.save(any(Folder.class))).thenReturn(folder);
 
         // when
@@ -397,8 +383,7 @@ class FolderServiceTest {
         request.setName(newName);
         request.setDescription(newDescription);
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail)).thenReturn(folder);
         when(folderRepository.save(any(Folder.class))).thenReturn(folder);
 
         // when
@@ -420,8 +405,7 @@ class FolderServiceTest {
         FolderRequest request = new FolderRequest();
         request.setDescription(""); // empty string should clear (set to null)
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail)).thenReturn(folder);
         when(folderRepository.save(any(Folder.class))).thenReturn(folder);
 
         // when
@@ -439,14 +423,15 @@ class FolderServiceTest {
         Long folderId = TestUtil.generateRandomId();
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
-        when(folderRepository.findById(folderId)).thenReturn(Optional.empty());
+        when(util.getFolderWithAccessCheck(folderId, testEmail))
+                .thenThrow(new RuntimeException("Folder not found with Id: " + folderId));
 
         // when / then
         assertThatThrownBy(() -> folderService.patchFolder(folderId, request, testEmail))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Folder not found");
 
-        verify(folderRepository).findById(folderId);
+        verify(util).getFolderWithAccessCheck(folderId, testEmail);
         verify(folderRepository, never()).save(any());
     }
 
@@ -459,8 +444,8 @@ class FolderServiceTest {
 
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail))
+                .thenThrow(new RuntimeException("Folder not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> folderService.patchFolder(folder.getId(), request, testEmail))
@@ -475,8 +460,7 @@ class FolderServiceTest {
         // given
         Folder folder = TestUtil.createRandomFolder(testWorkspace);
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail)).thenReturn(folder);
 
         // when
         folderService.deleteFolder(folder.getId(), testEmail);
@@ -490,7 +474,8 @@ class FolderServiceTest {
         // given
         Long folderId = TestUtil.generateRandomId();
 
-        when(folderRepository.findById(folderId)).thenReturn(Optional.empty());
+        when(util.getFolderWithAccessCheck(folderId, testEmail))
+                .thenThrow(new RuntimeException("Folder not found with Id: " + folderId));
 
         // when / then
         assertThatThrownBy(() -> folderService.deleteFolder(folderId, testEmail))
@@ -507,8 +492,8 @@ class FolderServiceTest {
         Workspace otherWorkspace = TestUtil.createRandomWorkspace(otherUser);
         Folder folder = TestUtil.createRandomFolder(otherWorkspace);
 
-        when(folderRepository.findById(folder.getId())).thenReturn(Optional.of(folder));
-        when(util.getUserByEmail(testEmail)).thenReturn(testUser);
+        when(util.getFolderWithAccessCheck(folder.getId(), testEmail))
+                .thenThrow(new RuntimeException("Folder not found or access denied"));
 
         // when / then
         assertThatThrownBy(() -> folderService.deleteFolder(folder.getId(), testEmail))

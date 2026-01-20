@@ -4,8 +4,6 @@ import com.syncapi.dto.request.RequestRequest;
 import com.syncapi.dto.request.RequestResponse;
 import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
-import com.syncapi.entity.User;
-import com.syncapi.repository.FolderRepository;
 import com.syncapi.repository.RequestRepository;
 import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;
@@ -16,19 +14,15 @@ import java.util.List;
 @Service
 public class RequestService {
     private final RequestRepository requestRepository;
-    private final FolderRepository folderRepository;
     private final Util util;
 
-    public RequestService(RequestRepository requestRepository,
-                          FolderRepository folderRepository,
-                          Util util) {
+    public RequestService(RequestRepository requestRepository, Util util) {
         this.requestRepository = requestRepository;
-        this.folderRepository = folderRepository;
         this.util = util;
     }
 
     public List<RequestResponse> getRequestsByFolder(Long folderId, String email) {
-        getFolderWithAccessCheck(folderId, email);
+        util.getFolderWithAccessCheck(folderId, email);
         List<Request> requests = requestRepository.findByFolderId(folderId);
 
         return requests.stream()
@@ -37,12 +31,12 @@ public class RequestService {
     }
 
     public RequestResponse getRequestById(Long requestId, String email) {
-        return toResponse(getRequestWithAccessCheck(requestId, email));
+        return toResponse(util.getRequestWithAccessCheck(requestId, email));
     }
 
     @Transactional
     public RequestResponse createRequest(Long folderId, RequestRequest request, String email) {
-        Folder folder = getFolderWithAccessCheck(folderId, email);
+        Folder folder = util.getFolderWithAccessCheck(folderId, email);
 
         Request newRequest = new Request();
         newRequest.setName(request.getName());
@@ -60,7 +54,7 @@ public class RequestService {
 
     @Transactional
     public RequestResponse updateRequest(Long requestId, RequestRequest request, String email) {
-        Request existingRequest = getRequestWithAccessCheck(requestId, email);
+        Request existingRequest = util.getRequestWithAccessCheck(requestId, email);
         existingRequest.setName(request.getName());
         existingRequest.setDescription(request.getDescription());
         existingRequest.setMethod(request.getMethod());
@@ -75,7 +69,7 @@ public class RequestService {
 
     @Transactional
     public RequestResponse patchRequest(Long requestId, RequestRequest request, String email) {
-        Request existingRequest = getRequestWithAccessCheck(requestId, email);
+        Request existingRequest = util.getRequestWithAccessCheck(requestId, email);
 
         if (request.getName() != null) {
             existingRequest.setName(request.getName());
@@ -112,31 +106,7 @@ public class RequestService {
 
     @Transactional
     public void deleteRequest(Long requestId, String email) {
-        requestRepository.delete(getRequestWithAccessCheck(requestId, email));
-    }
-
-    private Request getRequestWithAccessCheck(Long requestId, String email) {
-        Request request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found with Id: " + requestId));
-
-        User user = util.getUserByEmail(email);
-        if (!request.getFolder().getWorkspace().getMembers().contains(user)) {
-            throw new RuntimeException("Request not found or access denied");
-        }
-
-        return request;
-    }
-
-    private Folder getFolderWithAccessCheck(Long folderId, String email) {
-        Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new RuntimeException("Folder not found with Id: " + folderId));
-
-        User user = util.getUserByEmail(email);
-        if (!folder.getWorkspace().getMembers().contains(user)) {
-            throw new RuntimeException("Folder not found or access denied");
-        }
-
-        return folder;
+        requestRepository.delete(util.getRequestWithAccessCheck(requestId, email));
     }
 
     private RequestResponse toResponse(Request request) {
