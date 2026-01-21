@@ -251,7 +251,7 @@ class EnvironmentVariableControllerTest {
 
         // when / then
         mockMvc.perform(JsonTestUtil.deleteAuth(
-                        V.replace(ENV_ID_PLACEHOLDER, environmentId.toString()) + "/" + variableId,
+                        VAR_URL.replace(ENV_ID_PLACEHOLDER, environmentId.toString()) + "/" + variableId,
                         token
                 ))
                 .andExpect(status().isForbidden());
