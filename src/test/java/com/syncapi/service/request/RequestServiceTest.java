@@ -8,7 +8,7 @@ import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
-import com.syncapi.repository.RequestRepository;
+import com.syncapi.repository.request.RequestRepository;
 import com.syncapi.util.RequestMethod;
 import com.syncapi.util.Util;
 import org.junit.jupiter.api.BeforeEach;

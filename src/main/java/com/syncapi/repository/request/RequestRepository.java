@@ -1,4 +1,4 @@
-package com.syncapi.repository;
+package com.syncapi.repository.request;
 
 import com.syncapi.entity.Request;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +9,4 @@ import java.util.List;
 @Repository
 public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findByFolderId(Long folderId);
-
-    Request findByIdAndFolderId(Long id, Long folderId);
 }

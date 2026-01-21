@@ -4,7 +4,7 @@ import com.syncapi.dto.environment.EnvironmentVariableRequest;
 import com.syncapi.dto.environment.EnvironmentVariableResponse;
 import com.syncapi.entity.Environment;
 import com.syncapi.entity.EnvironmentVariable;
-import com.syncapi.repository.EnvironmentVariableRepository;
+import com.syncapi.repository.environment.EnvironmentVariableRepository;
 import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;

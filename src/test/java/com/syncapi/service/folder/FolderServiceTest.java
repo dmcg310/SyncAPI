@@ -6,7 +6,7 @@ import com.syncapi.dto.folder.FolderResponse;
 import com.syncapi.entity.Folder;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
-import com.syncapi.repository.FolderRepository;
+import com.syncapi.repository.folder.FolderRepository;
 import com.syncapi.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

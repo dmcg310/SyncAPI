@@ -2,12 +2,12 @@ package com.syncapi.util;
 
 import com.syncapi.TestUtil;
 import com.syncapi.entity.User;
-import com.syncapi.repository.EnvironmentRepository;
-import com.syncapi.repository.EnvironmentVariableRepository;
-import com.syncapi.repository.FolderRepository;
-import com.syncapi.repository.RequestRepository;
-import com.syncapi.repository.UserRepository;
-import com.syncapi.repository.WorkspaceRepository;
+import com.syncapi.repository.environment.EnvironmentRepository;
+import com.syncapi.repository.environment.EnvironmentVariableRepository;
+import com.syncapi.repository.folder.FolderRepository;
+import com.syncapi.repository.request.RequestRepository;
+import com.syncapi.repository.user.UserRepository;
+import com.syncapi.repository.workspace.WorkspaceRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

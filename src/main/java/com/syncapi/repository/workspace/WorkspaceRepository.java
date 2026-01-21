@@ -1,4 +1,4 @@
-package com.syncapi.repository;
+package com.syncapi.repository.workspace;
 
 import com.syncapi.entity.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;

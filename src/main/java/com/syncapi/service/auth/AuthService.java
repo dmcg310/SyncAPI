@@ -4,7 +4,7 @@ import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
 import com.syncapi.entity.User;
-import com.syncapi.repository.UserRepository;
+import com.syncapi.repository.user.UserRepository;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.util.Util;
 import org.springframework.security.crypto.password.PasswordEncoder;

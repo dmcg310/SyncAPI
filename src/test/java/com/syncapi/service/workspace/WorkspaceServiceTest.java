@@ -6,7 +6,7 @@ import com.syncapi.dto.workspace.WorkspaceRequest;
 import com.syncapi.dto.workspace.WorkspaceResponse;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
-import com.syncapi.repository.WorkspaceRepository;
+import com.syncapi.repository.workspace.WorkspaceRepository;
 import com.syncapi.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

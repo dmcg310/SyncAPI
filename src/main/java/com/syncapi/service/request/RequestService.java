@@ -4,7 +4,7 @@ import com.syncapi.dto.request.RequestRequest;
 import com.syncapi.dto.request.RequestResponse;
 import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
-import com.syncapi.repository.RequestRepository;
+import com.syncapi.repository.request.RequestRepository;
 import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
