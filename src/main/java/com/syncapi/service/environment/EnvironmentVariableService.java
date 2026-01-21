@@ -1,4 +1,4 @@
-package com.syncapi.service.enviornment;
+package com.syncapi.service.environment;
 
 import com.syncapi.dto.environment.EnvironmentVariableRequest;
 import com.syncapi.dto.environment.EnvironmentVariableResponse;

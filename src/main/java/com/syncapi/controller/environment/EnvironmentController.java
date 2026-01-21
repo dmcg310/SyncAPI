@@ -2,7 +2,7 @@ package com.syncapi.controller.environment;
 
 import com.syncapi.dto.environment.EnvironmentRequest;
 import com.syncapi.dto.environment.EnvironmentResponse;
-import com.syncapi.service.enviornment.EnvironmentService;
+import com.syncapi.service.environment.EnvironmentService;
 import com.syncapi.util.Util;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
