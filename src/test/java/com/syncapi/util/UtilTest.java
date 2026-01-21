@@ -2,6 +2,8 @@ package com.syncapi.util;
 
 import com.syncapi.TestUtil;
 import com.syncapi.entity.User;
+import com.syncapi.repository.EnvironmentRepository;
+import com.syncapi.repository.EnvironmentVariableRepository;
 import com.syncapi.repository.FolderRepository;
 import com.syncapi.repository.RequestRepository;
 import com.syncapi.repository.UserRepository;
@@ -32,6 +34,12 @@ class UtilTest {
     private WorkspaceRepository workspaceRepository;
 
     @Mock
+    private EnvironmentRepository environmentRepository;
+
+    @Mock
+    private EnvironmentVariableRepository environmentVariableRepository;
+
+    @Mock
     private FolderRepository folderRepository;
 
     @Mock
@@ -41,7 +49,8 @@ class UtilTest {
 
     @BeforeEach
     void setUp() {
-        util = new Util(userRepository, workspaceRepository, folderRepository, requestRepository);
+        util = new Util(userRepository, workspaceRepository, environmentRepository, environmentVariableRepository,
+                folderRepository, requestRepository);
         SecurityContextHolder.clearContext();
     }
 

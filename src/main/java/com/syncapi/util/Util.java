@@ -1,9 +1,13 @@
 package com.syncapi.util;
 
+import com.syncapi.entity.Environment;
+import com.syncapi.entity.EnvironmentVariable;
 import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
+import com.syncapi.repository.EnvironmentRepository;
+import com.syncapi.repository.EnvironmentVariableRepository;
 import com.syncapi.repository.FolderRepository;
 import com.syncapi.repository.RequestRepository;
 import com.syncapi.repository.UserRepository;
@@ -17,14 +21,20 @@ import org.springframework.stereotype.Component;
 public class Util {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
+    private final EnvironmentRepository environmentRepository;
+    private final EnvironmentVariableRepository environmentVariableRepository;
     private final FolderRepository folderRepository;
     private final RequestRepository requestRepository;
 
     @Autowired
     public Util(UserRepository userRepository, WorkspaceRepository workspaceRepository,
-                FolderRepository folderRepository, RequestRepository requestRepository) {
+                EnvironmentRepository environmentRepository,
+                EnvironmentVariableRepository environmentVariableRepository, FolderRepository folderRepository,
+                RequestRepository requestRepository) {
         this.userRepository = userRepository;
         this.workspaceRepository = workspaceRepository;
+        this.environmentRepository = environmentRepository;
+        this.environmentVariableRepository = environmentVariableRepository;
         this.folderRepository = folderRepository;
         this.requestRepository = requestRepository;
     }
@@ -48,6 +58,10 @@ public class Util {
                 .orElseThrow(() -> new RuntimeException("User not found with Id: " + id));
     }
 
+    public boolean defaultFalse(Boolean value) {
+        return Boolean.TRUE.equals(value);
+    }
+
     public Workspace getWorkspaceWithAccessCheck(Long workspaceId, String email) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new RuntimeException("Workspace not found with Id: " + workspaceId));
@@ -58,6 +72,30 @@ public class Util {
         }
 
         return workspace;
+    }
+
+    public Environment getEnvironmentWithAccessCheck(Long environmentId, String email) {
+        Environment environment = environmentRepository.findById(environmentId)
+                .orElseThrow(() -> new RuntimeException("Environment not found with Id: " + environmentId));
+
+        User user = getUserByEmail(email);
+        if (!environment.getWorkspace().getMembers().contains(user)) {
+            throw new RuntimeException("Environment not found or access denied");
+        }
+
+        return environment;
+    }
+
+    public EnvironmentVariable getEnvironmentVariableWithAccessCheck(Long variableId, String email) {
+        EnvironmentVariable variable = environmentVariableRepository.findById(variableId)
+                .orElseThrow(() -> new RuntimeException("Environment variable not found with Id: " + variableId));
+
+        User user = getUserByEmail(email);
+        if (!variable.getEnvironment().getWorkspace().getMembers().contains(user)) {
+            throw new RuntimeException("Environment variable not found or access denied");
+        }
+
+        return variable;
     }
 
     public Folder getFolderWithAccessCheck(Long folderId, String email) {

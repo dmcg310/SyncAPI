@@ -1,6 +1,7 @@
 package com.syncapi.dto.environment;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class EnvironmentResponse {
     private Long id;
@@ -12,6 +13,8 @@ public class EnvironmentResponse {
 
     private Long workspaceId;
     private int variableCount;
+
+    private List<EnvironmentVariableResponse> variables;
 
     public EnvironmentResponse() {
     }
@@ -81,5 +84,13 @@ public class EnvironmentResponse {
 
     public void setVariableCount(int variableCount) {
         this.variableCount = variableCount;
+    }
+
+    public List<EnvironmentVariableResponse> getVariables() {
+        return variables;
+    }
+
+    public void setVariables(List<EnvironmentVariableResponse> variables) {
+        this.variables = variables;
     }
 }
