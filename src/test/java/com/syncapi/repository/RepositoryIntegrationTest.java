@@ -68,12 +68,14 @@ class RepositoryIntegrationTest {
 
     @Test
     void userRepositoryFindByEmailAndExistsByEmailWork() {
+        // given
         User user = new User();
         user.setName(TestUtil.generateRandomName());
         user.setEmail(TestUtil.generateRandomEmail());
         user.setPasswordHash(TestUtil.generateRandomPasswordHash());
         userRepository.save(user);
 
+        // when / then
         assertThat(userRepository.existsByEmail(user.getEmail())).isTrue();
         assertThat(userRepository.findByEmail(user.getEmail())).isPresent();
         assertThat(userRepository.findByEmail("missing-" + TestUtil.generateRandomEmail())).isEmpty();
@@ -81,6 +83,7 @@ class RepositoryIntegrationTest {
 
     @Test
     void workspaceRepositoryFindByMemberIdWorks() {
+        // given
         User user = new User();
         user.setName(TestUtil.generateRandomName());
         user.setEmail(TestUtil.generateRandomEmail());
@@ -92,12 +95,16 @@ class RepositoryIntegrationTest {
         workspace.getMembers().add(user);
         workspace = workspaceRepository.save(workspace);
 
+        // when
         List<Workspace> found = workspaceRepository.findByMemberId(user.getId());
+
+        // then
         assertThat(found).extracting(Workspace::getId).contains(workspace.getId());
     }
 
     @Test
     void folderRepositoryFindByWorkspaceIdWorks() {
+        // given
         Workspace workspace = createWorkspaceWithOneMember();
 
         Folder folder = new Folder();
@@ -105,13 +112,17 @@ class RepositoryIntegrationTest {
         folder.setWorkspace(workspace);
         folderRepository.save(folder);
 
+        // when
         List<Folder> found = folderRepository.findByWorkspaceId(workspace.getId());
+
+        // then
         assertThat(found).hasSize(1);
         assertThat(found.getFirst().getWorkspace().getId()).isEqualTo(workspace.getId());
     }
 
     @Test
     void requestRepositoryFindByFolderIdWorks() {
+        // given
         Workspace workspace = createWorkspaceWithOneMember();
 
         Folder folder = new Folder();
@@ -126,13 +137,17 @@ class RepositoryIntegrationTest {
         request.setFolder(folder);
         requestRepository.save(request);
 
+        // when
         List<Request> found = requestRepository.findByFolderId(folder.getId());
+
+        // then
         assertThat(found).hasSize(1);
         assertThat(found.getFirst().getFolder().getId()).isEqualTo(folder.getId());
     }
 
     @Test
     void environmentVariableRepositoryFindByEnvironmentIdWorks() {
+        // given
         Workspace workspace = createWorkspaceWithOneMember();
 
         Environment environment = new Environment();
@@ -146,13 +161,17 @@ class RepositoryIntegrationTest {
         var.setEnvironment(environment);
         environmentVariableRepository.save(var);
 
+        // when
         List<EnvironmentVariable> found = environmentVariableRepository.findByEnvironmentId(environment.getId());
+
+        // then
         assertThat(found).hasSize(1);
         assertThat(found.getFirst().getEnvironment().getId()).isEqualTo(environment.getId());
     }
 
     @Test
     void environmentRepositoryDeactivateAllInWorkspaceSetsAllToFalse() {
+        // given
         Workspace workspace = createWorkspaceWithOneMember();
 
         Environment environment1 = new Environment();
@@ -167,13 +186,16 @@ class RepositoryIntegrationTest {
         environment2.setIsActive(true);
         environment2 = environmentRepository.save(environment2);
 
+        // when / then (pre-check)
         assertThat(environmentRepository.findByWorkspaceId(workspace.getId()))
                 .extracting(Environment::getIsActive)
                 .containsExactlyInAnyOrder(true, true);
 
+        // when
         environmentRepository.deactivateAllInWorkspace(workspace.getId());
         environmentRepository.flush();
 
+        // then
         List<Environment> updated = environmentRepository.findByWorkspaceId(workspace.getId());
         assertThat(updated).extracting(Environment::getIsActive).containsOnly(false);
     }
