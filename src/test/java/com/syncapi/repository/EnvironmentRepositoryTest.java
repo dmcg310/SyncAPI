@@ -42,11 +42,11 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
         workspace = workspaceRepository.save(workspace);
 
         environment1 = new Environment(TestUtil.generateRandomName(), workspace);
-        environment1.setActive(true);
+        environment1.setIsActive(true);
         environmentRepository.save(environment1);
 
         environment2 = new Environment(TestUtil.generateRandomName(), workspace);
-        environment2.setActive(false);
+        environment2.setIsActive(false);
         environmentRepository.save(environment2);
     }
 
@@ -62,7 +62,7 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
         // then
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getName()).isEqualTo(environmentName);
-        assertThat(saved.isActive()).isFalse();
+        assertThat(saved.getIsActive()).isFalse();
         assertThat(saved.getCreatedAt()).isNotNull();
     }
 
@@ -97,13 +97,13 @@ public class EnvironmentRepositoryTest extends AbstractIntegrationTest {
         // then
         assertThat(active).isPresent();
         assertThat(active.get().getName()).isEqualTo(environment1.getName());
-        assertThat(active.get().isActive()).isTrue();
+        assertThat(active.get().getIsActive()).isTrue();
     }
 
     @Test
     void shouldReturnEmptyWhenNoActiveEnvironment() {
         // given
-        environment1.setActive(false);
+        environment1.setIsActive(false);
         environmentRepository.save(environment1);
 
         // when

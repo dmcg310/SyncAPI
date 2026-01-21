@@ -7,7 +7,7 @@ public class EnvironmentRequest {
     private String name;
 
     private String description;
-    private boolean isActive = false;
+    private Boolean isActive;
 
     public EnvironmentRequest() {
     }
@@ -16,7 +16,7 @@ public class EnvironmentRequest {
         this.name = name;
     }
 
-    public EnvironmentRequest(String name, String description, boolean isActive) {
+    public EnvironmentRequest(String name, String description, Boolean isActive) {
         this.name = name;
         this.description = description;
         this.isActive = isActive;
@@ -38,11 +38,11 @@ public class EnvironmentRequest {
         this.description = description;
     }
 
-    public boolean isActive() {
+    public Boolean getIsActive() {
         return isActive;
     }
 
-    public void setActive(boolean active) {
+    public void setIsActive(Boolean active) {
         isActive = active;
     }
 }

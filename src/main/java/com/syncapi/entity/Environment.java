@@ -30,7 +30,7 @@ public class Environment {
     @Column(length = 1024)
     private String description;
 
-    @Column(name = "is_active")
+    @Column(name = "is_active", nullable = false)
     private boolean isActive = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -82,11 +82,11 @@ public class Environment {
         this.description = description;
     }
 
-    public boolean isActive() {
+    public boolean getIsActive() {
         return isActive;
     }
 
-    public void setActive(boolean active) {
+    public void setIsActive(boolean active) {
         isActive = active;
     }
 
