@@ -137,6 +137,25 @@ class EnvironmentControllerTest {
     }
 
     @Test
+    void shouldReturnForbiddenWhenGetEnvironmentThrows() throws Exception {
+        // given
+        Long environmentId = TestUtil.generateRandomId();
+
+        when(environmentService.getEnvironmentById(eq(environmentId), anyString()))
+                .thenThrow(new RuntimeException("access denied"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.getJsonAuth(
+                        ENV_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString())
+                                + "/" + environmentId,
+                        token
+                ))
+                .andExpect(status().isForbidden());
+
+        verify(environmentService).getEnvironmentById(eq(environmentId), anyString());
+    }
+
+    @Test
     void shouldCreateEnvironment() throws Exception {
         // given
         EnvironmentRequest request = new EnvironmentRequest();
@@ -166,6 +185,25 @@ class EnvironmentControllerTest {
                         jsonPath("$.description").value(request.getDescription()),
                         jsonPath("$.isActive").value(true)
                 );
+
+        verify(environmentService).createEnvironment(eq(workspaceId), any(EnvironmentRequest.class), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenCreateEnvironmentThrows() throws Exception {
+        // given
+        EnvironmentRequest request = new EnvironmentRequest();
+        request.setName(TestUtil.generateRandomName());
+        request.setDescription(TestUtil.generateRandomDescription());
+
+        when(environmentService.createEnvironment(eq(workspaceId), any(EnvironmentRequest.class), anyString()))
+                .thenThrow(new RuntimeException("access denied"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.postJsonAuth(
+                        ENV_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()), request, token
+                ))
+                .andExpect(status().isForbidden());
 
         verify(environmentService).createEnvironment(eq(workspaceId), any(EnvironmentRequest.class), anyString());
     }
@@ -213,6 +251,29 @@ class EnvironmentControllerTest {
                         jsonPath("$.name").value(request.getName()),
                         jsonPath("$.isActive").value(false)
                 );
+
+        verify(environmentService).updateEnvironment(eq(environmentId), any(EnvironmentRequest.class), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenUpdateEnvironmentThrows() throws Exception {
+        // given
+        Long environmentId = TestUtil.generateRandomId();
+        EnvironmentRequest request = new EnvironmentRequest();
+        request.setName(TestUtil.generateRandomName());
+        request.setDescription(TestUtil.generateRandomDescription());
+
+        when(environmentService.updateEnvironment(eq(environmentId), any(EnvironmentRequest.class), anyString()))
+                .thenThrow(new RuntimeException("access denied"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.putJsonAuth(
+                        ENV_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString())
+                                + "/" + environmentId,
+                        request,
+                        token
+                ))
+                .andExpect(status().isForbidden());
 
         verify(environmentService).updateEnvironment(eq(environmentId), any(EnvironmentRequest.class), anyString());
     }
@@ -265,6 +326,28 @@ class EnvironmentControllerTest {
     }
 
     @Test
+    void shouldReturnForbiddenWhenPatchEnvironmentThrows() throws Exception {
+        // given
+        Long environmentId = TestUtil.generateRandomId();
+        EnvironmentRequest request = new EnvironmentRequest();
+        request.setDescription(TestUtil.generateRandomDescription());
+
+        when(environmentService.patchEnvironment(eq(environmentId), any(EnvironmentRequest.class), anyString()))
+                .thenThrow(new RuntimeException("access denied"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                        ENV_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString())
+                                + "/" + environmentId,
+                        request,
+                        token
+                ))
+                .andExpect(status().isForbidden());
+
+        verify(environmentService).patchEnvironment(eq(environmentId), any(EnvironmentRequest.class), anyString());
+    }
+
+    @Test
     void shouldDeleteEnvironment() throws Exception {
         // given
         Long environmentId = TestUtil.generateRandomId();
@@ -276,6 +359,25 @@ class EnvironmentControllerTest {
                         token
                 ))
                 .andExpect(status().isNoContent());
+
+        verify(environmentService).deleteEnvironment(eq(environmentId), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenDeleteEnvironmentThrows() throws Exception {
+        // given
+        Long environmentId = TestUtil.generateRandomId();
+
+        doThrow(new RuntimeException("access denied"))
+                .when(environmentService)
+                .deleteEnvironment(eq(environmentId), anyString());
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.deleteAuth(
+                        ENV_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()) + "/" + environmentId,
+                        token
+                ))
+                .andExpect(status().isForbidden());
 
         verify(environmentService).deleteEnvironment(eq(environmentId), anyString());
     }
@@ -304,6 +406,27 @@ class EnvironmentControllerTest {
         res.andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(environmentId))
                 .andExpect(jsonPath("$.isActive").value(true));
+
+        verify(environmentService).setEnvironmentActiveStatus(eq(environmentId), eq(true), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenActivateEnvironmentThrows() throws Exception {
+        // given
+        Long environmentId = TestUtil.generateRandomId();
+
+        when(environmentService.setEnvironmentActiveStatus(eq(environmentId), eq(true), anyString()))
+                .thenThrow(new RuntimeException("access denied"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                        ENV_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString())
+                                + "/" + environmentId
+                                + "/activate",
+                        new Object(),
+                        token
+                ))
+                .andExpect(status().isForbidden());
 
         verify(environmentService).setEnvironmentActiveStatus(eq(environmentId), eq(true), anyString());
     }

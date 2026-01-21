@@ -80,6 +80,21 @@ class EnvironmentVariableControllerTest {
     }
 
     @Test
+    void shouldReturnForbiddenWhenGetVariablesThrows() throws Exception {
+        // given
+        when(environmentVariableService.getVariablesByEnvironment(eq(environmentId), anyString()))
+                .thenThrow(new RuntimeException("access denied"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.getJsonAuth(
+                        VAR_URL.replace(ENV_ID_PLACEHOLDER, environmentId.toString()), token
+                ))
+                .andExpect(status().isForbidden());
+
+        verify(environmentVariableService).getVariablesByEnvironment(eq(environmentId), anyString());
+    }
+
+    @Test
     void shouldAddVariable() throws Exception {
         // given
         EnvironmentVariableRequest request = new EnvironmentVariableRequest(TestUtil.generateRandomKey(),
@@ -104,6 +119,26 @@ class EnvironmentVariableControllerTest {
                         jsonPath("$.value").value(request.getValue()),
                         jsonPath("$.environmentId").value(environmentId)
                 );
+
+        verify(environmentVariableService).addVariable(eq(environmentId), any(EnvironmentVariableRequest.class), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenAddVariableThrows() throws Exception {
+        // given
+        EnvironmentVariableRequest request = new EnvironmentVariableRequest(
+                TestUtil.generateRandomKey(),
+                TestUtil.generateRandomValue()
+        );
+
+        when(environmentVariableService.addVariable(eq(environmentId), any(EnvironmentVariableRequest.class), anyString()))
+                .thenThrow(new RuntimeException("access denied"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.postJsonAuth(
+                        VAR_URL.replace(ENV_ID_PLACEHOLDER, environmentId.toString()), request, token
+                ))
+                .andExpect(status().isForbidden());
 
         verify(environmentVariableService).addVariable(eq(environmentId), any(EnvironmentVariableRequest.class), anyString());
     }
@@ -151,6 +186,30 @@ class EnvironmentVariableControllerTest {
                 .updateVariable(eq(environmentId), eq(variableId), any(EnvironmentVariableRequest.class), anyString());
     }
 
+    @Test
+    void shouldReturnForbiddenWhenUpdateVariableThrows() throws Exception {
+        // given
+        Long variableId = TestUtil.generateRandomId();
+        EnvironmentVariableRequest request = new EnvironmentVariableRequest(
+                TestUtil.generateRandomKey(),
+                TestUtil.generateRandomValue()
+        );
+
+        when(environmentVariableService.updateVariable(eq(environmentId), eq(variableId),
+                any(EnvironmentVariableRequest.class), anyString())).thenThrow(new RuntimeException("access denied"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.putJsonAuth(
+                        VAR_URL.replace(ENV_ID_PLACEHOLDER, environmentId.toString()) + "/" + variableId,
+                        request,
+                        token
+                ))
+                .andExpect(status().isForbidden());
+
+        verify(environmentVariableService).updateVariable(eq(environmentId), eq(variableId),
+                any(EnvironmentVariableRequest.class), anyString());
+    }
+
     @ParameterizedTest
     @MethodSource("invalidVariableRequests")
     void shouldFailValidationForInvalidUpdate(EnvironmentVariableRequest request) throws Exception {
@@ -177,6 +236,25 @@ class EnvironmentVariableControllerTest {
                         VAR_URL.replace(ENV_ID_PLACEHOLDER, environmentId.toString()) + "/" + variableId, token
                 ))
                 .andExpect(status().isNoContent());
+
+        verify(environmentVariableService).deleteVariable(eq(environmentId), eq(variableId), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenDeleteVariableThrows() throws Exception {
+        // given
+        Long variableId = TestUtil.generateRandomId();
+
+        doThrow(new RuntimeException("access denied"))
+                .when(environmentVariableService)
+                .deleteVariable(eq(environmentId), eq(variableId), anyString());
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.deleteAuth(
+                        V.replace(ENV_ID_PLACEHOLDER, environmentId.toString()) + "/" + variableId,
+                        token
+                ))
+                .andExpect(status().isForbidden());
 
         verify(environmentVariableService).deleteVariable(eq(environmentId), eq(variableId), anyString());
     }
