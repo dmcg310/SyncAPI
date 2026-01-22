@@ -3,6 +3,7 @@ package com.syncapi.service.auth;
 import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
+import com.syncapi.dto.auth.UpdatePasswordRequest;
 import com.syncapi.entity.User;
 import com.syncapi.repository.user.UserRepository;
 import com.syncapi.security.jwt.JwtService;
@@ -33,15 +34,40 @@ public class AuthService {
         User user = new User(request.getEmail(), passwordEncoder.encode(request.getPassword()), request.getName());
         userRepository.save(user);
 
-        return new AuthResponse(jwtService.generateToken(user.getEmail()), user.getEmail(), user.getName());
+        return toResponse(user);
     }
 
     public AuthResponse login(LoginRequest request) {
         User user = util.getUserByEmail(request.getEmail());
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        if (!isPasswordCorrect(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid email or password");
         }
 
-        return new AuthResponse(jwtService.generateToken(user.getEmail()), user.getEmail(), user.getName());
+        return toResponse(user);
     }
+
+    public AuthResponse updatePassword(UpdatePasswordRequest request, String email) {
+        User user = util.getUserByEmail(email);
+        if (!isPasswordCorrect(request.getOriginalPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return toResponse(user);
+    }
+
+    private boolean isPasswordCorrect(String password, String currentPasswordHash) {
+        return passwordEncoder.matches(password, currentPasswordHash);
+    }
+
+    private AuthResponse toResponse(User user) {
+        return new AuthResponse(
+                jwtService.generateToken(user.getEmail()),
+                user.getEmail(),
+                user.getName()
+        );
+    }
+
 }

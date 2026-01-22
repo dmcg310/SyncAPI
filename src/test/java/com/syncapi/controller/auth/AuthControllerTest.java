@@ -5,8 +5,10 @@ import com.syncapi.TestUtil;
 import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
+import com.syncapi.dto.auth.UpdatePasswordRequest;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.auth.AuthService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -14,10 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +42,19 @@ class AuthControllerTest {
 
     @MockitoBean
     private JwtService jwtService;
+
+    private String token;
+
+    @BeforeEach
+    void setUp() {
+        reset(authService);
+
+        token = TestUtil.generateRandomToken();
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(TestUtil.generateRandomEmail(), null, List.of())
+        );
+    }
 
     @Test
     void shouldRegisterNewUser() throws Exception {
@@ -157,6 +175,75 @@ class AuthControllerTest {
                 new LoginRequest("", "password"),
                 new LoginRequest(TestUtil.generateRandomEmail(), ""),
                 new LoginRequest(TestUtil.generateRandomEmail(), "wrong-password")
+        );
+    }
+
+    @Test
+    void shouldUpdatePasswordSuccessfully() throws Exception {
+        // given
+        String email = TestUtil.generateRandomEmail();
+        String newToken = TestUtil.generateRandomToken();
+        String name = TestUtil.generateRandomName();
+
+        UpdatePasswordRequest request = new UpdatePasswordRequest(
+                TestUtil.generateRandomPassword(),
+                TestUtil.generateRandomPassword()
+        );
+        AuthResponse response = new AuthResponse(newToken, email, name);
+
+        when(authService.updatePassword(any(UpdatePasswordRequest.class), anyString()))
+                .thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.patchJsonAuth(AUTH_URL + "/password", request, token));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.token").value(newToken),
+                        jsonPath("$.email").value(email),
+                        jsonPath("$.name").value(name)
+                );
+
+        verify(authService).updatePassword(any(UpdatePasswordRequest.class), anyString());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenOriginalPasswordIncorrect() throws Exception {
+        // given
+        UpdatePasswordRequest request = new UpdatePasswordRequest(
+                TestUtil.generateRandomPassword(),
+                TestUtil.generateRandomPassword()
+        );
+
+        when(authService.updatePassword(any(UpdatePasswordRequest.class), anyString()))
+                .thenThrow(new RuntimeException("Current password is incorrect"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.patchJsonAuth(AUTH_URL + "/password", request, token))
+                .andExpect(status().isBadRequest());
+
+        verify(authService).updatePassword(any(UpdatePasswordRequest.class), anyString());
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidUpdatePasswordRequests")
+    void shouldFailValidationForInvalidUpdatePasswordRequest(UpdatePasswordRequest request) throws Exception {
+        // when / then
+        mockMvc.perform(JsonTestUtil.patchJsonAuth(AUTH_URL + "/password", request, token))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(authService);
+    }
+
+    private static Stream<UpdatePasswordRequest> invalidUpdatePasswordRequests() {
+        return Stream.of(
+                new UpdatePasswordRequest("", TestUtil.generateRandomPassword()),
+                new UpdatePasswordRequest(null, TestUtil.generateRandomPassword()),
+                new UpdatePasswordRequest(TestUtil.generateRandomPassword(), ""),
+                new UpdatePasswordRequest(TestUtil.generateRandomPassword(), null),
+                new UpdatePasswordRequest(TestUtil.generateRandomPassword(), "123")
         );
     }
 }

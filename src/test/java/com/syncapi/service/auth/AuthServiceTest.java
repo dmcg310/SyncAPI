@@ -4,6 +4,7 @@ import com.syncapi.TestUtil;
 import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
+import com.syncapi.dto.auth.UpdatePasswordRequest;
 import com.syncapi.entity.User;
 import com.syncapi.repository.user.UserRepository;
 import com.syncapi.security.jwt.JwtService;
@@ -165,5 +166,89 @@ class AuthServiceTest {
         verify(util).getUserByEmail(email);
         verify(passwordEncoder).matches(wrongPassword, user.getPasswordHash());
         verifyNoInteractions(jwtService);
+    }
+
+    @Test
+    void shouldUpdatePasswordSuccessfully() {
+        // given
+        String email = TestUtil.generateRandomEmail();
+        String currentPasswordHash = TestUtil.generateRandomPasswordHash();
+        String name = TestUtil.generateRandomName();
+        User user = new User(email, currentPasswordHash, name);
+
+        String originalPassword = TestUtil.generateRandomPassword();
+        String newPassword = TestUtil.generateRandomPassword();
+        String newPasswordHash = TestUtil.generateRandomPasswordHash();
+        String token = TestUtil.generateRandomToken();
+
+        UpdatePasswordRequest request = new UpdatePasswordRequest(originalPassword, newPassword);
+
+        when(util.getUserByEmail(email)).thenReturn(user);
+        when(passwordEncoder.matches(originalPassword, currentPasswordHash)).thenReturn(true);
+        when(passwordEncoder.encode(newPassword)).thenReturn(newPasswordHash);
+        when(jwtService.generateToken(email)).thenReturn(token);
+
+        // when
+        AuthResponse response = authService.updatePassword(request, email);
+
+        // then
+        assertThat(response.getToken()).isEqualTo(token);
+        assertThat(response.getEmail()).isEqualTo(email);
+        assertThat(response.getName()).isEqualTo(name);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getPasswordHash()).isEqualTo(newPasswordHash);
+
+        verify(util).getUserByEmail(email);
+        verify(passwordEncoder).matches(originalPassword, currentPasswordHash);
+        verify(passwordEncoder).encode(newPassword);
+        verify(jwtService).generateToken(email);
+    }
+
+    @Test
+    void shouldThrowWhenOriginalPasswordIsIncorrect() {
+        // given
+        String email = TestUtil.generateRandomEmail();
+        User user = TestUtil.createUser(TestUtil.generateRandomId(), email, TestUtil.generateRandomName());
+
+        String wrongOriginalPassword = TestUtil.generateRandomPassword();
+        UpdatePasswordRequest request = new UpdatePasswordRequest(wrongOriginalPassword,
+                TestUtil.generateRandomPassword());
+
+        when(util.getUserByEmail(email)).thenReturn(user);
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        // when / then
+        assertThatThrownBy(() -> authService.updatePassword(request, email))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Current password is incorrect");
+
+        verify(util).getUserByEmail(email);
+        verify(passwordEncoder).matches(wrongOriginalPassword, user.getPasswordHash());
+        verify(userRepository, never()).save(any());
+        verifyNoInteractions(jwtService);
+    }
+
+    @Test
+    void shouldThrowWhenUserNotFoundDuringPasswordUpdate() {
+        // given
+        String email = TestUtil.generateRandomEmail();
+        UpdatePasswordRequest request = new UpdatePasswordRequest(
+                TestUtil.generateRandomPassword(),
+                TestUtil.generateRandomPassword()
+        );
+
+        when(util.getUserByEmail(email)).thenThrow(new RuntimeException("User not found: " + email));
+
+        // when / then
+        assertThatThrownBy(() -> authService.updatePassword(request, email))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("User not found");
+
+        verify(util).getUserByEmail(email);
+        verifyNoInteractions(passwordEncoder);
+        verifyNoInteractions(jwtService);
+        verify(userRepository, never()).save(any());
     }
 }
