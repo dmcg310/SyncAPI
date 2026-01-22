@@ -8,6 +8,9 @@ import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
+import com.syncapi.exception.AccessDeniedException;
+import com.syncapi.exception.ConflictException;
+import com.syncapi.exception.ResourceNotFoundException;
 import com.syncapi.repository.request.RequestRepository;
 import com.syncapi.util.RequestMethod;
 import com.syncapi.util.Util;
@@ -93,12 +96,12 @@ class RequestServiceTest {
         // given
         Long folderId = TestUtil.generateRandomId();
         when(util.getFolderWithAccessCheck(folderId, testEmail))
-                .thenThrow(new RuntimeException("Folder not found with Id: " + folderId));
+                .thenThrow(new ResourceNotFoundException("Folder not found: " + folderId));
 
         // when / then
         assertThatThrownBy(() -> requestService.getRequestsByFolder(folderId, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Folder not found with Id: " + folderId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Folder not found: " + folderId);
 
         verifyNoInteractions(requestRepository);
     }
@@ -114,12 +117,12 @@ class RequestServiceTest {
                 otherWorkspace);
 
         when(util.getFolderWithAccessCheck(otherFolder.getId(), testEmail))
-                .thenThrow(new RuntimeException("Folder not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to folder: " + otherFolder.getId()));
 
         // when / then
         assertThatThrownBy(() -> requestService.getRequestsByFolder(otherFolder.getId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Folder not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to folder");
 
         verifyNoInteractions(requestRepository);
     }
@@ -154,12 +157,12 @@ class RequestServiceTest {
         // given
         Long requestId = TestUtil.generateRandomId();
         when(util.getRequestWithAccessCheck(requestId, testEmail))
-                .thenThrow(new RuntimeException("Request not found with Id: " + requestId));
+                .thenThrow(new ResourceNotFoundException("Request not found: " + requestId));
 
         // when / then
         assertThatThrownBy(() -> requestService.getRequestById(requestId, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Request not found with Id: " + requestId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Request not found: " + requestId);
     }
 
     @Test
@@ -174,12 +177,12 @@ class RequestServiceTest {
                 RequestMethod.GET, TestUtil.generateRandomUrl(), otherFolder);
 
         when(util.getRequestWithAccessCheck(request.getId(), testEmail))
-                .thenThrow(new RuntimeException("Request not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to request: " + request.getId()));
 
         // when / then
         assertThatThrownBy(() -> requestService.getRequestById(request.getId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Request not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to request");
     }
 
     @Test
@@ -256,12 +259,12 @@ class RequestServiceTest {
                 TestUtil.generateRandomUrl());
 
         when(util.getFolderWithAccessCheck(folderId, testEmail))
-                .thenThrow(new RuntimeException("Folder not found with Id: " + folderId));
+                .thenThrow(new ResourceNotFoundException("Folder not found: " + folderId));
 
         // when / then
         assertThatThrownBy(() -> requestService.createRequest(folderId, request, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Folder not found with Id: " + folderId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Folder not found: " + folderId);
 
         verifyNoInteractions(requestRepository);
     }
@@ -280,12 +283,12 @@ class RequestServiceTest {
                 TestUtil.generateRandomUrl());
 
         when(util.getFolderWithAccessCheck(otherFolder.getId(), testEmail))
-                .thenThrow(new RuntimeException("Folder not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to folder: " + otherFolder.getId()));
 
         // when / then
         assertThatThrownBy(() -> requestService.createRequest(otherFolder.getId(), request, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Folder not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to folder");
 
         verify(requestRepository, never()).save(any());
     }
@@ -352,12 +355,12 @@ class RequestServiceTest {
                 TestUtil.generateRandomUrl());
 
         when(util.getRequestWithAccessCheck(requestId, testEmail))
-                .thenThrow(new RuntimeException("Request not found with Id: " + requestId));
+                .thenThrow(new ResourceNotFoundException("Request not found: " + requestId));
 
         // when / then
         assertThatThrownBy(() -> requestService.updateRequest(requestId, request, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Request not found with Id: " + requestId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Request not found: " + requestId);
 
         verify(requestRepository, never()).save(any());
     }
@@ -378,12 +381,12 @@ class RequestServiceTest {
                 TestUtil.generateRandomUrl());
 
         when(util.getRequestWithAccessCheck(request.getId(), testEmail))
-                .thenThrow(new RuntimeException("Request not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to request: " + request.getId()));
 
         // when / then
         assertThatThrownBy(() -> requestService.updateRequest(request.getId(), updateRequest, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Request not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to request");
 
         verify(requestRepository, never()).save(any());
     }
@@ -550,12 +553,12 @@ class RequestServiceTest {
         patchRequest.setName(TestUtil.generateRandomName());
 
         when(util.getRequestWithAccessCheck(requestId, testEmail))
-                .thenThrow(new RuntimeException("Request not found with Id: " + requestId));
+                .thenThrow(new ResourceNotFoundException("Request not found: " + requestId));
 
         // when / then
         assertThatThrownBy(() -> requestService.patchRequest(requestId, patchRequest, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Request not found with Id: " + requestId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Request not found: " + requestId);
 
         verify(requestRepository, never()).save(any());
     }
@@ -576,12 +579,12 @@ class RequestServiceTest {
         patchRequest.setName(TestUtil.generateRandomName());
 
         when(util.getRequestWithAccessCheck(request.getId(), testEmail))
-                .thenThrow(new RuntimeException("Request not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to request: " + request.getId()));
 
         // when / then
         assertThatThrownBy(() -> requestService.patchRequest(request.getId(), patchRequest, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Request not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to request");
 
         verify(requestRepository, never()).save(any());
     }
@@ -607,12 +610,12 @@ class RequestServiceTest {
         Long requestId = TestUtil.generateRandomId();
 
         when(util.getRequestWithAccessCheck(requestId, testEmail))
-                .thenThrow(new RuntimeException("Request not found with Id: " + requestId));
+                .thenThrow(new ResourceNotFoundException("Request not found: " + requestId));
 
         // when / then
         assertThatThrownBy(() -> requestService.deleteRequest(requestId, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Request not found with Id: " + requestId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Request not found: " + requestId);
 
         verify(requestRepository, never()).delete(any());
     }
@@ -630,12 +633,12 @@ class RequestServiceTest {
                 RequestMethod.GET, TestUtil.generateRandomUrl(), otherFolder);
 
         when(util.getRequestWithAccessCheck(request.getId(), testEmail))
-                .thenThrow(new RuntimeException("Request not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to request: " + request.getId()));
 
         // when / then
         assertThatThrownBy(() -> requestService.deleteRequest(request.getId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Request not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to request");
 
         verify(requestRepository, never()).delete(any());
     }
@@ -698,7 +701,7 @@ class RequestServiceTest {
 
         // when / then
         assertThatThrownBy(() -> requestService.lockRequest(request.getId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("already locked");
 
         verify(requestRepository, never()).save(any());
@@ -741,7 +744,7 @@ class RequestServiceTest {
 
         // when / then
         assertThatThrownBy(() -> requestService.unlockRequest(request.getId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("not locked by the current user");
 
         verify(requestRepository, never()).save(any());
@@ -758,7 +761,7 @@ class RequestServiceTest {
 
         // when / then
         assertThatThrownBy(() -> requestService.unlockRequest(request.getId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("not locked by the current user");
 
         verify(requestRepository, never()).save(any());

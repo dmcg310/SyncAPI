@@ -6,6 +6,9 @@ import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
 import com.syncapi.dto.auth.UpdatePasswordRequest;
 import com.syncapi.entity.User;
+import com.syncapi.exception.ConflictException;
+import com.syncapi.exception.ResourceNotFoundException;
+import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.repository.user.UserRepository;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.util.Util;
@@ -90,7 +93,7 @@ class AuthServiceTest {
 
         // when / then
         assertThatThrownBy(() -> authService.register(request))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("Email already exists");
 
         verify(userRepository).existsByEmail(email);
@@ -134,11 +137,11 @@ class AuthServiceTest {
         String email = TestUtil.generateRandomEmail();
         LoginRequest request = new LoginRequest(email, TestUtil.generateRandomPassword());
 
-        when(util.getUserByEmail(email)).thenThrow(new RuntimeException("User not found: " + email));
+        when(util.getUserByEmail(email)).thenThrow(new ResourceNotFoundException("User not found: " + email));
 
         // when / then
         assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("User not found");
 
         verify(util).getUserByEmail(email);
@@ -160,7 +163,7 @@ class AuthServiceTest {
 
         // when / then
         assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessageContaining("Invalid email or password");
 
         verify(util).getUserByEmail(email);
@@ -221,8 +224,8 @@ class AuthServiceTest {
 
         // when / then
         assertThatThrownBy(() -> authService.updatePassword(request, email))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Current password is incorrect");
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("Original password is incorrect");
 
         verify(util).getUserByEmail(email);
         verify(passwordEncoder).matches(wrongOriginalPassword, user.getPasswordHash());
@@ -239,11 +242,11 @@ class AuthServiceTest {
                 TestUtil.generateRandomPassword()
         );
 
-        when(util.getUserByEmail(email)).thenThrow(new RuntimeException("User not found: " + email));
+        when(util.getUserByEmail(email)).thenThrow(new ResourceNotFoundException("User not found: " + email));
 
         // when / then
         assertThatThrownBy(() -> authService.updatePassword(request, email))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("User not found");
 
         verify(util).getUserByEmail(email);

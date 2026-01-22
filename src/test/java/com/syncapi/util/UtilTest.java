@@ -7,6 +7,8 @@ import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
+import com.syncapi.exception.AccessDeniedException;
+import com.syncapi.exception.ResourceNotFoundException;
 import com.syncapi.repository.environment.EnvironmentRepository;
 import com.syncapi.repository.environment.EnvironmentVariableRepository;
 import com.syncapi.repository.folder.FolderRepository;
@@ -80,7 +82,7 @@ class UtilTest {
     void shouldThrowWhenNoAuthentication() {
         // when / then
         assertThatThrownBy(Util::getCurrentUserEmail)
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("No authenticated user found");
     }
 
@@ -109,7 +111,7 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getUserByEmail(email))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("User not found")
                 .hasMessageContaining(email);
 
@@ -140,7 +142,7 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getUserById(userId))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("User not found")
                 .hasMessageContaining(userId.toString());
 
@@ -209,7 +211,7 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getWorkspaceWithAccessCheck(workspaceId, email))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Workspace not found")
                 .hasMessageContaining(workspaceId.toString());
 
@@ -236,8 +238,8 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getWorkspaceWithAccessCheck(workspaceId, email))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to workspace");
 
         verify(workspaceRepository).findById(workspaceId);
         verify(userRepository).findByEmail(email);
@@ -283,7 +285,7 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getEnvironmentWithAccessCheck(environmentId, email))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Environment not found")
                 .hasMessageContaining(environmentId.toString());
 
@@ -314,8 +316,8 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getEnvironmentWithAccessCheck(environmentId, email))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Environment not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to environment");
 
         verify(environmentRepository).findById(environmentId);
         verify(userRepository).findByEmail(email);
@@ -365,7 +367,7 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getEnvironmentVariableWithAccessCheck(variableId, email))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Environment variable not found")
                 .hasMessageContaining(variableId.toString());
 
@@ -401,8 +403,8 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getEnvironmentVariableWithAccessCheck(variableId, email))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Environment variable not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to environment variable");
 
         verify(environmentVariableRepository).findById(variableId);
         verify(userRepository).findByEmail(email);
@@ -447,7 +449,7 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getFolderWithAccessCheck(folderId, email))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Folder not found")
                 .hasMessageContaining(folderId.toString());
 
@@ -478,8 +480,8 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getFolderWithAccessCheck(folderId, email))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Folder not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to folder");
 
         verify(folderRepository).findById(folderId);
         verify(userRepository).findByEmail(email);
@@ -529,7 +531,7 @@ class UtilTest {
         String email = TestUtil.generateRandomEmail();
         // when / then
         assertThatThrownBy(() -> util.getRequestWithAccessCheck(requestId, email))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Request not found")
                 .hasMessageContaining(requestId.toString());
 
@@ -566,8 +568,8 @@ class UtilTest {
 
         // when / then
         assertThatThrownBy(() -> util.getRequestWithAccessCheck(requestId, email))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Request not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to request");
 
         verify(requestRepository).findById(requestId);
         verify(userRepository).findByEmail(email);

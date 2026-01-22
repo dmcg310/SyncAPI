@@ -27,14 +27,10 @@ public class EnvironmentVariableController {
 
     @GetMapping
     public ResponseEntity<List<EnvironmentVariableResponse>> getVariables(@PathVariable Long environmentId) {
-        try {
-            List<EnvironmentVariableResponse> variables = environmentVariableService.getVariablesByEnvironment(
-                    environmentId, Util.getCurrentUserEmail());
+        List<EnvironmentVariableResponse> variables = environmentVariableService.getVariablesByEnvironment(
+                environmentId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(variables);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(variables);
     }
 
     @PostMapping
@@ -42,14 +38,10 @@ public class EnvironmentVariableController {
             @PathVariable Long environmentId,
             @Valid @RequestBody EnvironmentVariableRequest request
     ) {
-        try {
-            EnvironmentVariableResponse created = environmentVariableService.addVariable(environmentId, request,
-                    Util.getCurrentUserEmail());
+        EnvironmentVariableResponse created = environmentVariableService.addVariable(environmentId, request,
+                Util.getCurrentUserEmail());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{variableId}")
@@ -58,25 +50,17 @@ public class EnvironmentVariableController {
             @PathVariable Long variableId,
             @Valid @RequestBody EnvironmentVariableRequest request
     ) {
-        try {
-            EnvironmentVariableResponse updated = environmentVariableService.updateVariable(environmentId, variableId,
-                    request, Util.getCurrentUserEmail());
+        EnvironmentVariableResponse updated = environmentVariableService.updateVariable(environmentId, variableId,
+                request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{variableId}")
     public ResponseEntity<Void> deleteVariable(@PathVariable Long environmentId,
                                                @PathVariable Long variableId) {
-        try {
-            environmentVariableService.deleteVariable(environmentId, variableId, Util.getCurrentUserEmail());
+        environmentVariableService.deleteVariable(environmentId, variableId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.noContent().build();
     }
 }

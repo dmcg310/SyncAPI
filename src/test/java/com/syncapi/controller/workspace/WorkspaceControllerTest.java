@@ -5,6 +5,8 @@ import com.syncapi.TestUtil;
 import com.syncapi.dto.workspace.AddMemberRequest;
 import com.syncapi.dto.workspace.WorkspaceRequest;
 import com.syncapi.dto.workspace.WorkspaceResponse;
+import com.syncapi.exception.AccessDeniedException;
+import com.syncapi.exception.BadRequestException;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.workspace.WorkspaceService;
 import org.junit.jupiter.api.BeforeEach;
@@ -142,7 +144,7 @@ class WorkspaceControllerTest {
     @Test
     void shouldReturnForbiddenWhenGetWorkspaceThrows() throws Exception {
         when(workspaceService.getWorkspace(anyLong(), anyString()))
-                .thenThrow(new RuntimeException("forbidden"));
+                .thenThrow(new AccessDeniedException("forbidden"));
 
         mockMvc.perform(JsonTestUtil.getJsonAuth(WORKSPACES_URL + "/" + TestUtil.generateRandomId(), token))
                 .andExpect(status().isForbidden());
@@ -241,7 +243,7 @@ class WorkspaceControllerTest {
     void shouldReturnForbiddenWhenUpdateWorkspaceThrows() throws Exception {
         // given
         when(workspaceService.updateWorkspace(anyLong(), any(), anyString()))
-                .thenThrow(new RuntimeException("forbidden"));
+                .thenThrow(new AccessDeniedException("forbidden"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.putJsonAuth(
@@ -292,7 +294,7 @@ class WorkspaceControllerTest {
     void shouldReturnForbiddenWhenPatchWorkspaceThrows() throws Exception {
         // given
         when(workspaceService.patchWorkspace(anyLong(), any(), anyString()))
-                .thenThrow(new RuntimeException("forbidden"));
+                .thenThrow(new AccessDeniedException("forbidden"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.patchJsonAuth(
@@ -319,7 +321,7 @@ class WorkspaceControllerTest {
     void shouldReturnForbiddenWhenDeleteWorkspaceThrows() throws Exception {
         // given
         Long workspaceId = TestUtil.generateRandomId();
-        doThrow(new RuntimeException("forbidden"))
+        doThrow(new AccessDeniedException("forbidden"))
                 .when(workspaceService)
                 .deleteWorkspace(eq(workspaceId), anyString());
 
@@ -375,7 +377,7 @@ class WorkspaceControllerTest {
 
         Long workspaceId = TestUtil.generateRandomId();
         when(workspaceService.addMember(eq(workspaceId), any(AddMemberRequest.class), anyString()))
-                .thenThrow(new RuntimeException("bad request"));
+                .thenThrow(new BadRequestException("bad request"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.postJsonAuth(WORKSPACES_URL + "/" + workspaceId + "/members", request, token))
@@ -426,7 +428,7 @@ class WorkspaceControllerTest {
         Long workspaceId = TestUtil.generateRandomId();
         Long userId = TestUtil.generateRandomId();
         when(workspaceService.removeMember(eq(workspaceId), eq(userId), anyString()))
-                .thenThrow(new RuntimeException("bad request"));
+                .thenThrow(new BadRequestException("bad request"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.deleteAuth(WORKSPACES_URL + "/" + workspaceId + "/members/" + userId, token))

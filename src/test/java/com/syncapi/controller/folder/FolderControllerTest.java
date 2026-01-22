@@ -4,6 +4,7 @@ import com.syncapi.JsonTestUtil;
 import com.syncapi.TestUtil;
 import com.syncapi.dto.folder.FolderRequest;
 import com.syncapi.dto.folder.FolderResponse;
+import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.folder.FolderService;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,13 +109,13 @@ class FolderControllerTest {
     void shouldReturnForbiddenWhenGetFoldersThrows() throws Exception {
         // given
         when(folderService.getFoldersByWorkspace(eq(workspaceId), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.getJsonAuth(
                         FOLDERS_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()), token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(folderService).getFoldersByWorkspace(eq(workspaceId), anyString());
     }
@@ -154,13 +155,13 @@ class FolderControllerTest {
         Long folderId = TestUtil.generateRandomId();
 
         when(folderService.getFolderById(eq(folderId), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.getJsonAuth(
                         FOLDERS_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()) + "/" + folderId, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(folderService).getFolderById(eq(folderId), anyString());
     }
@@ -251,13 +252,13 @@ class FolderControllerTest {
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
         when(folderService.createFolder(eq(workspaceId), any(FolderRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.postJsonAuth(
                         FOLDERS_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()), request, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(folderService).createFolder(eq(workspaceId), any(FolderRequest.class), anyString());
     }
@@ -315,13 +316,13 @@ class FolderControllerTest {
         FolderRequest request = new FolderRequest(TestUtil.generateRandomName());
 
         when(folderService.updateFolder(eq(folderId), any(FolderRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.putJsonAuth(
                         FOLDERS_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()) + "/" + folderId, request, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(folderService).updateFolder(eq(folderId), any(FolderRequest.class), anyString());
     }
@@ -365,13 +366,13 @@ class FolderControllerTest {
         Long folderId = TestUtil.generateRandomId();
 
         when(folderService.patchFolder(eq(folderId), any(FolderRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.patchJsonAuth(
                         FOLDERS_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()) + "/" + folderId, request, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(folderService).patchFolder(eq(folderId), any(FolderRequest.class), anyString());
     }
@@ -397,14 +398,14 @@ class FolderControllerTest {
         // given
         Long folderId = TestUtil.generateRandomId();
 
-        doThrow(new RuntimeException("access denied"))
+        doThrow(new UnauthorizedException("access denied"))
                 .when(folderService).deleteFolder(eq(folderId), anyString());
 
         // when / then
         mockMvc.perform(JsonTestUtil.deleteAuth(
                         FOLDERS_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()) + "/" + folderId, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(folderService).deleteFolder(eq(folderId), anyString());
     }

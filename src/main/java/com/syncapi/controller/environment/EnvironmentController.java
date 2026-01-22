@@ -28,87 +28,59 @@ public class EnvironmentController {
 
     @GetMapping
     public ResponseEntity<List<EnvironmentResponse>> getEnvironmentsByWorkspace(@PathVariable Long workspaceId) {
-        try {
-            List<EnvironmentResponse> environments = environmentService.getEnvironmentsByWorkspace(workspaceId,
-                    Util.getCurrentUserEmail());
+        List<EnvironmentResponse> environments = environmentService.getEnvironmentsByWorkspace(workspaceId,
+                Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(environments);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(environments);
     }
 
     @GetMapping("/{environmentId}")
     public ResponseEntity<EnvironmentResponse> getEnvironment(@PathVariable Long environmentId) {
-        try {
-            EnvironmentResponse environment = environmentService.getEnvironmentById(environmentId,
-                    Util.getCurrentUserEmail());
+        EnvironmentResponse environment = environmentService.getEnvironmentById(environmentId,
+                Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(environment);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(environment);
     }
 
     @PostMapping
     public ResponseEntity<EnvironmentResponse> createEnvironment(@PathVariable Long workspaceId,
                                                                  @Valid @RequestBody EnvironmentRequest request) {
-        try {
-            EnvironmentResponse environment = environmentService.createEnvironment(workspaceId, request,
-                    Util.getCurrentUserEmail());
+        EnvironmentResponse environment = environmentService.createEnvironment(workspaceId, request,
+                Util.getCurrentUserEmail());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(environment);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(environment);
     }
 
     @PutMapping("/{environmentId}")
     public ResponseEntity<EnvironmentResponse> updateEnvironment(@PathVariable Long environmentId,
                                                                  @Valid @RequestBody EnvironmentRequest request) {
-        try {
-            EnvironmentResponse environment = environmentService.updateEnvironment(environmentId, request,
-                    Util.getCurrentUserEmail());
+        EnvironmentResponse environment = environmentService.updateEnvironment(environmentId, request,
+                Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(environment);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(environment);
     }
 
     @PatchMapping("/{environmentId}")
     public ResponseEntity<EnvironmentResponse> patchEnvironment(@PathVariable Long environmentId,
                                                                 @RequestBody EnvironmentRequest request) {
-        try {
-            EnvironmentResponse environment = environmentService.patchEnvironment(environmentId, request,
-                    Util.getCurrentUserEmail());
+        EnvironmentResponse environment = environmentService.patchEnvironment(environmentId, request,
+                Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(environment);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(environment);
     }
 
     @DeleteMapping("/{environmentId}")
     public ResponseEntity<Void> deleteEnvironment(@PathVariable Long environmentId) {
-        try {
-            environmentService.deleteEnvironment(environmentId, Util.getCurrentUserEmail());
+        environmentService.deleteEnvironment(environmentId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{environmentId}/activate")
     public ResponseEntity<EnvironmentResponse> activateEnvironment(@PathVariable Long environmentId) {
-        try {
-            EnvironmentResponse environment = environmentService.setEnvironmentActiveStatus(environmentId, true,
-                    Util.getCurrentUserEmail());
+        EnvironmentResponse environment = environmentService.setEnvironmentActiveStatus(environmentId, true,
+                Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(environment);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(environment);
     }
 }

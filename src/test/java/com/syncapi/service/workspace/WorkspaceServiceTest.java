@@ -6,6 +6,11 @@ import com.syncapi.dto.workspace.WorkspaceRequest;
 import com.syncapi.dto.workspace.WorkspaceResponse;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
+import com.syncapi.exception.AccessDeniedException;
+import com.syncapi.exception.BadRequestException;
+import com.syncapi.exception.ConflictException;
+import com.syncapi.exception.ResourceNotFoundException;
+import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.repository.workspace.WorkspaceRepository;
 import com.syncapi.util.Util;
 import org.junit.jupiter.api.BeforeEach;
@@ -105,12 +110,12 @@ class WorkspaceServiceTest {
         Long workspaceId = TestUtil.generateRandomId();
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found with Id: " + workspaceId));
+                .thenThrow(new ResourceNotFoundException("Workspace not found: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.getWorkspace(workspaceId, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Workspace not found: " + workspaceId);
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
     }
@@ -121,12 +126,12 @@ class WorkspaceServiceTest {
         Long workspaceId = TestUtil.generateRandomId();
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to workspace: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.getWorkspace(workspaceId, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to workspace");
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
     }
@@ -190,12 +195,12 @@ class WorkspaceServiceTest {
         WorkspaceRequest request = new WorkspaceRequest(TestUtil.generateRandomName());
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found with Id: " + workspaceId));
+                .thenThrow(new ResourceNotFoundException("Workspace not found: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.updateWorkspace(workspaceId, request, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Workspace not found: " + workspaceId);
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).save(any());
@@ -208,12 +213,12 @@ class WorkspaceServiceTest {
         WorkspaceRequest request = new WorkspaceRequest(TestUtil.generateRandomName());
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to workspace: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.updateWorkspace(workspaceId, request, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to workspace");
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).save(any());
@@ -323,12 +328,12 @@ class WorkspaceServiceTest {
         WorkspaceRequest request = new WorkspaceRequest(TestUtil.generateRandomName());
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found with Id: " + workspaceId));
+                .thenThrow(new ResourceNotFoundException("Workspace not found: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.patchWorkspace(workspaceId, request, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Workspace not found: " + workspaceId);
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).save(any());
@@ -341,12 +346,12 @@ class WorkspaceServiceTest {
         WorkspaceRequest request = new WorkspaceRequest(TestUtil.generateRandomName());
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to workspace: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.patchWorkspace(workspaceId, request, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to workspace");
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).save(any());
@@ -374,12 +379,12 @@ class WorkspaceServiceTest {
         Long workspaceId = TestUtil.generateRandomId();
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found with Id: " + workspaceId));
+                .thenThrow(new ResourceNotFoundException("Workspace not found: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.deleteWorkspace(workspaceId, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Workspace not found: " + workspaceId);
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).delete(any());
@@ -391,12 +396,12 @@ class WorkspaceServiceTest {
         Long workspaceId = TestUtil.generateRandomId();
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to workspace: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.deleteWorkspace(workspaceId, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to workspace");
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).delete(any());
@@ -434,12 +439,12 @@ class WorkspaceServiceTest {
         AddMemberRequest request = new AddMemberRequest(TestUtil.generateRandomEmail());
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found with Id: " + workspaceId));
+                .thenThrow(new ResourceNotFoundException("Workspace not found: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.addMember(workspaceId, request, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Workspace not found: " + workspaceId);
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).save(any());
@@ -452,12 +457,12 @@ class WorkspaceServiceTest {
         AddMemberRequest request = new AddMemberRequest(TestUtil.generateRandomEmail());
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to workspace: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.addMember(workspaceId, request, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to workspace");
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).save(any());
@@ -475,7 +480,7 @@ class WorkspaceServiceTest {
 
         // when / then
         assertThatThrownBy(() -> workspaceService.addMember(workspaceId, request, testEmail))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("already a member");
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
@@ -511,12 +516,12 @@ class WorkspaceServiceTest {
         Long workspaceId = TestUtil.generateRandomId();
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found with Id: " + workspaceId));
+                .thenThrow(new ResourceNotFoundException("Workspace not found: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.removeMember(workspaceId, TestUtil.generateRandomId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Workspace not found: " + workspaceId);
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).save(any());
@@ -528,12 +533,12 @@ class WorkspaceServiceTest {
         Long workspaceId = TestUtil.generateRandomId();
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found or access denied"));
+                .thenThrow(new AccessDeniedException("Access denied to workspace: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> workspaceService.removeMember(workspaceId, TestUtil.generateRandomId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found or access denied");
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to workspace");
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verify(workspaceRepository, never()).save(any());
@@ -552,7 +557,7 @@ class WorkspaceServiceTest {
 
         // when / then
         assertThatThrownBy(() -> workspaceService.removeMember(workspaceId, nonMember.getId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessageContaining("not a member");
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
@@ -570,7 +575,7 @@ class WorkspaceServiceTest {
 
         // when / then
         assertThatThrownBy(() -> workspaceService.removeMember(workspaceId, testUser.getId(), testEmail))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Cannot remove the last member");
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);

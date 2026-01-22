@@ -4,6 +4,7 @@ import com.syncapi.dto.environment.EnvironmentVariableRequest;
 import com.syncapi.dto.environment.EnvironmentVariableResponse;
 import com.syncapi.entity.Environment;
 import com.syncapi.entity.EnvironmentVariable;
+import com.syncapi.exception.BadRequestException;
 import com.syncapi.repository.environment.EnvironmentVariableRepository;
 import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;
@@ -49,7 +50,7 @@ public class EnvironmentVariableService {
                                                       EnvironmentVariableRequest request, String email) {
         EnvironmentVariable variable = util.getEnvironmentVariableWithAccessCheck(variableId, email);
         if (!variable.getEnvironment().getId().equals(environmentId)) {
-            throw new RuntimeException("Environment variable does not belong to this environment");
+            throw new BadRequestException("Environment variable does not belong to this environment");
         }
 
         variable.setKey(request.getKey());
@@ -62,7 +63,7 @@ public class EnvironmentVariableService {
     public void deleteVariable(Long environmentId, Long variableId, String email) {
         EnvironmentVariable variable = util.getEnvironmentVariableWithAccessCheck(variableId, email);
         if (!variable.getEnvironment().getId().equals(environmentId)) {
-            throw new RuntimeException("Environment variable does not belong to this environment");
+            throw new BadRequestException("Environment variable does not belong to this environment");
         }
 
         environmentVariableRepository.delete(variable);

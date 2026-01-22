@@ -7,6 +7,7 @@ import com.syncapi.entity.Environment;
 import com.syncapi.entity.EnvironmentVariable;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
+import com.syncapi.exception.BadRequestException;
 import com.syncapi.repository.environment.EnvironmentVariableRepository;
 import com.syncapi.util.Util;
 import org.junit.jupiter.api.BeforeEach;
@@ -141,7 +142,7 @@ class EnvironmentVariableServiceTest {
         // when / then
         assertThatThrownBy(() ->
                 environmentVariableService.updateVariable(testEnvironment.getId(), variableId, request, testEmail)
-        ).isInstanceOf(RuntimeException.class)
+        ).isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("does not belong");
 
         verify(environmentVariableRepository, never()).save(any());

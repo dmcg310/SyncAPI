@@ -28,99 +28,61 @@ public class RequestController {
 
     @GetMapping
     public ResponseEntity<List<RequestResponse>> getRequestsByFolder(@PathVariable Long folderId) {
-        try {
-            List<RequestResponse> requests =
-                    requestService.getRequestsByFolder(folderId, Util.getCurrentUserEmail());
+        List<RequestResponse> requests =
+                requestService.getRequestsByFolder(folderId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(requests);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(requests);
     }
 
     @GetMapping("/{requestId}")
     public ResponseEntity<RequestResponse> getRequest(@PathVariable Long requestId) {
-        try {
-            RequestResponse request =
-                    requestService.getRequestById(requestId, Util.getCurrentUserEmail());
+        RequestResponse request = requestService.getRequestById(requestId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(request);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(request);
     }
 
     @PostMapping
     public ResponseEntity<RequestResponse> createRequest(@PathVariable Long folderId,
                                                          @Valid @RequestBody RequestRequest request) {
-        try {
-            RequestResponse newRequest =
-                    requestService.createRequest(folderId, request, Util.getCurrentUserEmail());
+        RequestResponse newRequest = requestService.createRequest(folderId, request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(newRequest);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(newRequest);
     }
 
     @PutMapping("/{requestId}")
     public ResponseEntity<RequestResponse> updateRequest(@PathVariable Long requestId,
                                                          @Valid @RequestBody RequestRequest request) {
-        try {
-            RequestResponse updatedRequest =
-                    requestService.updateRequest(requestId, request, Util.getCurrentUserEmail());
+        RequestResponse updatedRequest = requestService.updateRequest(requestId, request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(updatedRequest);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(updatedRequest);
     }
 
     @PatchMapping("/{requestId}")
     public ResponseEntity<RequestResponse> patchRequest(@PathVariable Long requestId,
                                                         @RequestBody RequestRequest request) {
-        try {
-            RequestResponse patchedRequest =
-                    requestService.patchRequest(requestId, request, Util.getCurrentUserEmail());
+        RequestResponse patchedRequest = requestService.patchRequest(requestId, request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(patchedRequest);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(patchedRequest);
     }
 
     @DeleteMapping("/{requestId}")
     public ResponseEntity<Void> deleteRequest(@PathVariable Long requestId) {
-        try {
-            requestService.deleteRequest(requestId, Util.getCurrentUserEmail());
+        requestService.deleteRequest(requestId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{requestId}/lock")
     public ResponseEntity<RequestResponse> lockRequest(@PathVariable Long requestId) {
-        try {
-            RequestResponse lockedRequest =
-                    requestService.lockRequest(requestId, Util.getCurrentUserEmail());
+        RequestResponse lockedRequest = requestService.lockRequest(requestId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(lockedRequest);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(lockedRequest);
     }
 
     @PatchMapping("/{requestId}/unlock")
     public ResponseEntity<RequestResponse> unlockRequest(@PathVariable Long requestId) {
-        try {
-            RequestResponse unlockedRequest =
-                    requestService.unlockRequest(requestId, Util.getCurrentUserEmail());
+        RequestResponse unlockedRequest = requestService.unlockRequest(requestId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(unlockedRequest);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(unlockedRequest);
     }
 }

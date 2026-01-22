@@ -5,6 +5,9 @@ import com.syncapi.dto.workspace.WorkspaceRequest;
 import com.syncapi.dto.workspace.WorkspaceResponse;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
+import com.syncapi.exception.BadRequestException;
+import com.syncapi.exception.ConflictException;
+import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.repository.workspace.WorkspaceRepository;
 import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;
@@ -88,7 +91,7 @@ public class WorkspaceService {
         Workspace workspace = util.getWorkspaceWithAccessCheck(workspaceId, email);
         User userToAdd = util.getUserByEmail(request.getEmail());
         if (workspace.getMembers().contains(userToAdd)) {
-            throw new RuntimeException("User is already a member of the workspace");
+            throw new ConflictException("User is already a member of the workspace");
         }
 
         workspace.getMembers().add(userToAdd);
@@ -103,11 +106,11 @@ public class WorkspaceService {
         Workspace workspace = util.getWorkspaceWithAccessCheck(workspaceId, email);
         User userToRemove = util.getUserById(userId);
         if (!workspace.getMembers().contains(userToRemove)) {
-            throw new RuntimeException("User is not a member of the workspace");
+            throw new UnauthorizedException("User is not a member of the workspace");
         }
 
         if (workspace.getMembers().size() <= 1) {
-            throw new RuntimeException("Cannot remove the last member of the workspace. Delete workspace instead.");
+            throw new BadRequestException("Cannot remove the last member of the workspace, delete workspace instead");
         }
 
         workspace.getMembers().remove(userToRemove);

@@ -4,6 +4,7 @@ import com.syncapi.dto.request.RequestRequest;
 import com.syncapi.dto.request.RequestResponse;
 import com.syncapi.entity.Folder;
 import com.syncapi.entity.Request;
+import com.syncapi.exception.ConflictException;
 import com.syncapi.repository.request.RequestRepository;
 import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;
@@ -116,7 +117,7 @@ public class RequestService {
 
         Request existingRequest = util.getRequestWithAccessCheck(requestId, email);
         if (existingRequest.getLockedBy() != null && !existingRequest.getLockedBy().equals(userId)) {
-            throw new RuntimeException("Request is already locked by another user");
+            throw new ConflictException("Request is already locked by another user");
         }
 
         existingRequest.setLockedBy(userId);
@@ -131,7 +132,7 @@ public class RequestService {
 
         Request existingRequest = util.getRequestWithAccessCheck(requestId, email);
         if (existingRequest.getLockedBy() == null || !existingRequest.getLockedBy().equals(userId)) {
-            throw new RuntimeException("Request is not locked by the current user or is already unlocked");
+            throw new ConflictException("Request is not locked by the current user or is already unlocked");
         }
 
         existingRequest.setLockedBy(null);

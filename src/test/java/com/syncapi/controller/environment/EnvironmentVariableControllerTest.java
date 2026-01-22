@@ -4,6 +4,7 @@ import com.syncapi.JsonTestUtil;
 import com.syncapi.TestUtil;
 import com.syncapi.dto.environment.EnvironmentVariableRequest;
 import com.syncapi.dto.environment.EnvironmentVariableResponse;
+import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.environment.EnvironmentVariableService;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,13 +84,13 @@ class EnvironmentVariableControllerTest {
     void shouldReturnForbiddenWhenGetVariablesThrows() throws Exception {
         // given
         when(environmentVariableService.getVariablesByEnvironment(eq(environmentId), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.getJsonAuth(
                         VAR_URL.replace(ENV_ID_PLACEHOLDER, environmentId.toString()), token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentVariableService).getVariablesByEnvironment(eq(environmentId), anyString());
     }
@@ -132,13 +133,13 @@ class EnvironmentVariableControllerTest {
         );
 
         when(environmentVariableService.addVariable(eq(environmentId), any(EnvironmentVariableRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.postJsonAuth(
                         VAR_URL.replace(ENV_ID_PLACEHOLDER, environmentId.toString()), request, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentVariableService).addVariable(eq(environmentId), any(EnvironmentVariableRequest.class), anyString());
     }
@@ -196,7 +197,7 @@ class EnvironmentVariableControllerTest {
         );
 
         when(environmentVariableService.updateVariable(eq(environmentId), eq(variableId),
-                any(EnvironmentVariableRequest.class), anyString())).thenThrow(new RuntimeException("access denied"));
+                any(EnvironmentVariableRequest.class), anyString())).thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.putJsonAuth(
@@ -204,7 +205,7 @@ class EnvironmentVariableControllerTest {
                         request,
                         token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentVariableService).updateVariable(eq(environmentId), eq(variableId),
                 any(EnvironmentVariableRequest.class), anyString());
@@ -245,7 +246,7 @@ class EnvironmentVariableControllerTest {
         // given
         Long variableId = TestUtil.generateRandomId();
 
-        doThrow(new RuntimeException("access denied"))
+        doThrow(new UnauthorizedException("access denied"))
                 .when(environmentVariableService)
                 .deleteVariable(eq(environmentId), eq(variableId), anyString());
 
@@ -254,7 +255,7 @@ class EnvironmentVariableControllerTest {
                         VAR_URL.replace(ENV_ID_PLACEHOLDER, environmentId.toString()) + "/" + variableId,
                         token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentVariableService).deleteVariable(eq(environmentId), eq(variableId), anyString());
     }

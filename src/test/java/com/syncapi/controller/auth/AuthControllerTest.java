@@ -6,8 +6,12 @@ import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
 import com.syncapi.dto.auth.UpdatePasswordRequest;
+import com.syncapi.exception.ConflictException;
+import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.auth.AuthService;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -33,6 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
     private static final String AUTH_URL = "/api/auth";
+
+    @Autowired
+    private Validator validator;
 
     @Autowired
     private MockMvc mockMvc;
@@ -91,11 +99,11 @@ class AuthControllerTest {
                 TestUtil.generateRandomPassword());
 
         when(authService.register(any(RegisterRequest.class)))
-                .thenThrow(new RuntimeException("email already exists"));
+                .thenThrow(new ConflictException("email already exists"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.postJson(AUTH_URL + "/register", request))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict());
 
         verify(authService).register(any(RegisterRequest.class));
     }
@@ -149,20 +157,18 @@ class AuthControllerTest {
     @ParameterizedTest
     @MethodSource("invalidLoginRequests")
     void shouldFailLoginForInvalidCredentials(LoginRequest request) throws Exception {
-        boolean passesValidation = request.getEmail() != null
-                && !request.getEmail().isBlank()
-                && request.getEmail().contains("@")
-                && request.getPassword() != null
-                && !request.getPassword().isBlank();
-        if (passesValidation) {
+        Set<ConstraintViolation<LoginRequest>> violations = validator.validate(request);
+        boolean passesBeanValidation = violations.isEmpty();
+
+        if (passesBeanValidation) {
             when(authService.login(any(LoginRequest.class)))
-                    .thenThrow(new RuntimeException("invalid credentials"));
+                    .thenThrow(new UnauthorizedException("Invalid email or password"));
         }
 
         mockMvc.perform(JsonTestUtil.postJson(AUTH_URL + "/login", request))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().is(passesBeanValidation ? 401 : 400));
 
-        if (passesValidation) {
+        if (passesBeanValidation) {
             verify(authService).login(any(LoginRequest.class));
         } else {
             verifyNoInteractions(authService);
@@ -218,11 +224,11 @@ class AuthControllerTest {
         );
 
         when(authService.updatePassword(any(UpdatePasswordRequest.class), anyString()))
-                .thenThrow(new RuntimeException("Current password is incorrect"));
+                .thenThrow(new UnauthorizedException("Original password is incorrect"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.patchJsonAuth(AUTH_URL + "/password", request, token))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
 
         verify(authService).updatePassword(any(UpdatePasswordRequest.class), anyString());
     }

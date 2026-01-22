@@ -28,70 +28,46 @@ public class FolderController {
 
     @GetMapping
     public ResponseEntity<List<FolderResponse>> getFoldersByWorkspace(@PathVariable Long workspaceId) {
-        try {
-            List<FolderResponse> folders = folderService.getFoldersByWorkspace(workspaceId, Util.getCurrentUserEmail());
+        List<FolderResponse> folders = folderService.getFoldersByWorkspace(workspaceId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(folders);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(folders);
     }
 
     @GetMapping("/{folderId}")
     public ResponseEntity<FolderResponse> getFolder(@PathVariable Long folderId) {
-        try {
-            FolderResponse folder = folderService.getFolderById(folderId, Util.getCurrentUserEmail());
+        FolderResponse folder = folderService.getFolderById(folderId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(folder);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(folder);
     }
 
     @PostMapping
     public ResponseEntity<FolderResponse> createFolder(@PathVariable Long workspaceId,
                                                        @Valid @RequestBody FolderRequest request) {
-        try {
-            FolderResponse folder = folderService.createFolder(workspaceId, request, Util.getCurrentUserEmail());
+        FolderResponse folder = folderService.createFolder(workspaceId, request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(folder);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(folder);
     }
 
     @PutMapping("/{folderId}")
     public ResponseEntity<FolderResponse> updateFolder(@PathVariable Long folderId,
                                                        @Valid @RequestBody FolderRequest request) {
-        try {
-            FolderResponse folder = folderService.updateFolder(folderId, request, Util.getCurrentUserEmail());
+        FolderResponse folder = folderService.updateFolder(folderId, request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(folder);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(folder);
     }
 
     @PatchMapping("/{folderId}")
     public ResponseEntity<FolderResponse> patchFolder(@PathVariable Long folderId,
                                                       @RequestBody FolderRequest request) {
-        try {
-            FolderResponse folder = folderService.patchFolder(folderId, request, Util.getCurrentUserEmail());
+        FolderResponse folder = folderService.patchFolder(folderId, request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(folder);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(folder);
     }
 
     @DeleteMapping("/{folderId}")
     public ResponseEntity<Void> deleteFolder(@PathVariable Long folderId) {
-        try {
-            folderService.deleteFolder(folderId, Util.getCurrentUserEmail());
+        folderService.deleteFolder(folderId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.noContent().build();
     }
 }

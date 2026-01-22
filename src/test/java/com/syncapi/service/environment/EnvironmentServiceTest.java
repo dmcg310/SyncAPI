@@ -8,6 +8,7 @@ import com.syncapi.entity.Environment;
 import com.syncapi.entity.EnvironmentVariable;
 import com.syncapi.entity.User;
 import com.syncapi.entity.Workspace;
+import com.syncapi.exception.ResourceNotFoundException;
 import com.syncapi.repository.environment.EnvironmentRepository;
 import com.syncapi.util.Util;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,12 +91,12 @@ class EnvironmentServiceTest {
         Long workspaceId = TestUtil.generateRandomId();
 
         when(util.getWorkspaceWithAccessCheck(workspaceId, testEmail))
-                .thenThrow(new RuntimeException("Workspace not found with Id: " + workspaceId));
+                .thenThrow(new ResourceNotFoundException("Workspace not found: " + workspaceId));
 
         // when / then
         assertThatThrownBy(() -> environmentService.getEnvironmentsByWorkspace(workspaceId, testEmail))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Workspace not found with Id: " + workspaceId);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Workspace not found: " + workspaceId);
 
         verify(util).getWorkspaceWithAccessCheck(workspaceId, testEmail);
         verifyNoInteractions(environmentRepository);
@@ -139,11 +140,11 @@ class EnvironmentServiceTest {
         Long environmentId = TestUtil.generateRandomId();
 
         when(util.getEnvironmentWithAccessCheck(environmentId, testEmail))
-                .thenThrow(new RuntimeException("Environment not found with Id: " + environmentId));
+                .thenThrow(new ResourceNotFoundException("Environment not found: " + environmentId));
 
         // when / then
         assertThatThrownBy(() -> environmentService.getEnvironmentById(environmentId, testEmail))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Environment not found");
 
         verify(util).getEnvironmentWithAccessCheck(environmentId, testEmail);

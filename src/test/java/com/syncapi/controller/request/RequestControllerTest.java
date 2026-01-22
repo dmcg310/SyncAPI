@@ -4,6 +4,7 @@ import com.syncapi.JsonTestUtil;
 import com.syncapi.TestUtil;
 import com.syncapi.dto.request.RequestRequest;
 import com.syncapi.dto.request.RequestResponse;
+import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.request.RequestService;
 import com.syncapi.util.RequestMethod;
@@ -110,13 +111,13 @@ class RequestControllerTest {
     void shouldReturnForbiddenWhenGetRequestsThrows() throws Exception {
         // given
         when(requestService.getRequestsByFolder(eq(folderId), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.getJsonAuth(
                         REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString()), token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -154,13 +155,13 @@ class RequestControllerTest {
         Long requestId = TestUtil.generateRandomId();
 
         when(requestService.getRequestById(eq(requestId), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.getJsonAuth(
                         REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString()) + "/" + requestId, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -232,13 +233,13 @@ class RequestControllerTest {
                 TestUtil.generateRandomUrl());
 
         when(requestService.createRequest(eq(folderId), any(RequestRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.postJsonAuth(
                         REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString()), request, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -297,13 +298,13 @@ class RequestControllerTest {
                 TestUtil.generateRandomUrl());
 
         when(requestService.updateRequest(eq(requestId), any(RequestRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.putJsonAuth(
                         REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString()) + "/" + requestId, request, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -340,13 +341,13 @@ class RequestControllerTest {
         request.setName(TestUtil.generateRandomName());
 
         when(requestService.patchRequest(eq(requestId), any(RequestRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.patchJsonAuth(
                         REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString()) + "/" + requestId, request, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -370,14 +371,14 @@ class RequestControllerTest {
         // given
         Long requestId = TestUtil.generateRandomId();
 
-        doThrow(new RuntimeException("access denied"))
+        doThrow(new UnauthorizedException("access denied"))
                 .when(requestService).deleteRequest(eq(requestId), anyString());
 
         // when / then
         mockMvc.perform(JsonTestUtil.deleteAuth(
                         REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString()) + "/" + requestId, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -418,7 +419,7 @@ class RequestControllerTest {
         Long requestId = TestUtil.generateRandomId();
 
         when(requestService.lockRequest(eq(requestId), anyString()))
-                .thenThrow(new RuntimeException("already locked"));
+                .thenThrow(new UnauthorizedException("already locked"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.patchJsonAuth(
@@ -427,7 +428,7 @@ class RequestControllerTest {
                         "",
                         token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(requestService).lockRequest(eq(requestId), anyString());
     }
@@ -469,7 +470,7 @@ class RequestControllerTest {
         Long requestId = TestUtil.generateRandomId();
 
         when(requestService.unlockRequest(eq(requestId), anyString()))
-                .thenThrow(new RuntimeException("not locked by current user"));
+                .thenThrow(new UnauthorizedException("not locked by current user"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.patchJsonAuth(
@@ -478,7 +479,7 @@ class RequestControllerTest {
                         "",
                         token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(requestService).unlockRequest(eq(requestId), anyString());
     }

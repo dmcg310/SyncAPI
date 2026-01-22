@@ -36,13 +36,9 @@ public class WorkspaceController {
 
     @GetMapping("/{id}")
     public ResponseEntity<WorkspaceResponse> getWorkspace(@PathVariable Long id) {
-        try {
-            WorkspaceResponse workspace = workspaceService.getWorkspace(id, Util.getCurrentUserEmail());
+        WorkspaceResponse workspace = workspaceService.getWorkspace(id, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(workspace);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(workspace);
     }
 
     @PostMapping
@@ -55,58 +51,38 @@ public class WorkspaceController {
     @PutMapping("/{id}")
     public ResponseEntity<WorkspaceResponse> updateWorkspace(@PathVariable Long id,
                                                              @Valid @RequestBody WorkspaceRequest request) {
-        try {
-            WorkspaceResponse workspace = workspaceService.updateWorkspace(id, request, Util.getCurrentUserEmail());
+        WorkspaceResponse workspace = workspaceService.updateWorkspace(id, request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(workspace);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(workspace);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<WorkspaceResponse> patchWorkspace(@PathVariable Long id,
                                                             @RequestBody WorkspaceRequest request) {
-        try {
-            WorkspaceResponse workspace = workspaceService.patchWorkspace(id, request, Util.getCurrentUserEmail());
+        WorkspaceResponse workspace = workspaceService.patchWorkspace(id, request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(workspace);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok(workspace);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteWorkspace(@PathVariable Long id) {
-        try {
-            workspaceService.deleteWorkspace(id, Util.getCurrentUserEmail());
+        workspaceService.deleteWorkspace(id, Util.getCurrentUserEmail());
 
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/members")
     public ResponseEntity<WorkspaceResponse> addMember(@PathVariable Long id,
                                                        @Valid @RequestBody AddMemberRequest request) {
-        try {
-            WorkspaceResponse workspace = workspaceService.addMember(id, request, Util.getCurrentUserEmail());
+        WorkspaceResponse workspace = workspaceService.addMember(id, request, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(workspace);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(workspace);
     }
 
     @DeleteMapping("/{id}/members/{userId}")
     public ResponseEntity<WorkspaceResponse> removeMember(@PathVariable Long id, @PathVariable Long userId) {
-        try {
-            WorkspaceResponse workspace = workspaceService.removeMember(id, userId, Util.getCurrentUserEmail());
+        WorkspaceResponse workspace = workspaceService.removeMember(id, userId, Util.getCurrentUserEmail());
 
-            return ResponseEntity.ok(workspace);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(workspace);
     }
 }

@@ -5,6 +5,7 @@ import com.syncapi.TestUtil;
 import com.syncapi.dto.environment.EnvironmentRequest;
 import com.syncapi.dto.environment.EnvironmentResponse;
 import com.syncapi.dto.environment.EnvironmentVariableResponse;
+import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.environment.EnvironmentService;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,13 +91,13 @@ class EnvironmentControllerTest {
     void shouldReturnForbiddenWhenGetEnvironmentsThrows() throws Exception {
         // given
         when(environmentService.getEnvironmentsByWorkspace(eq(workspaceId), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.getJsonAuth(
                         ENV_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()), token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentService).getEnvironmentsByWorkspace(eq(workspaceId), anyString());
     }
@@ -142,7 +143,7 @@ class EnvironmentControllerTest {
         Long environmentId = TestUtil.generateRandomId();
 
         when(environmentService.getEnvironmentById(eq(environmentId), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.getJsonAuth(
@@ -150,7 +151,7 @@ class EnvironmentControllerTest {
                                 + "/" + environmentId,
                         token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentService).getEnvironmentById(eq(environmentId), anyString());
     }
@@ -197,13 +198,13 @@ class EnvironmentControllerTest {
         request.setDescription(TestUtil.generateRandomDescription());
 
         when(environmentService.createEnvironment(eq(workspaceId), any(EnvironmentRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.postJsonAuth(
                         ENV_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()), request, token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentService).createEnvironment(eq(workspaceId), any(EnvironmentRequest.class), anyString());
     }
@@ -264,7 +265,7 @@ class EnvironmentControllerTest {
         request.setDescription(TestUtil.generateRandomDescription());
 
         when(environmentService.updateEnvironment(eq(environmentId), any(EnvironmentRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.putJsonAuth(
@@ -273,7 +274,7 @@ class EnvironmentControllerTest {
                         request,
                         token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentService).updateEnvironment(eq(environmentId), any(EnvironmentRequest.class), anyString());
     }
@@ -333,7 +334,7 @@ class EnvironmentControllerTest {
         request.setDescription(TestUtil.generateRandomDescription());
 
         when(environmentService.patchEnvironment(eq(environmentId), any(EnvironmentRequest.class), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.patchJsonAuth(
@@ -342,7 +343,7 @@ class EnvironmentControllerTest {
                         request,
                         token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentService).patchEnvironment(eq(environmentId), any(EnvironmentRequest.class), anyString());
     }
@@ -368,7 +369,7 @@ class EnvironmentControllerTest {
         // given
         Long environmentId = TestUtil.generateRandomId();
 
-        doThrow(new RuntimeException("access denied"))
+        doThrow(new UnauthorizedException("access denied"))
                 .when(environmentService)
                 .deleteEnvironment(eq(environmentId), anyString());
 
@@ -377,7 +378,7 @@ class EnvironmentControllerTest {
                         ENV_URL.replace(WORKSPACE_ID_PLACEHOLDER, workspaceId.toString()) + "/" + environmentId,
                         token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentService).deleteEnvironment(eq(environmentId), anyString());
     }
@@ -416,7 +417,7 @@ class EnvironmentControllerTest {
         Long environmentId = TestUtil.generateRandomId();
 
         when(environmentService.setEnvironmentActiveStatus(eq(environmentId), eq(true), anyString()))
-                .thenThrow(new RuntimeException("access denied"));
+                .thenThrow(new UnauthorizedException("access denied"));
 
         // when / then
         mockMvc.perform(JsonTestUtil.patchJsonAuth(
@@ -426,7 +427,7 @@ class EnvironmentControllerTest {
                         new Object(),
                         token
                 ))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(environmentService).setEnvironmentActiveStatus(eq(environmentId), eq(true), anyString());
     }
