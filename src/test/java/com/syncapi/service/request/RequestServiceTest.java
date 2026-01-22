@@ -18,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -637,5 +638,129 @@ class RequestServiceTest {
                 .hasMessageContaining("Request not found or access denied");
 
         verify(requestRepository, never()).delete(any());
+    }
+
+    @Test
+    void shouldLockRequest() {
+        // given
+        Request request = TestUtil.createRandomRequest(testFolder);
+        User user = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+
+        when(util.getUserByEmail(testEmail)).thenReturn(user);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail)).thenReturn(request);
+        when(requestRepository.save(any(Request.class))).thenReturn(request);
+
+        // when
+        RequestResponse result = requestService.lockRequest(request.getId(), testEmail);
+
+        // then
+        assertThat(result.getLockedBy()).isEqualTo(user.getId());
+        assertThat(result.getLockedAt()).isNotNull();
+
+        verify(util).getUserByEmail(testEmail);
+        verify(util).getRequestWithAccessCheck(request.getId(), testEmail);
+        verify(requestRepository).save(request);
+    }
+
+    @Test
+    void shouldAllowRelockingByTheSameUser() {
+        // given
+        User user = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+        Request request = TestUtil.createRandomRequest(testFolder);
+        request.setLockedBy(user.getId());
+        request.setLockedAt(LocalDateTime.now().minusHours(1));
+
+        when(util.getUserByEmail(testEmail)).thenReturn(user);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail)).thenReturn(request);
+        when(requestRepository.save(any(Request.class))).thenReturn(request);
+
+        // when
+        RequestResponse result = requestService.lockRequest(request.getId(), testEmail);
+
+        // then
+        assertThat(result.getLockedBy()).isEqualTo(user.getId());
+
+        verify(requestRepository).save(request);
+    }
+
+    @Test
+    void shouldThrowWhenLockingRequestLockedByAnotherUser() {
+        // given
+        Long otherUserId = TestUtil.generateRandomId();
+        Request request = TestUtil.createRandomRequest(testFolder);
+        request.setLockedBy(otherUserId);
+        request.setLockedAt(LocalDateTime.now());
+
+        User user = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+
+        when(util.getUserByEmail(testEmail)).thenReturn(user);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail)).thenReturn(request);
+
+        // when / then
+        assertThatThrownBy(() -> requestService.lockRequest(request.getId(), testEmail))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("already locked");
+
+        verify(requestRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldUnlockRequest() {
+        // given
+        User user = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+        Request request = TestUtil.createRandomRequest(testFolder);
+        request.setLockedBy(user.getId());
+        request.setLockedAt(LocalDateTime.now());
+
+        when(util.getUserByEmail(testEmail)).thenReturn(user);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail)).thenReturn(request);
+        when(requestRepository.save(any(Request.class))).thenReturn(request);
+
+        // when
+        RequestResponse result = requestService.unlockRequest(request.getId(), testEmail);
+
+        // then
+        assertThat(result.getLockedBy()).isNull();
+        assertThat(result.getLockedAt()).isNull();
+
+        verify(requestRepository).save(request);
+    }
+
+    @Test
+    void shouldThrowWhenUnlockingRequestNotLockedByCurrentUser() {
+        // given
+        Long otherUserId = TestUtil.generateRandomId();
+        Request request = TestUtil.createRandomRequest(testFolder);
+        request.setLockedBy(otherUserId);
+        request.setLockedAt(LocalDateTime.now());
+
+        User user = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+
+        when(util.getUserByEmail(testEmail)).thenReturn(user);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail)).thenReturn(request);
+
+        // when / then
+        assertThatThrownBy(() -> requestService.unlockRequest(request.getId(), testEmail))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("not locked by the current user");
+
+        verify(requestRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowWhenUnlockingAlreadyUnlockedRequest() {
+        // given
+        Request request = TestUtil.createRandomRequest(testFolder);
+        User user = TestUtil.createUser(TestUtil.generateRandomId(), testEmail, TestUtil.generateRandomName());
+
+        when(util.getUserByEmail(testEmail)).thenReturn(user);
+        when(util.getRequestWithAccessCheck(request.getId(), testEmail)).thenReturn(request);
+
+        // when / then
+        assertThatThrownBy(() -> requestService.unlockRequest(request.getId(), testEmail))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("not locked by the current user");
+
+        verify(requestRepository, never()).save(any());
     }
 }

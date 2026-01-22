@@ -99,4 +99,28 @@ public class RequestController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
+
+    @PatchMapping("/{requestId}/lock")
+    public ResponseEntity<RequestResponse> lockRequest(@PathVariable Long requestId) {
+        try {
+            RequestResponse lockedRequest =
+                    requestService.lockRequest(requestId, Util.getCurrentUserEmail());
+
+            return ResponseEntity.ok(lockedRequest);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @PatchMapping("/{requestId}/unlock")
+    public ResponseEntity<RequestResponse> unlockRequest(@PathVariable Long requestId) {
+        try {
+            RequestResponse unlockedRequest =
+                    requestService.unlockRequest(requestId, Util.getCurrentUserEmail());
+
+            return ResponseEntity.ok(unlockedRequest);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
 }

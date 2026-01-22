@@ -380,6 +380,109 @@ class RequestControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void shouldLockRequest() throws Exception {
+        // given
+        Long requestId = TestUtil.generateRandomId();
+        Long userId = TestUtil.generateRandomId();
+        RequestResponse response = createRequestResponse(requestId);
+        response.setLockedBy(userId);
+        response.setLockedAt(LocalDateTime.now());
+
+        when(requestService.lockRequest(eq(requestId), anyString()))
+                .thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString())
+                        + "/" + requestId + "/lock",
+                "",
+                token
+        ));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(requestId),
+                        jsonPath("$.lockedBy").value(userId),
+                        jsonPath("$.lockedAt").exists()
+                );
+
+        verify(requestService).lockRequest(eq(requestId), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenLockRequestThrows() throws Exception {
+        // given
+        Long requestId = TestUtil.generateRandomId();
+
+        when(requestService.lockRequest(eq(requestId), anyString()))
+                .thenThrow(new RuntimeException("already locked"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                        REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString())
+                                + "/" + requestId + "/lock",
+                        "",
+                        token
+                ))
+                .andExpect(status().isForbidden());
+
+        verify(requestService).lockRequest(eq(requestId), anyString());
+    }
+
+    @Test
+    void shouldUnlockRequest() throws Exception {
+        // given
+        Long requestId = TestUtil.generateRandomId();
+        RequestResponse response = createRequestResponse(requestId);
+        response.setLockedBy(null);
+        response.setLockedAt(null);
+
+        when(requestService.unlockRequest(eq(requestId), anyString()))
+                .thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString())
+                        + "/" + requestId + "/unlock",
+                "",
+                token
+        ));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(requestId),
+                        jsonPath("$.lockedBy").isEmpty(),
+                        jsonPath("$.lockedAt").isEmpty()
+                );
+
+        verify(requestService).unlockRequest(eq(requestId), anyString());
+    }
+
+    @Test
+    void shouldReturnForbiddenWhenUnlockRequestThrows() throws Exception {
+        // given
+        Long requestId = TestUtil.generateRandomId();
+
+        when(requestService.unlockRequest(eq(requestId), anyString()))
+                .thenThrow(new RuntimeException("not locked by current user"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.patchJsonAuth(
+                        REQUESTS_URL.replace(FOLDER_ID_PLACEHOLDER, folderId.toString())
+                                + "/" + requestId + "/unlock",
+                        "",
+                        token
+                ))
+                .andExpect(status().isForbidden());
+
+        verify(requestService).unlockRequest(eq(requestId), anyString());
+    }
+
     private RequestResponse createRequestResponse() {
         return createRequestResponse(TestUtil.generateRandomId());
     }

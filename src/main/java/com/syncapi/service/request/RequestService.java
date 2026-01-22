@@ -9,6 +9,7 @@ import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -107,6 +108,36 @@ public class RequestService {
     @Transactional
     public void deleteRequest(Long requestId, String email) {
         requestRepository.delete(util.getRequestWithAccessCheck(requestId, email));
+    }
+
+    @Transactional
+    public RequestResponse lockRequest(Long requestId, String email) {
+        Long userId = util.getUserByEmail(email).getId();
+
+        Request existingRequest = util.getRequestWithAccessCheck(requestId, email);
+        if (existingRequest.getLockedBy() != null && !existingRequest.getLockedBy().equals(userId)) {
+            throw new RuntimeException("Request is already locked by another user");
+        }
+
+        existingRequest.setLockedBy(userId);
+        existingRequest.setLockedAt(LocalDateTime.now());
+
+        return toResponse(requestRepository.save(existingRequest));
+    }
+
+    @Transactional
+    public RequestResponse unlockRequest(Long requestId, String email) {
+        Long userId = util.getUserByEmail(email).getId();
+
+        Request existingRequest = util.getRequestWithAccessCheck(requestId, email);
+        if (existingRequest.getLockedBy() == null || !existingRequest.getLockedBy().equals(userId)) {
+            throw new RuntimeException("Request is not locked by the current user or is already unlocked");
+        }
+
+        existingRequest.setLockedBy(null);
+        existingRequest.setLockedAt(null);
+
+        return toResponse(requestRepository.save(existingRequest));
     }
 
     private RequestResponse toResponse(Request request) {
