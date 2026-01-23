@@ -5,6 +5,9 @@ import com.syncapi.util.RequestMethod;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+/**
+ * Data Transfer Object for API request response.
+ */
 public class RequestResponse {
     private Long id;
     private String name;
@@ -20,9 +23,29 @@ public class RequestResponse {
     private LocalDateTime createdAt;
     private Long folderId;
 
+    /**
+     * Default constructor.
+     */
     public RequestResponse() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param id          the request ID
+     * @param name        the request name
+     * @param description the request description
+     * @param method      the HTTP method
+     * @param url         the request URL
+     * @param headers     the request headers
+     * @param body        the request body
+     * @param authType    the authentication type
+     * @param authConfig  the authentication configuration
+     * @param lockedBy    the user ID who locked the request
+     * @param lockedAt    the timestamp when the request was locked
+     * @param createdAt   the creation timestamp
+     * @param folderId    the folder ID
+     */
     public RequestResponse(Long id, String name, String description, RequestMethod method, String url,
                            Map<String, String> headers, Map<String, Object> body, String authType,
                            Map<String, String> authConfig, Long lockedBy, LocalDateTime lockedAt,

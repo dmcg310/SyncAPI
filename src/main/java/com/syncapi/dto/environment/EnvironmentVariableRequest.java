@@ -2,6 +2,9 @@ package com.syncapi.dto.environment;
 
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * DTO for creating or updating an environment variable.
+ */
 public class EnvironmentVariableRequest {
     @NotBlank(message = "Key is required")
     private String key;
@@ -9,9 +12,18 @@ public class EnvironmentVariableRequest {
     @NotBlank(message = "Value is required")
     private String value;
 
+    /**
+     * Default constructor.
+     */
     public EnvironmentVariableRequest() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param key   the variable key
+     * @param value the variable value
+     */
     public EnvironmentVariableRequest(String key, String value) {
         this.key = key;
         this.value = value;

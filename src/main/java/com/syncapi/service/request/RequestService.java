@@ -13,16 +13,32 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Service for request operations.
+ */
 @Service
 public class RequestService {
     private final RequestRepository requestRepository;
     private final Util util;
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param requestRepository the request repository
+     * @param util              the utility service
+     */
     public RequestService(RequestRepository requestRepository, Util util) {
         this.requestRepository = requestRepository;
         this.util = util;
     }
 
+    /**
+     * Retrieves all requests for a folder.
+     *
+     * @param folderId the folder ID
+     * @param email    the user's email
+     * @return the list of request responses
+     */
     public List<RequestResponse> getRequestsByFolder(Long folderId, String email) {
         util.getFolderWithAccessCheck(folderId, email);
         List<Request> requests = requestRepository.findByFolderId(folderId);
@@ -32,10 +48,25 @@ public class RequestService {
                 .toList();
     }
 
+    /**
+     * Retrieves a request by ID.
+     *
+     * @param requestId the request ID
+     * @param email     the user's email
+     * @return the request response
+     */
     public RequestResponse getRequestById(Long requestId, String email) {
         return toResponse(util.getRequestWithAccessCheck(requestId, email));
     }
 
+    /**
+     * Creates a new request.
+     *
+     * @param folderId the folder ID
+     * @param request  the request request
+     * @param email    the user's email
+     * @return the request response
+     */
     @Transactional
     public RequestResponse createRequest(Long folderId, RequestRequest request, String email) {
         Folder folder = util.getFolderWithAccessCheck(folderId, email);
@@ -54,6 +85,14 @@ public class RequestService {
         return toResponse(requestRepository.save(newRequest));
     }
 
+    /**
+     * Updates a request.
+     *
+     * @param requestId the request ID
+     * @param request   the request request
+     * @param email     the user's email
+     * @return the request response
+     */
     @Transactional
     public RequestResponse updateRequest(Long requestId, RequestRequest request, String email) {
         Request existingRequest = util.getRequestWithAccessCheck(requestId, email);
@@ -69,6 +108,14 @@ public class RequestService {
         return toResponse(requestRepository.save(existingRequest));
     }
 
+    /**
+     * Partially updates a request.
+     *
+     * @param requestId the request ID
+     * @param request   the request request
+     * @param email     the user's email
+     * @return the request response
+     */
     @Transactional
     public RequestResponse patchRequest(Long requestId, RequestRequest request, String email) {
         Request existingRequest = util.getRequestWithAccessCheck(requestId, email);
@@ -106,11 +153,24 @@ public class RequestService {
 
     }
 
+    /**
+     * Deletes a request.
+     *
+     * @param requestId the request ID
+     * @param email     the user's email
+     */
     @Transactional
     public void deleteRequest(Long requestId, String email) {
         requestRepository.delete(util.getRequestWithAccessCheck(requestId, email));
     }
 
+    /**
+     * Locks a request.
+     *
+     * @param requestId the request ID
+     * @param email     the user's email
+     * @return the request response
+     */
     @Transactional
     public RequestResponse lockRequest(Long requestId, String email) {
         Long userId = util.getUserByEmail(email).getId();
@@ -126,6 +186,13 @@ public class RequestService {
         return toResponse(requestRepository.save(existingRequest));
     }
 
+    /**
+     * Unlocks a request.
+     *
+     * @param requestId the request ID
+     * @param email     the user's email
+     * @return the request response
+     */
     @Transactional
     public RequestResponse unlockRequest(Long requestId, String email) {
         Long userId = util.getUserByEmail(email).getId();
@@ -141,6 +208,12 @@ public class RequestService {
         return toResponse(requestRepository.save(existingRequest));
     }
 
+    /**
+     * Converts a request entity to a request response.
+     *
+     * @param request the request entity
+     * @return the request response
+     */
     private RequestResponse toResponse(Request request) {
         return new RequestResponse(
                 request.getId(),

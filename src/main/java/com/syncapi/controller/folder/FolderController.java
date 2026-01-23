@@ -20,12 +20,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controller for folder-related endpoints.
+ */
 @RestController
 @RequestMapping("/api/workspaces/{workspaceId}/folders")
 public class FolderController {
+    /**
+     * The folder service.
+     */
     @Autowired
     private FolderService folderService;
 
+    /**
+     * Get all folders in a workspace.
+     *
+     * @param workspaceId the workspace Id
+     * @return the list of folders
+     */
     @GetMapping
     public ResponseEntity<List<FolderResponse>> getFoldersByWorkspace(@PathVariable Long workspaceId) {
         List<FolderResponse> folders = folderService.getFoldersByWorkspace(workspaceId, Util.getCurrentUserEmail());
@@ -33,6 +45,12 @@ public class FolderController {
         return ResponseEntity.ok(folders);
     }
 
+    /**
+     * Get a folder by its Id.
+     *
+     * @param folderId the folder Id
+     * @return the folder
+     */
     @GetMapping("/{folderId}")
     public ResponseEntity<FolderResponse> getFolder(@PathVariable Long folderId) {
         FolderResponse folder = folderService.getFolderById(folderId, Util.getCurrentUserEmail());
@@ -40,6 +58,13 @@ public class FolderController {
         return ResponseEntity.ok(folder);
     }
 
+    /**
+     * Create a new folder in a workspace.
+     *
+     * @param workspaceId the workspace Id
+     * @param request     the folder request
+     * @return the created folder
+     */
     @PostMapping
     public ResponseEntity<FolderResponse> createFolder(@PathVariable Long workspaceId,
                                                        @Valid @RequestBody FolderRequest request) {
@@ -48,6 +73,13 @@ public class FolderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(folder);
     }
 
+    /**
+     * Update an existing folder.
+     *
+     * @param folderId the folder Id
+     * @param request  the folder request
+     * @return the updated folder
+     */
     @PutMapping("/{folderId}")
     public ResponseEntity<FolderResponse> updateFolder(@PathVariable Long folderId,
                                                        @Valid @RequestBody FolderRequest request) {
@@ -56,6 +88,13 @@ public class FolderController {
         return ResponseEntity.ok(folder);
     }
 
+    /**
+     * Patches an existing folder.
+     *
+     * @param folderId the folder Id
+     * @param request  the folder request
+     * @return the patched folder
+     */
     @PatchMapping("/{folderId}")
     public ResponseEntity<FolderResponse> patchFolder(@PathVariable Long folderId,
                                                       @RequestBody FolderRequest request) {
@@ -64,6 +103,12 @@ public class FolderController {
         return ResponseEntity.ok(folder);
     }
 
+    /**
+     * Delete a folder by its Id.
+     *
+     * @param folderId the folder Id
+     * @return no content
+     */
     @DeleteMapping("/{folderId}")
     public ResponseEntity<Void> deleteFolder(@PathVariable Long folderId) {
         folderService.deleteFolder(folderId, Util.getCurrentUserEmail());

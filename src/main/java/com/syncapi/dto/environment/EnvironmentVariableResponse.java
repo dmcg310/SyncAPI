@@ -1,14 +1,28 @@
 package com.syncapi.dto.environment;
 
+/**
+ * Data Transfer Object for environment variable response.
+ */
 public class EnvironmentVariableResponse {
     private Long id;
     private String key;
     private String value;
     private Long environmentId;
 
+    /**
+     * Default constructor.
+     */
     public EnvironmentVariableResponse() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param id            the variable ID
+     * @param key           the variable key
+     * @param value         the variable value
+     * @param environmentId the environment ID
+     */
     public EnvironmentVariableResponse(Long id, String key, String value, Long environmentId) {
         this.id = id;
         this.key = key;

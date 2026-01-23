@@ -3,6 +3,9 @@ package com.syncapi.dto.workspace;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Data Transfer Object for workspace response.
+ */
 public class WorkspaceResponse {
     private Long id;
     private String name;
@@ -15,9 +18,22 @@ public class WorkspaceResponse {
 
     private List<WorkspaceMemberDTO> members;
 
+    /**
+     * Default constructor.
+     */
     public WorkspaceResponse() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param id          the workspace ID
+     * @param name        the workspace name
+     * @param description the workspace description
+     * @param createdAt   the creation timestamp
+     * @param memberCount the number of members
+     * @param folderCount the number of folders
+     */
     public WorkspaceResponse(Long id, String name, String description, LocalDateTime createdAt,
                              int memberCount, int folderCount) {
         this.id = id;
@@ -84,14 +100,27 @@ public class WorkspaceResponse {
         this.members = members;
     }
 
+    /**
+     * DTO for workspace member information.
+     */
     public static class WorkspaceMemberDTO {
         private Long userId;
         private String email;
         private String name;
 
+        /**
+         * Default constructor.
+         */
         public WorkspaceMemberDTO() {
         }
 
+        /**
+         * Parameterized constructor.
+         *
+         * @param userId the user ID
+         * @param email  the user's email
+         * @param name   the user's name
+         */
         public WorkspaceMemberDTO(Long userId, String email, String name) {
             this.userId = userId;
             this.email = email;

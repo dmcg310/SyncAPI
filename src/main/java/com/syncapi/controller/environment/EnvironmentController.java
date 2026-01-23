@@ -20,12 +20,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controller for environment-related endpoints.
+ */
 @RestController
 @RequestMapping("/api/workspaces/{workspaceId}/environments")
 public class EnvironmentController {
+    /**
+     * The environment service.
+     */
     @Autowired
     private EnvironmentService environmentService;
 
+    /**
+     * Gets all environments for a workspace.
+     *
+     * @param workspaceId the workspace Id
+     * @return the list of environment responses
+     */
     @GetMapping
     public ResponseEntity<List<EnvironmentResponse>> getEnvironmentsByWorkspace(@PathVariable Long workspaceId) {
         List<EnvironmentResponse> environments = environmentService.getEnvironmentsByWorkspace(workspaceId,
@@ -34,6 +46,12 @@ public class EnvironmentController {
         return ResponseEntity.ok(environments);
     }
 
+    /**
+     * Gets an environment by its Id.
+     *
+     * @param environmentId the environment Id
+     * @return the environment response
+     */
     @GetMapping("/{environmentId}")
     public ResponseEntity<EnvironmentResponse> getEnvironment(@PathVariable Long environmentId) {
         EnvironmentResponse environment = environmentService.getEnvironmentById(environmentId,
@@ -42,6 +60,13 @@ public class EnvironmentController {
         return ResponseEntity.ok(environment);
     }
 
+    /**
+     * Creates a new environment.
+     *
+     * @param workspaceId the workspace Id
+     * @param request     the environment request
+     * @return the created environment response
+     */
     @PostMapping
     public ResponseEntity<EnvironmentResponse> createEnvironment(@PathVariable Long workspaceId,
                                                                  @Valid @RequestBody EnvironmentRequest request) {
@@ -51,6 +76,13 @@ public class EnvironmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(environment);
     }
 
+    /**
+     * Updates an existing environment.
+     *
+     * @param environmentId the environment Id
+     * @param request       the environment request
+     * @return the updated environment response
+     */
     @PutMapping("/{environmentId}")
     public ResponseEntity<EnvironmentResponse> updateEnvironment(@PathVariable Long environmentId,
                                                                  @Valid @RequestBody EnvironmentRequest request) {
@@ -60,6 +92,13 @@ public class EnvironmentController {
         return ResponseEntity.ok(environment);
     }
 
+    /**
+     * Patches an existing environment.
+     *
+     * @param environmentId the environment Id
+     * @param request       the environment request
+     * @return the patched environment response
+     */
     @PatchMapping("/{environmentId}")
     public ResponseEntity<EnvironmentResponse> patchEnvironment(@PathVariable Long environmentId,
                                                                 @RequestBody EnvironmentRequest request) {
@@ -69,6 +108,12 @@ public class EnvironmentController {
         return ResponseEntity.ok(environment);
     }
 
+    /**
+     * Deletes an environment.
+     *
+     * @param environmentId the environment Id
+     * @return no content response
+     */
     @DeleteMapping("/{environmentId}")
     public ResponseEntity<Void> deleteEnvironment(@PathVariable Long environmentId) {
         environmentService.deleteEnvironment(environmentId, Util.getCurrentUserEmail());
@@ -76,6 +121,12 @@ public class EnvironmentController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Deactivates an environment.
+     *
+     * @param environmentId the environment Id
+     * @return the updated environment response
+     */
     @PatchMapping("/{environmentId}/activate")
     public ResponseEntity<EnvironmentResponse> activateEnvironment(@PathVariable Long environmentId) {
         EnvironmentResponse environment = environmentService.setEnvironmentActiveStatus(environmentId, true,

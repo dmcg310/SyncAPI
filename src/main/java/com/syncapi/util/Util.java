@@ -19,6 +19,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+/**
+ * Utility component for common operations.
+ */
 @Component
 public class Util {
     private final UserRepository userRepository;
@@ -28,6 +31,16 @@ public class Util {
     private final FolderRepository folderRepository;
     private final RequestRepository requestRepository;
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param userRepository                the user repository
+     * @param workspaceRepository           the workspace repository
+     * @param environmentRepository         the environment repository
+     * @param environmentVariableRepository the environment variable repository
+     * @param folderRepository              the folder repository
+     * @param requestRepository             the request repository
+     */
     @Autowired
     public Util(UserRepository userRepository, WorkspaceRepository workspaceRepository,
                 EnvironmentRepository environmentRepository,
@@ -41,6 +54,11 @@ public class Util {
         this.requestRepository = requestRepository;
     }
 
+    /**
+     * Gets the current authenticated user's email.
+     *
+     * @return the user's email
+     */
     public static String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -50,16 +68,35 @@ public class Util {
         return authentication.getName();
     }
 
+    /**
+     * Gets a user by email.
+     *
+     * @param email the user's email
+     * @return the user entity
+     */
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
     }
 
+    /**
+     * Gets a user by ID.
+     *
+     * @param id the user ID
+     * @return the user entity
+     */
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
     }
 
+    /**
+     * Gets a workspace and verifies the user has access to it.
+     *
+     * @param workspaceId the workspace ID
+     * @param email       the user's email
+     * @return the workspace entity
+     */
     public Workspace getWorkspaceWithAccessCheck(Long workspaceId, String email) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Workspace not found: " + workspaceId));
@@ -72,6 +109,13 @@ public class Util {
         return workspace;
     }
 
+    /**
+     * Gets an environment and verifies the user has access to it.
+     *
+     * @param environmentId the environment ID
+     * @param email         the user's email
+     * @return the environment entity
+     */
     public Environment getEnvironmentWithAccessCheck(Long environmentId, String email) {
         Environment environment = environmentRepository.findById(environmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Environment not found: " + environmentId));
@@ -84,6 +128,13 @@ public class Util {
         return environment;
     }
 
+    /**
+     * Gets an environment variable and verifies the user has access to it.
+     *
+     * @param variableId the variable ID
+     * @param email      the user's email
+     * @return the environment variable entity
+     */
     public EnvironmentVariable getEnvironmentVariableWithAccessCheck(Long variableId, String email) {
         EnvironmentVariable variable = environmentVariableRepository.findById(variableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Environment variable not found: " + variableId));
@@ -96,6 +147,13 @@ public class Util {
         return variable;
     }
 
+    /**
+     * Gets a folder and verifies the user has access to it.
+     *
+     * @param folderId the folder ID
+     * @param email    the user's email
+     * @return the folder entity
+     */
     public Folder getFolderWithAccessCheck(Long folderId, String email) {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Folder not found: " + folderId));
@@ -108,6 +166,13 @@ public class Util {
         return folder;
     }
 
+    /**
+     * Gets a request and verifies the user has access to it.
+     *
+     * @param requestId the request ID
+     * @param email     the user's email
+     * @return the request entity
+     */
     public Request getRequestWithAccessCheck(Long requestId, String email) {
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Request not found: " + requestId));
@@ -121,6 +186,12 @@ public class Util {
 
     }
 
+    /**
+     * Converts a Boolean to a boolean, defaulting to false if null.
+     *
+     * @param value the Boolean value
+     * @return true if value is TRUE, false otherwise
+     */
     public boolean defaultFalse(Boolean value) {
         return Boolean.TRUE.equals(value);
     }

@@ -1,13 +1,26 @@
 package com.syncapi.dto.auth;
 
+/**
+ * Data Transfer Object for authentication response.
+ */
 public class AuthResponse {
     private String token;
     private String email;
     private String name;
 
+    /**
+     * Default constructor.
+     */
     public AuthResponse() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param token the authentication token
+     * @param email the user's email
+     * @param name  the user's name
+     */
     public AuthResponse(String token, String email, String name) {
         this.token = token;
         this.email = email;

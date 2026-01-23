@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.Map;
 
+/**
+ * DTO for creating or updating an API request.
+ */
 public class RequestRequest {
     @NotBlank(message = "Request name is required")
     private String name;
@@ -23,9 +26,19 @@ public class RequestRequest {
     private Map<String, String> authConfig;
     private String authType;
 
+    /**
+     * Default constructor.
+     */
     public RequestRequest() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param name   the request name
+     * @param method the HTTP method
+     * @param url    the request URL
+     */
     public RequestRequest(String name, RequestMethod method, String url) {
         this.name = name;
         this.method = method;

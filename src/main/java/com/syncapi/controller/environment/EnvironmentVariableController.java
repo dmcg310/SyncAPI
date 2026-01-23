@@ -19,12 +19,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controller for environment variable-related endpoints.
+ */
 @RestController
 @RequestMapping("/api/environments/{environmentId}/variables")
 public class EnvironmentVariableController {
+    /**
+     * The environment variable service.
+     */
     @Autowired
     private EnvironmentVariableService environmentVariableService;
 
+    /**
+     * Get all environment variables for a specific environment.
+     *
+     * @param environmentId the environment Id
+     * @return the list of environment variables
+     */
     @GetMapping
     public ResponseEntity<List<EnvironmentVariableResponse>> getVariables(@PathVariable Long environmentId) {
         List<EnvironmentVariableResponse> variables = environmentVariableService.getVariablesByEnvironment(
@@ -33,6 +45,13 @@ public class EnvironmentVariableController {
         return ResponseEntity.ok(variables);
     }
 
+    /**
+     * Add a new environment variable to a specific environment.
+     *
+     * @param environmentId the environment Id
+     * @param request       the environment variable request
+     * @return the created environment variable
+     */
     @PostMapping
     public ResponseEntity<EnvironmentVariableResponse> addVariable(
             @PathVariable Long environmentId,
@@ -44,6 +63,14 @@ public class EnvironmentVariableController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    /**
+     * Update an existing environment variable.
+     *
+     * @param environmentId the environment Id
+     * @param variableId    the variable Id
+     * @param request       the environment variable request
+     * @return the updated environment variable
+     */
     @PutMapping("/{variableId}")
     public ResponseEntity<EnvironmentVariableResponse> updateVariable(
             @PathVariable Long environmentId,
@@ -56,6 +83,13 @@ public class EnvironmentVariableController {
         return ResponseEntity.ok(updated);
     }
 
+    /**
+     * Delete an environment variable.
+     *
+     * @param environmentId the environment Id
+     * @param variableId    the variable Id
+     * @return no content response
+     */
     @DeleteMapping("/{variableId}")
     public ResponseEntity<Void> deleteVariable(@PathVariable Long environmentId,
                                                @PathVariable Long variableId) {

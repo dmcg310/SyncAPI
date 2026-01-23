@@ -3,6 +3,9 @@ package com.syncapi.dto.environment;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DTO representing an environment response.
+ */
 public class EnvironmentResponse {
     private Long id;
     private String name;
@@ -16,9 +19,23 @@ public class EnvironmentResponse {
 
     private List<EnvironmentVariableResponse> variables;
 
+    /**
+     * Default constructor.
+     */
     public EnvironmentResponse() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param id            the environment ID
+     * @param name          the environment name
+     * @param description   the environment description
+     * @param isActive      the environment active status
+     * @param createdAt     the environment creation timestamp
+     * @param workspaceId   the associated workspace ID
+     * @param variableCount the count of variables in the environment
+     */
     public EnvironmentResponse(Long id, String name, String description, boolean isActive, LocalDateTime createdAt,
                                Long workspaceId, int variableCount) {
         this.id = id;

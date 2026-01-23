@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entity representing a user.
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -36,14 +39,27 @@ public class User {
     @ManyToMany(mappedBy = "members")
     private List<Workspace> workspaces = new ArrayList<>();
 
+    /**
+     * Lifecycle callback to set creation timestamp.
+     */
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Default constructor.
+     */
     public User() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param email        the user's email
+     * @param passwordHash the user's hashed password
+     * @param name         the user's name
+     */
     public User(String email, String passwordHash, String name) {
         this.email = email;
         this.passwordHash = passwordHash;

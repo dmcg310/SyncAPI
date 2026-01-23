@@ -15,12 +15,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controller for authentication-related endpoints.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    /**
+     * The authentication service.
+     */
     @Autowired
     private AuthService authService;
 
+    /**
+     * Registers a new user.
+     *
+     * @param request the registration request
+     * @return the authentication response
+     */
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse auth = authService.register(request);
@@ -28,6 +40,12 @@ public class AuthController {
         return ResponseEntity.ok(auth);
     }
 
+    /**
+     * Logs in a user.
+     *
+     * @param request the login request
+     * @return the authentication response
+     */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse auth = authService.login(request);
@@ -35,6 +53,12 @@ public class AuthController {
         return ResponseEntity.ok(auth);
     }
 
+    /**
+     * Updates the password for the current user.
+     *
+     * @param request the update password request
+     * @return the authentication response
+     */
     @PatchMapping("/password")
     public ResponseEntity<AuthResponse> updatePassword(@Valid @RequestBody UpdatePasswordRequest request) {
         AuthResponse auth = authService.updatePassword(request, Util.getCurrentUserEmail());

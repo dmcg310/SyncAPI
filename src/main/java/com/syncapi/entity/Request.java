@@ -20,6 +20,9 @@ import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+/**
+ * Entity representing an API request.
+ */
 @Entity
 @Table(name = "requests")
 public class Request {
@@ -72,20 +75,37 @@ public class Request {
     @JoinColumn(name = "folder_id", nullable = false)
     private Folder folder;
 
+    /**
+     * Lifecycle callback to set creation and update timestamps.
+     */
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Lifecycle callback to update the timestamp on entity update.
+     */
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Default constructor.
+     */
     public Request() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param name   the request name
+     * @param method the HTTP method
+     * @param url    the request URL
+     * @param folder the folder this request belongs to
+     */
     public Request(String name, RequestMethod method, String url, Folder folder) {
         this.name = name;
         this.method = method;

@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entity representing a folder.
+ */
 @Entity
 @Table(name = "folders")
 public class Folder {
@@ -42,14 +45,26 @@ public class Folder {
     @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Request> requests = new ArrayList<>();
 
+    /**
+     * Lifecycle callback to set creation timestamp.
+     */
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Default constructor.
+     */
     public Folder() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param name      the folder name
+     * @param workspace the workspace this folder belongs to
+     */
     public Folder(String name, Workspace workspace) {
         this.name = name;
         this.workspace = workspace;

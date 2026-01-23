@@ -2,6 +2,9 @@ package com.syncapi.dto.folder;
 
 import java.time.LocalDateTime;
 
+/**
+ * Data Transfer Object for folder response.
+ */
 public class FolderResponse {
     private Long id;
     private String name;
@@ -12,9 +15,22 @@ public class FolderResponse {
     private Long workspaceId;
     private int requestCount;
 
+    /**
+     * Default constructor.
+     */
     public FolderResponse() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param id           the folder ID
+     * @param name         the folder name
+     * @param description  the folder description
+     * @param createdAt    the creation timestamp
+     * @param workspaceId  the workspace ID
+     * @param requestCount the number of requests
+     */
     public FolderResponse(Long id, String name, String description, LocalDateTime createdAt,
                           Long workspaceId, int requestCount) {
         this.id = id;

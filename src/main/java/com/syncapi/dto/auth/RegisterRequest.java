@@ -4,6 +4,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * DTO for user registration requests.
+ */
 public class RegisterRequest {
     @NotBlank(message = "Name is required")
     private String name;
@@ -16,9 +19,19 @@ public class RegisterRequest {
     @Size(min = 6, message = "Password must be at least 6 characters long")
     private String password;
 
+    /**
+     * Default constructor.
+     */
     public RegisterRequest() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param name     the user's name
+     * @param email    the user's email
+     * @param password the user's password
+     */
     public RegisterRequest(String name, String email, String password) {
         this.name = name;
         this.email = email;

@@ -10,6 +10,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/**
+ * Entity representing an environment variable.
+ */
 @Entity
 @Table(name = "environment_variables")
 public class EnvironmentVariable {
@@ -28,9 +31,19 @@ public class EnvironmentVariable {
     @JoinColumn(name = "environment_id", nullable = false)
     private Environment environment;
 
+    /**
+     * Default constructor.
+     */
     public EnvironmentVariable() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param key         the variable key
+     * @param value       the variable value
+     * @param environment the environment this variable belongs to
+     */
     public EnvironmentVariable(String key, String value, Environment environment) {
         this.key = key;
         this.value = value;

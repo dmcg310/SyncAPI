@@ -16,6 +16,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Filter that processes JWT authentication for incoming requests.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String AUTH_HEADER = "Authorization";
@@ -25,10 +28,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param jwtService the JWT service
+     */
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
     }
 
+    /**
+     * Processes the request and authenticates the user if a valid JWT is present.
+     *
+     * @param request     the HTTP request
+     * @param response    the HTTP response
+     * @param filterChain the filter chain
+     * @throws ServletException if a servlet error occurs
+     * @throws IOException      if an I/O error occurs
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -46,6 +63,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Extracts the JWT token from the Authorization header.
+     *
+     * @param request the HTTP request
+     * @return an optional containing the token if present
+     */
     private Optional<String> extractToken(HttpServletRequest request) {
         String header = request.getHeader(AUTH_HEADER);
         if (header != null && header.startsWith(BEARER_PREFIX)) {
@@ -55,10 +78,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return java.util.Optional.empty();
     }
 
+    /**
+     * Checks if the current request is not authenticated.
+     *
+     * @return true if not authenticated
+     */
     private boolean isNotAuthenticated() {
         return SecurityContextHolder.getContext().getAuthentication() == null;
     }
 
+    /**
+     * Sets the authentication in the security context.
+     *
+     * @param email   the user's email
+     * @param request the HTTP request
+     */
     private void setAuthentication(String email, HttpServletRequest request) {
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(email, null, List.of());

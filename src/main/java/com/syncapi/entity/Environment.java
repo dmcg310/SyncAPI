@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entity representing an environment.
+ */
 @Entity
 @Table(name = "environments")
 public class Environment {
@@ -45,14 +48,26 @@ public class Environment {
     @OneToMany(mappedBy = "environment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EnvironmentVariable> variables = new ArrayList<>();
 
+    /**
+     * Lifecycle callback to set creation timestamp.
+     */
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Default constructor.
+     */
     public Environment() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param name      the environment name
+     * @param workspace the workspace this environment belongs to
+     */
     public Environment(String name, Workspace workspace) {
         this.name = name;
         this.workspace = workspace;

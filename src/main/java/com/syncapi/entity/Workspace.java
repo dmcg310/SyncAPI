@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entity representing a workspace.
+ */
 @Entity
 @Table(name = "workspaces")
 public class Workspace {
@@ -50,14 +53,25 @@ public class Workspace {
     @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Environment> environments = new ArrayList<>();
 
+    /**
+     * Lifecycle callback to set creation timestamp.
+     */
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Default constructor.
+     */
     public Workspace() {
     }
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param name the workspace name
+     */
     public Workspace(String name) {
         this.name = name;
     }

@@ -13,6 +13,9 @@ import com.syncapi.util.Util;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service for authentication operations.
+ */
 @Service
 public class AuthService {
     private final UserRepository userRepository;
@@ -20,6 +23,14 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final Util util;
 
+    /**
+     * Parameterized constructor.
+     *
+     * @param userRepository  the user repository
+     * @param jwtService      the JWT service
+     * @param passwordEncoder the password encoder
+     * @param util            the utility service
+     */
     public AuthService(UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder,
                        Util util) {
         this.userRepository = userRepository;
@@ -28,6 +39,12 @@ public class AuthService {
         this.util = util;
     }
 
+    /**
+     * Registers a new user.
+     *
+     * @param request the registration request
+     * @return the authentication response
+     */
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new ConflictException("Email already exists");
@@ -39,6 +56,12 @@ public class AuthService {
         return toResponse(user);
     }
 
+    /**
+     * Authenticates a user.
+     *
+     * @param request the login request
+     * @return the authentication response
+     */
     public AuthResponse login(LoginRequest request) {
         User user = util.getUserByEmail(request.getEmail());
         if (!isPasswordCorrect(request.getPassword(), user.getPasswordHash())) {
@@ -48,6 +71,13 @@ public class AuthService {
         return toResponse(user);
     }
 
+    /**
+     * Updates a user's password.
+     *
+     * @param request the update password request
+     * @param email   the user's email
+     * @return the authentication response
+     */
     public AuthResponse updatePassword(UpdatePasswordRequest request, String email) {
         User user = util.getUserByEmail(email);
         if (!isPasswordCorrect(request.getOriginalPassword(), user.getPasswordHash())) {
@@ -60,10 +90,23 @@ public class AuthService {
         return toResponse(user);
     }
 
+    /**
+     * Checks if a password matches the stored hash.
+     *
+     * @param password            the plain text password
+     * @param currentPasswordHash the stored password hash
+     * @return true if the password is correct
+     */
     private boolean isPasswordCorrect(String password, String currentPasswordHash) {
         return passwordEncoder.matches(password, currentPasswordHash);
     }
 
+    /**
+     * Converts a user entity to an authentication response.
+     *
+     * @param user the user entity
+     * @return the authentication response
+     */
     private AuthResponse toResponse(User user) {
         return new AuthResponse(
                 jwtService.generateToken(user.getEmail()),
