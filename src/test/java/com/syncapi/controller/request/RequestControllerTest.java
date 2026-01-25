@@ -457,8 +457,8 @@ class RequestControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         jsonPath("$.id").value(requestId),
-                        jsonPath("$.lockedBy").isEmpty(),
-                        jsonPath("$.lockedAt").isEmpty()
+                        jsonPath("$.lockedBy").doesNotExist(),
+                        jsonPath("$.lockedAt").doesNotExist()
                 );
 
         verify(requestService).unlockRequest(eq(requestId), anyString());

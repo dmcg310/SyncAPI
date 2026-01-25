@@ -1,10 +1,13 @@
 package com.syncapi.dto.folder;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.time.LocalDateTime;
 
 /**
  * Data Transfer Object for folder response.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FolderResponse {
     private Long id;
     private String name;

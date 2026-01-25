@@ -222,7 +222,7 @@ class FolderControllerTest {
         res.andExpect(status().isCreated())
                 .andExpectAll(
                         jsonPath("$.name").value(folderName),
-                        jsonPath("$.description").isEmpty()
+                        jsonPath("$.description").doesNotExist()
                 );
     }
 

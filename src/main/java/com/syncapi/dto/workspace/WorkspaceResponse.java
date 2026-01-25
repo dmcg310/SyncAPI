@@ -1,11 +1,14 @@
 package com.syncapi.dto.workspace;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * Data Transfer Object for workspace response.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class WorkspaceResponse {
     private Long id;
     private String name;

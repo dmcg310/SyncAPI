@@ -1,5 +1,6 @@
 package com.syncapi.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.syncapi.util.RequestMethod;
 
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.util.Map;
 /**
  * Data Transfer Object for API request response.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RequestResponse {
     private Long id;
     private String name;

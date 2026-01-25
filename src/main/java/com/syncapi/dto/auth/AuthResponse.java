@@ -1,8 +1,11 @@
 package com.syncapi.dto.auth;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Data Transfer Object for authentication response.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthResponse {
     private String token;
     private String email;

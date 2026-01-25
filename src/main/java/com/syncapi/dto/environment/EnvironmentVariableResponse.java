@@ -1,8 +1,11 @@
 package com.syncapi.dto.environment;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Data Transfer Object for environment variable response.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EnvironmentVariableResponse {
     private Long id;
     private String key;
