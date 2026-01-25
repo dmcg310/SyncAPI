@@ -74,6 +74,7 @@ public class WorkspaceService {
 
         Workspace workspace = new Workspace();
         workspace.setName(request.getName());
+        workspace.setDescription(request.getDescription());
         workspace.getMembers().add(user);
 
         Workspace savedWorkspace = workspaceRepository.save(workspace);
