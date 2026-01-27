@@ -1,6 +1,6 @@
 package com.syncapi.repository.user;
 
-import com.syncapi.entity.User;
+import com.syncapi.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

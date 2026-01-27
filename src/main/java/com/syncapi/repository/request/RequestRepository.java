@@ -1,6 +1,6 @@
 package com.syncapi.repository.request;
 
-import com.syncapi.entity.Request;
+import com.syncapi.entity.request.Request;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

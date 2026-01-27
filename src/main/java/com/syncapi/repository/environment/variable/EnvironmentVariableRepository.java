@@ -1,6 +1,6 @@
-package com.syncapi.repository.environment;
+package com.syncapi.repository.environment.variable;
 
-import com.syncapi.entity.EnvironmentVariable;
+import com.syncapi.entity.environment.variable.EnvironmentVariable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

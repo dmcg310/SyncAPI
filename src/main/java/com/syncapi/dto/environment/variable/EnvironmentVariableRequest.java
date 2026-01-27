@@ -1,4 +1,4 @@
-package com.syncapi.dto.environment;
+package com.syncapi.dto.environment.variable;
 
 import jakarta.validation.constraints.NotBlank;
 

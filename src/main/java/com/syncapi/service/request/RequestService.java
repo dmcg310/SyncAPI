@@ -2,8 +2,8 @@ package com.syncapi.service.request;
 
 import com.syncapi.dto.request.RequestRequest;
 import com.syncapi.dto.request.RequestResponse;
-import com.syncapi.entity.Folder;
-import com.syncapi.entity.Request;
+import com.syncapi.entity.folder.Folder;
+import com.syncapi.entity.request.Request;
 import com.syncapi.exception.ConflictException;
 import com.syncapi.repository.request.RequestRepository;
 import com.syncapi.util.Util;

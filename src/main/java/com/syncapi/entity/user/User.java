@@ -1,5 +1,6 @@
-package com.syncapi.entity;
+package com.syncapi.entity.user;
 
+import com.syncapi.entity.workspace.Workspace;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -1,14 +1,17 @@
-package com.syncapi.entity;
+package com.syncapi.entity.workspace;
 
+import com.syncapi.entity.environment.Environment;
+import com.syncapi.entity.folder.Folder;
+import com.syncapi.entity.user.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -18,11 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Entity representing an environment.
+ * Entity representing a workspace.
  */
 @Entity
-@Table(name = "environments")
-public class Environment {
+@Table(name = "workspaces")
+public class Workspace {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,20 +36,25 @@ public class Environment {
     @Column(length = 1024)
     private String description;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean isActive = false;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // many-to-one, environment belongs to one workspace
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private Workspace workspace;
+    // many-to-many, workspace can have multiple users
+    @ManyToMany
+    @JoinTable(
+            name = "workspace_members",
+            joinColumns = @JoinColumn(name = "workspace_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> members = new ArrayList<>();
 
-    // one-to-many, environment has many variables
-    @OneToMany(mappedBy = "environment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EnvironmentVariable> variables = new ArrayList<>();
+    // one-to-many, workspace has many folders
+    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Folder> folders = new ArrayList<>();
+
+    // one-to-many, workspace has many environments
+    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Environment> environments = new ArrayList<>();
 
     /**
      * Lifecycle callback to set creation timestamp.
@@ -59,18 +67,16 @@ public class Environment {
     /**
      * Default constructor.
      */
-    public Environment() {
+    public Workspace() {
     }
 
     /**
      * Parameterized constructor.
      *
-     * @param name      the environment name
-     * @param workspace the workspace this environment belongs to
+     * @param name the workspace name
      */
-    public Environment(String name, Workspace workspace) {
+    public Workspace(String name) {
         this.name = name;
-        this.workspace = workspace;
     }
 
     public Long getId() {
@@ -97,14 +103,6 @@ public class Environment {
         this.description = description;
     }
 
-    public boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(boolean active) {
-        isActive = active;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -113,19 +111,27 @@ public class Environment {
         this.createdAt = createdAt;
     }
 
-    public Workspace getWorkspace() {
-        return workspace;
+    public List<User> getMembers() {
+        return members;
     }
 
-    public void setWorkspace(Workspace workspace) {
-        this.workspace = workspace;
+    public void setMembers(List<User> members) {
+        this.members = members;
     }
 
-    public List<EnvironmentVariable> getVariables() {
-        return variables;
+    public List<Folder> getFolders() {
+        return folders;
     }
 
-    public void setVariables(List<EnvironmentVariable> variables) {
-        this.variables = variables;
+    public void setFolders(List<Folder> folders) {
+        this.folders = folders;
+    }
+
+    public List<Environment> getEnvironments() {
+        return environments;
+    }
+
+    public void setEnvironments(List<Environment> environments) {
+        this.environments = environments;
     }
 }

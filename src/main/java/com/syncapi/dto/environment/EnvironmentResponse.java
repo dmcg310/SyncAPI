@@ -1,6 +1,7 @@
 package com.syncapi.dto.environment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.syncapi.dto.environment.variable.EnvironmentVariableResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;

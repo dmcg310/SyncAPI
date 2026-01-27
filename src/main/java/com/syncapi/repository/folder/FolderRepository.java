@@ -1,6 +1,6 @@
 package com.syncapi.repository.folder;
 
-import com.syncapi.entity.Folder;
+import com.syncapi.entity.folder.Folder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

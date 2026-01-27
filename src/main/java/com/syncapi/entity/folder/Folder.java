@@ -1,5 +1,7 @@
-package com.syncapi.entity;
+package com.syncapi.entity.folder;
 
+import com.syncapi.entity.request.Request;
+import com.syncapi.entity.workspace.Workspace;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

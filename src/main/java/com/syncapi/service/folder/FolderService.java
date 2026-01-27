@@ -2,8 +2,8 @@ package com.syncapi.service.folder;
 
 import com.syncapi.dto.folder.FolderRequest;
 import com.syncapi.dto.folder.FolderResponse;
-import com.syncapi.entity.Folder;
-import com.syncapi.entity.Workspace;
+import com.syncapi.entity.folder.Folder;
+import com.syncapi.entity.workspace.Workspace;
 import com.syncapi.repository.folder.FolderRepository;
 import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;

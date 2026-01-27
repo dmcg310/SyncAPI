@@ -1,15 +1,15 @@
 package com.syncapi.util;
 
-import com.syncapi.entity.Environment;
-import com.syncapi.entity.EnvironmentVariable;
-import com.syncapi.entity.Folder;
-import com.syncapi.entity.Request;
-import com.syncapi.entity.User;
-import com.syncapi.entity.Workspace;
+import com.syncapi.entity.environment.Environment;
+import com.syncapi.entity.environment.variable.EnvironmentVariable;
+import com.syncapi.entity.folder.Folder;
+import com.syncapi.entity.request.Request;
+import com.syncapi.entity.user.User;
+import com.syncapi.entity.workspace.Workspace;
 import com.syncapi.exception.AccessDeniedException;
 import com.syncapi.exception.ResourceNotFoundException;
 import com.syncapi.repository.environment.EnvironmentRepository;
-import com.syncapi.repository.environment.EnvironmentVariableRepository;
+import com.syncapi.repository.environment.variable.EnvironmentVariableRepository;
 import com.syncapi.repository.folder.FolderRepository;
 import com.syncapi.repository.request.RequestRepository;
 import com.syncapi.repository.user.UserRepository;

@@ -1,11 +1,11 @@
 package com.syncapi;
 
-import com.syncapi.entity.Environment;
-import com.syncapi.entity.EnvironmentVariable;
-import com.syncapi.entity.Folder;
-import com.syncapi.entity.Request;
-import com.syncapi.entity.User;
-import com.syncapi.entity.Workspace;
+import com.syncapi.entity.environment.Environment;
+import com.syncapi.entity.environment.variable.EnvironmentVariable;
+import com.syncapi.entity.folder.Folder;
+import com.syncapi.entity.request.Request;
+import com.syncapi.entity.user.User;
+import com.syncapi.entity.workspace.Workspace;
 import com.syncapi.util.RequestMethod;
 
 import java.util.ArrayList;

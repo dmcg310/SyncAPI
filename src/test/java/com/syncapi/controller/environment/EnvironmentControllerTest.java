@@ -4,7 +4,7 @@ import com.syncapi.JsonTestUtil;
 import com.syncapi.TestUtil;
 import com.syncapi.dto.environment.EnvironmentRequest;
 import com.syncapi.dto.environment.EnvironmentResponse;
-import com.syncapi.dto.environment.EnvironmentVariableResponse;
+import com.syncapi.dto.environment.variable.EnvironmentVariableResponse;
 import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.environment.EnvironmentService;

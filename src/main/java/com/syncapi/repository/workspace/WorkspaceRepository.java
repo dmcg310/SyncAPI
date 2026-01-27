@@ -1,6 +1,6 @@
 package com.syncapi.repository.workspace;
 
-import com.syncapi.entity.Workspace;
+import com.syncapi.entity.workspace.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

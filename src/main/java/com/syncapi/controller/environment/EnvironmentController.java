@@ -122,7 +122,7 @@ public class EnvironmentController {
     }
 
     /**
-     * Deactivates an environment.
+     * Activates/deactivates an environment.
      *
      * @param environmentId the environment Id
      * @return the updated environment response

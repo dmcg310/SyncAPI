@@ -1,14 +1,15 @@
 package com.syncapi.service.environment;
 
 import com.syncapi.TestUtil;
-import com.syncapi.dto.environment.EnvironmentVariableRequest;
-import com.syncapi.dto.environment.EnvironmentVariableResponse;
-import com.syncapi.entity.Environment;
-import com.syncapi.entity.EnvironmentVariable;
-import com.syncapi.entity.User;
-import com.syncapi.entity.Workspace;
+import com.syncapi.dto.environment.variable.EnvironmentVariableRequest;
+import com.syncapi.dto.environment.variable.EnvironmentVariableResponse;
+import com.syncapi.entity.environment.Environment;
+import com.syncapi.entity.environment.variable.EnvironmentVariable;
+import com.syncapi.entity.user.User;
+import com.syncapi.entity.workspace.Workspace;
 import com.syncapi.exception.BadRequestException;
-import com.syncapi.repository.environment.EnvironmentVariableRepository;
+import com.syncapi.repository.environment.variable.EnvironmentVariableRepository;
+import com.syncapi.service.environment.variable.EnvironmentVariableService;
 import com.syncapi.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

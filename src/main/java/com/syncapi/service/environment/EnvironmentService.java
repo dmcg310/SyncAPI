@@ -2,9 +2,9 @@ package com.syncapi.service.environment;
 
 import com.syncapi.dto.environment.EnvironmentRequest;
 import com.syncapi.dto.environment.EnvironmentResponse;
-import com.syncapi.dto.environment.EnvironmentVariableResponse;
-import com.syncapi.entity.Environment;
-import com.syncapi.entity.Workspace;
+import com.syncapi.dto.environment.variable.EnvironmentVariableResponse;
+import com.syncapi.entity.environment.Environment;
+import com.syncapi.entity.workspace.Workspace;
 import com.syncapi.repository.environment.EnvironmentRepository;
 import com.syncapi.util.Util;
 import jakarta.transaction.Transactional;

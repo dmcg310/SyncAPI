@@ -2,11 +2,12 @@ package com.syncapi.controller.environment;
 
 import com.syncapi.JsonTestUtil;
 import com.syncapi.TestUtil;
-import com.syncapi.dto.environment.EnvironmentVariableRequest;
-import com.syncapi.dto.environment.EnvironmentVariableResponse;
+import com.syncapi.controller.environment.variable.EnvironmentVariableController;
+import com.syncapi.dto.environment.variable.EnvironmentVariableRequest;
+import com.syncapi.dto.environment.variable.EnvironmentVariableResponse;
 import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.security.jwt.JwtService;
-import com.syncapi.service.environment.EnvironmentVariableService;
+import com.syncapi.service.environment.variable.EnvironmentVariableService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

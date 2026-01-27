@@ -1,5 +1,6 @@
-package com.syncapi.entity;
+package com.syncapi.entity.environment.variable;
 
+import com.syncapi.entity.environment.Environment;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
