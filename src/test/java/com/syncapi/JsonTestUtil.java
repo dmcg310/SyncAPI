@@ -50,6 +50,14 @@ public final class JsonTestUtil {
     }
 
     /**
+     * Creates a GET request with JSON accept header.
+     */
+    public static MockHttpServletRequestBuilder getJson(String url) {
+        return get(url)
+                .accept(JSON_MEDIA_TYPE);
+    }
+
+    /**
      * Creates a GET request with Bearer token authentication.
      */
     public static MockHttpServletRequestBuilder getJsonAuth(String url, String token) {

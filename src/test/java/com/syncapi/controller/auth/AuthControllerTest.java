@@ -6,7 +6,9 @@ import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
 import com.syncapi.dto.auth.UpdatePasswordRequest;
+import com.syncapi.dto.auth.UserResponse;
 import com.syncapi.exception.ConflictException;
+import com.syncapi.exception.ResourceNotFoundException;
 import com.syncapi.exception.UnauthorizedException;
 import com.syncapi.security.jwt.JwtService;
 import com.syncapi.service.auth.AuthService;
@@ -26,6 +28,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -251,5 +254,46 @@ class AuthControllerTest {
                 new UpdatePasswordRequest(TestUtil.generateRandomPassword(), null),
                 new UpdatePasswordRequest(TestUtil.generateRandomPassword(), "123")
         );
+    }
+
+    @Test
+    void shouldGetCurrentUser() throws Exception {
+        // given
+        Long userId = TestUtil.generateRandomId();
+        String email = TestUtil.generateRandomEmail();
+        String name = TestUtil.generateRandomName();
+        LocalDateTime createdAt = LocalDateTime.now();
+
+        UserResponse response = new UserResponse(userId, email, name, createdAt);
+
+        when(authService.getCurrentUser(anyString())).thenReturn(response);
+
+        // when
+        ResultActions res = mockMvc.perform(JsonTestUtil.getJson(AUTH_URL + "/me"));
+
+        // then
+        res.andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        jsonPath("$.id").value(userId),
+                        jsonPath("$.email").value(email),
+                        jsonPath("$.name").value(name),
+                        jsonPath("$.createdAt").exists()
+                );
+
+        verify(authService).getCurrentUser(anyString());
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
+        // given
+        when(authService.getCurrentUser(anyString()))
+                .thenThrow(new ResourceNotFoundException("User not found"));
+
+        // when / then
+        mockMvc.perform(JsonTestUtil.getJson(AUTH_URL + "/me"))
+                .andExpect(status().isNotFound());
+
+        verify(authService).getCurrentUser(anyString());
     }
 }

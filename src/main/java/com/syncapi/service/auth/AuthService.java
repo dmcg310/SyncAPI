@@ -4,6 +4,7 @@ import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
 import com.syncapi.dto.auth.UpdatePasswordRequest;
+import com.syncapi.dto.auth.UserResponse;
 import com.syncapi.entity.user.User;
 import com.syncapi.exception.ConflictException;
 import com.syncapi.exception.UnauthorizedException;
@@ -88,6 +89,23 @@ public class AuthService {
         userRepository.save(user);
 
         return toResponse(user);
+    }
+
+    /**
+     * Gets the current user's profile.
+     *
+     * @param email the user's email
+     * @return the user response
+     */
+    public UserResponse getCurrentUser(String email) {
+        User user = util.getUserByEmail(email);
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getCreatedAt()
+        );
     }
 
     /**

@@ -5,6 +5,7 @@ import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
 import com.syncapi.dto.auth.UpdatePasswordRequest;
+import com.syncapi.dto.auth.UserResponse;
 import com.syncapi.entity.user.User;
 import com.syncapi.exception.ConflictException;
 import com.syncapi.exception.ResourceNotFoundException;
@@ -19,6 +20,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -253,5 +256,30 @@ class AuthServiceTest {
         verifyNoInteractions(passwordEncoder);
         verifyNoInteractions(jwtService);
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldGetCurrentUser() {
+        // given
+        Long userId = TestUtil.generateRandomId();
+        String email = TestUtil.generateRandomEmail();
+        String name = TestUtil.generateRandomName();
+        LocalDateTime createdAt = LocalDateTime.now();
+
+        User user = TestUtil.createUser(userId, email, name);
+        user.setCreatedAt(createdAt);
+
+        when(util.getUserByEmail(email)).thenReturn(user);
+
+        // when
+        UserResponse response = authService.getCurrentUser(email);
+
+        // then
+        assertThat(response.getId()).isEqualTo(userId);
+        assertThat(response.getEmail()).isEqualTo(email);
+        assertThat(response.getName()).isEqualTo(name);
+        assertThat(response.getCreatedAt()).isEqualTo(createdAt);
+
+        verify(util).getUserByEmail(email);
     }
 }

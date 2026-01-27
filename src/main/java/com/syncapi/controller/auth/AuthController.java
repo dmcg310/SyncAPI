@@ -4,11 +4,13 @@ import com.syncapi.dto.auth.AuthResponse;
 import com.syncapi.dto.auth.LoginRequest;
 import com.syncapi.dto.auth.RegisterRequest;
 import com.syncapi.dto.auth.UpdatePasswordRequest;
+import com.syncapi.dto.auth.UserResponse;
 import com.syncapi.service.auth.AuthService;
 import com.syncapi.util.Util;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -64,5 +66,17 @@ public class AuthController {
         AuthResponse auth = authService.updatePassword(request, Util.getCurrentUserEmail());
 
         return ResponseEntity.ok(auth);
+    }
+
+    /**
+     * Gets the current authenticated user's profile.
+     *
+     * @return the user response
+     */
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        UserResponse user = authService.getCurrentUser(Util.getCurrentUserEmail());
+
+        return ResponseEntity.ok(user);
     }
 }
