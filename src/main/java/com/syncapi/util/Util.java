@@ -19,6 +19,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 /**
  * Utility component for common operations.
  */
@@ -148,6 +152,22 @@ public class Util {
     }
 
     /**
+     * Gets the active environment for a workspace.
+     *
+     * @param workspace the workspace
+     * @return the active environment, if any
+     */
+    public Optional<Environment> getActiveEnvironmentByRequestId(Long requestId, String email) {
+        Request request = getRequestWithAccessCheck(requestId, email);
+        Long workspaceId = request.getFolder().getWorkspace().getId();
+
+        return getWorkspaceWithAccessCheck(workspaceId, email)
+                .getEnvironments().stream()
+                .filter(Environment::getIsActive)
+                .findFirst();
+    }
+
+    /**
      * Gets a folder and verifies the user has access to it.
      *
      * @param folderId the folder ID
@@ -184,6 +204,19 @@ public class Util {
 
         return request;
 
+    }
+
+    /**
+     * Builds a map of variable key-value pairs from an environment.
+     *
+     * @param environment the environment
+     * @return the map of variables
+     */
+    public Map<String, String> getVariablesFromEnvironment(Environment environment) {
+        return environment.getVariables().stream()
+                .collect(HashMap::new,
+                        (map, var) -> map.put(var.getKey(), var.getValue()),
+                        HashMap::putAll);
     }
 
     /**
