@@ -168,18 +168,14 @@ public final class TestUtil {
     }
 
     /**
-     * Creates a Workspace entity with random values and multiple members.
+     * Creates a Workspace entity with random values.
      */
-    public static Workspace createRandomWorkspaceWithMembers(User... members) {
-        Workspace workspace = createWorkspace(
+    public static Workspace createRandomWorkspace() {
+        return createWorkspace(
                 generateRandomId(),
                 generateRandomName(),
-                members[0]
+                createRandomUser()
         );
-
-        workspace.setMembers(new ArrayList<>(List.of(members)));
-
-        return workspace;
     }
 
     /**

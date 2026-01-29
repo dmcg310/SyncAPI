@@ -25,6 +25,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,7 +70,9 @@ class UtilTest {
     void shouldGetCurrentUserEmail() {
         // given
         String email = TestUtil.generateRandomEmail();
-        setAuthentication(email);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null,
+                List.of());
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
         // when
         String result = Util.getCurrentUserEmail();
@@ -575,9 +578,104 @@ class UtilTest {
         verify(userRepository).findByEmail(email);
     }
 
-    private void setAuthentication(String email) {
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null,
-                List.of());
-        SecurityContextHolder.getContext().setAuthentication(auth);
+    @Test
+    void shouldGetActiveEnvironmentByRequestId() {
+        // given
+        Long requestId = TestUtil.generateRandomId();
+        String email = TestUtil.generateRandomEmail();
+
+        User user = TestUtil.createRandomUser();
+        Workspace workspace = TestUtil.createRandomWorkspace(user);
+
+        Environment activeEnv = TestUtil.createRandomEnvironment(workspace);
+        activeEnv.setIsActive(true);
+        workspace.getEnvironments().add(activeEnv);
+
+        Environment inactiveEnv = TestUtil.createRandomEnvironment(workspace);
+        inactiveEnv.setIsActive(false);
+        workspace.getEnvironments().add(inactiveEnv);
+
+        Folder folder = TestUtil.createRandomFolder(workspace);
+        Request request = TestUtil.createRandomRequest(folder);
+
+        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
+        when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        // when
+        Optional<Environment> result = util.getActiveEnvironmentByRequestId(requestId, email);
+
+        // then
+        assertThat(result).isPresent();
+        assertThat(result.get().getName()).isEqualTo(activeEnv.getName());
+        assertThat(result.get().getIsActive()).isTrue();
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoActiveEnvironment() {
+        // given
+        Long requestId = TestUtil.generateRandomId();
+        String email = TestUtil.generateRandomEmail();
+
+        User user = TestUtil.createRandomUser();
+        Workspace workspace = TestUtil.createRandomWorkspace(user);
+
+        Environment activeEnv = TestUtil.createRandomEnvironment(workspace);
+        activeEnv.setIsActive(false);
+        workspace.getEnvironments().add(activeEnv);
+
+        Folder folder = TestUtil.createRandomFolder(workspace);
+        Request request = TestUtil.createRandomRequest(folder);
+
+        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
+        when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        // when
+        Optional<Environment> result = util.getActiveEnvironmentByRequestId(requestId, email);
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shouldGetVariablesFromEnvironment() {
+        // given
+        Workspace workspace = TestUtil.createRandomWorkspace();
+        Environment environment = TestUtil.createRandomEnvironment(workspace);
+
+        String var1Key = TestUtil.generateRandomKey();
+        String var1Value = TestUtil.generateRandomValue();
+        EnvironmentVariable var1 = TestUtil.createEnvironmentVariable(TestUtil.generateRandomId(), var1Key, var1Value,
+                environment);
+        environment.getVariables().add(var1);
+
+        String var2Key = TestUtil.generateRandomKey();
+        String var2Value = TestUtil.generateRandomValue();
+        EnvironmentVariable var2 = TestUtil.createEnvironmentVariable(TestUtil.generateRandomId(), var2Key, var2Value,
+                environment);
+        environment.getVariables().add(var2);
+
+        // when
+        Map<String, String> result = util.getVariablesFromEnvironment(environment);
+
+        // then
+        assertThat(result)
+                .hasSize(2)
+                .containsEntry(var1Key, var1Value)
+                .containsEntry(var2Key, var2Value);
+    }
+
+    @Test
+    void shouldReturnEmptyMapWhenNoVariables() {
+        // given
+        Workspace workspace = TestUtil.createRandomWorkspace();
+        Environment environment = TestUtil.createRandomEnvironment(workspace);
+
+        // when
+        Map<String, String> result = util.getVariablesFromEnvironment(environment);
+
+        // then
+        assertThat(result).isEmpty();
     }
 }
