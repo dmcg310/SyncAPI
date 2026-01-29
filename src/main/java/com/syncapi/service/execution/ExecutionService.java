@@ -132,6 +132,10 @@ public class ExecutionService {
     private Map<String, String> extractHeaders(HttpHeaders headers) {
         Map<String, String> headerMap = new HashMap<>();
 
+        if (headers == null) {
+            return headerMap;
+        }
+
         headers.forEach((key, values) -> {
             if (!values.isEmpty()) {
                 headerMap.put(key, values.getFirst());

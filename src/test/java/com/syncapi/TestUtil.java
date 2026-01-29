@@ -10,8 +10,11 @@ import com.syncapi.util.RequestMethod;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
@@ -34,6 +37,13 @@ public final class TestUtil {
      */
     public static int generateRandomInt() {
         return ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Generates a random long.
+     */
+    public static long generateRandomLong() {
+        return ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
     }
 
     /**
@@ -108,6 +118,13 @@ public final class TestUtil {
     }
 
     /**
+     * Generates a random error message.
+     */
+    public static String generateRandomErrorMessage() {
+        return "Error: " + UUID.randomUUID().toString().substring(0, 12);
+    }
+
+    /**
      * Generates a random RequestMethod enum value.
      */
     public static RequestMethod generateRandomRequestMethod() {
@@ -115,6 +132,15 @@ public final class TestUtil {
         int randomIndex = ThreadLocalRandom.current().nextInt(methods.length);
 
         return methods[randomIndex];
+    }
+
+    /**
+     * Creates a Map with random key-value pairs.
+     */
+    public static Map<String, String> createRandomMap(int count) {
+        return IntStream.range(0, count)
+                .boxed()
+                .collect(Collectors.toMap(i -> generateRandomKey(), i -> generateRandomValue()));
     }
 
     /**

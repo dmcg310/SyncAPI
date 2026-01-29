@@ -21,6 +21,11 @@ public final class JsonTestUtil {
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String BASIC_PREFIX = "Basic ";
 
+    public static final int SUCCESS_STATUS_CODE = 200;
+    public static final int BAD_STATUS_CODE = 0;
+
+    public static final String SUCCESS_STATUS_TEXT = "200 OK";
+
     private static final MediaType JSON_MEDIA_TYPE = MediaType.APPLICATION_JSON;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -86,6 +91,15 @@ public final class JsonTestUtil {
                 .contentType(JSON_MEDIA_TYPE)
                 .accept(JSON_MEDIA_TYPE)
                 .content(toJson(body));
+    }
+
+    /**
+     * Creates a POST request with no body.
+     */
+    public static MockHttpServletRequestBuilder postJsonNoBody(String url) {
+        return post(url)
+                .contentType(JSON_MEDIA_TYPE)
+                .accept(JSON_MEDIA_TYPE);
     }
 
     /**
