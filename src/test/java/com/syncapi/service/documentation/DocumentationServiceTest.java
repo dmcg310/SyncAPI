@@ -70,7 +70,7 @@ class DocumentationServiceTest {
         OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
 
         // then
-        assertThat(spec.getOpenApi()).isEqualTo(OPENAPI_VERSION);
+        assertThat(spec.getOpenapi()).isEqualTo(OPENAPI_VERSION);
         assertThat(spec.getInfo().getTitle()).isEqualTo(workspace.getName());
         assertThat(spec.getInfo().getDescription()).isEqualTo(workspace.getDescription());
         assertThat(spec.getPaths()).containsKey("/users");
@@ -206,7 +206,7 @@ class DocumentationServiceTest {
         OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
 
         // then
-        assertThat(spec.getOpenApi()).isEqualTo(OPENAPI_VERSION);
+        assertThat(spec.getOpenapi()).isEqualTo(OPENAPI_VERSION);
         assertThat(spec.getInfo().getTitle()).isEqualTo(workspace.getName());
         assertThat(spec.getPaths()).isEmpty();
     }
