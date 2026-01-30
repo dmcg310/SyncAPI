@@ -24,6 +24,17 @@ public class OpenApiSpec {
     /**
      * Parameterized constructor.
      *
+     * @param info  the API information
+     * @param paths the API paths
+     */
+    public OpenApiSpec(OpenApiInfo info, Map<String, OpenApiPathItem> paths) {
+        this.info = info;
+        this.paths = paths;
+    }
+
+    /**
+     * Parameterized constructor.
+     *
      * @param openapi the OpenAPI version
      * @param info    the API information
      * @param paths   the API paths

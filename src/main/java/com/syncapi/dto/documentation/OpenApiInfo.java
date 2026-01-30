@@ -22,6 +22,17 @@ public class OpenApiInfo {
      *
      * @param title       the title
      * @param description the description
+     */
+    public OpenApiInfo(String title, String description) {
+        this.title = title;
+        this.description = description;
+    }
+
+    /**
+     * Parameterized constructor.
+     *
+     * @param title       the title
+     * @param description the description
      * @param version     the version
      */
     public OpenApiInfo(String title, String description, String version) {
