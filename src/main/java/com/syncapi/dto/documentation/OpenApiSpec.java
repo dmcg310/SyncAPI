@@ -45,12 +45,12 @@ public class OpenApiSpec {
         this.paths = paths;
     }
 
-    public String getOpenApi() {
+    public String getOpenapi() {
         return openapi;
     }
 
-    public void setOpenApi(String openApi) {
-        this.openapi = openApi;
+    public void setOpenapi(String openapi) {
+        this.openapi = openapi;
     }
 
     public OpenApiInfo getInfo() {
