@@ -31,7 +31,7 @@ const RegisterPage: React.FC = () => {
 
         try {
             await register(name, email, password);
-            navigate('/login', {state: {message: 'Account created successfully. Please sign in.'}});
+            navigate('/dashboard');
         } catch (err: unknown) {
             if (err && typeof err === 'object' && 'response' in err) {
                 const axiosError = err as { response?: { data?: { message?: string } } };
@@ -45,23 +45,26 @@ const RegisterPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50">
             <div className="max-w-md w-full">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-neutral-900">SyncAPI</h1>
-                    <p className="text-neutral-600 mt-2">Create your account</p>
+                    <p className="text-lg text-neutral-600 mt-2">Create your account</p>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-md p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="flex justify-center mb-6">
+                            <img src="/syncapi.png" alt="SyncAPI" className="h-30 w-auto"/>
+                        </div>
+
                         {error && (
-                            <div className="bg-error-50 text-error-700 px-4 py-3 rounded-lg text-sm">
+                            <div className="bg-error-50 text-error-700 px-4 py-3 rounded-lg text-md">
                                 {error}
                             </div>
                         )}
 
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-2">
+                            <label htmlFor="name" className="block text-md font-medium text-neutral-700 mb-2">
                                 Name
                             </label>
                             <input
@@ -76,7 +79,7 @@ const RegisterPage: React.FC = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-2">
+                            <label htmlFor="email" className="block text-md font-medium text-neutral-700 mb-2">
                                 Email
                             </label>
                             <input
@@ -91,7 +94,7 @@ const RegisterPage: React.FC = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-2">
+                            <label htmlFor="password" className="block text-md font-medium text-neutral-700 mb-2">
                                 Password
                             </label>
                             <input
@@ -107,7 +110,7 @@ const RegisterPage: React.FC = () => {
 
                         <div>
                             <label htmlFor="confirmPassword"
-                                   className="block text-sm font-medium text-neutral-700 mb-2">
+                                   className="block text-md font-medium text-neutral-700 mb-2">
                                 Confirm Password
                             </label>
                             <input
@@ -124,15 +127,16 @@ const RegisterPage: React.FC = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                         >
                             {loading ? 'Creating account...' : 'Create account'}
                         </button>
                     </form>
 
-                    <p className="mt-6 text-center text-sm text-neutral-600">
+                    <p className="mt-6 text-center text-md text-neutral-600">
                         Already have an account?{' '}
-                        <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+                        <Link to="/login"
+                              className="text-primary-600 hover:text-primary-700 font-medium cursor-pointer">
                             Sign in
                         </Link>
                     </p>
