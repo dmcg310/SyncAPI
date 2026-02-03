@@ -39,9 +39,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        const url = error.config?.url;
-        const isAuthRoute = url?.includes('/auth/login') || url?.includes('/auth/register');
-        if (error.response?.status === 401 && !isAuthRoute) {
+        const rawUrl = error.config?.url ?? '';
+        const pathname = rawUrl.startsWith('http')
+            ? new URL(rawUrl).pathname
+            : rawUrl;
+
+        const isMeRoute = pathname === '/auth/me';
+
+        if (error.response?.status === 401 && isMeRoute) {
             localStorage.removeItem(STORAGE_KEYS.TOKEN);
             localStorage.removeItem(STORAGE_KEYS.USER);
             window.location.href = '/login';
@@ -84,16 +89,16 @@ export const workspaceApi = {
 export const folderApi = {
     getByWorkspace: (workspaceId: number) =>
         api.get<Folder[]>(`/workspaces/${workspaceId}/folders`),
-    getById: (folderId: number) =>
-        api.get<Folder>(`/folders/${folderId}`),
+    getById: (workspaceId: number, folderId: number) =>
+        api.get<Folder>(`/workspaces/${workspaceId}/folders/${folderId}`),
     create: (workspaceId: number, data: FolderRequest) =>
         api.post<Folder>(`/workspaces/${workspaceId}/folders`, data),
-    update: (folderId: number, data: FolderRequest) =>
-        api.put<Folder>(`/folders/${folderId}`, data),
-    patch: (folderId: number, data: Partial<FolderRequest>) =>
-        api.patch<Folder>(`/folders/${folderId}`, data),
-    delete: (folderId: number) =>
-        api.delete<void>(`/folders/${folderId}`)
+    update: (workspaceId: number, folderId: number, data: FolderRequest) =>
+        api.put<Folder>(`/workspaces/${workspaceId}/folders/${folderId}`, data),
+    patch: (workspaceId: number, folderId: number, data: Partial<FolderRequest>) =>
+        api.patch<Folder>(`/workspaces/${workspaceId}/folders/${folderId}`, data),
+    delete: (workspaceId: number, folderId: number) =>
+        api.delete<void>(`/workspaces/${workspaceId}/folders/${folderId}`)
 };
 
 export const requestApi = {
@@ -112,26 +117,26 @@ export const requestApi = {
     execute: (folderId: number, requestId: number) =>
         api.post<ExecutionResponse>(`/folders/${folderId}/requests/${requestId}/execute`),
     lock: (folderId: number, requestId: number) =>
-        api.post<ApiRequest>(`/folders/${folderId}/requests/${requestId}/lock`),
+        api.patch<ApiRequest>(`/folders/${folderId}/requests/${requestId}/lock`),
     unlock: (folderId: number, requestId: number) =>
-        api.post<ApiRequest>(`/folders/${folderId}/requests/${requestId}/unlock`)
+        api.patch<ApiRequest>(`/folders/${folderId}/requests/${requestId}/unlock`)
 };
 
 export const environmentApi = {
     getByWorkspace: (workspaceId: number) =>
         api.get<Environment[]>(`/workspaces/${workspaceId}/environments`),
-    getById: (environmentId: number) =>
-        api.get<Environment>(`/environments/${environmentId}`),
+    getById: (workspaceId: number, environmentId: number) =>
+        api.get<Environment>(`/workspaces/${workspaceId}/environments/${environmentId}`),
     create: (workspaceId: number, data: EnvironmentRequest) =>
         api.post<Environment>(`/workspaces/${workspaceId}/environments`, data),
-    update: (environmentId: number, data: EnvironmentRequest) =>
-        api.put<Environment>(`/environments/${environmentId}`, data),
-    patch: (environmentId: number, data: Partial<EnvironmentRequest>) =>
-        api.patch<Environment>(`/environments/${environmentId}`, data),
-    delete: (environmentId: number) =>
-        api.delete<void>(`/environments/${environmentId}`),
-    activate: (environmentId: number) =>
-        api.post<Environment>(`/environments/${environmentId}/activate`)
+    update: (workspaceId: number, environmentId: number, data: EnvironmentRequest) =>
+        api.put<Environment>(`/workspaces/${workspaceId}/environments/${environmentId}`, data),
+    patch: (workspaceId: number, environmentId: number, data: Partial<EnvironmentRequest>) =>
+        api.patch<Environment>(`/workspaces/${workspaceId}/environments/${environmentId}`, data),
+    delete: (workspaceId: number, environmentId: number) =>
+        api.delete<void>(`/workspaces/${workspaceId}/environments/${environmentId}`),
+    activate: (workspaceId: number, environmentId: number) =>
+        api.post<Environment>(`/workspaces/${workspaceId}/environments/${environmentId}/activate`)
 };
 
 export const variableApi = {

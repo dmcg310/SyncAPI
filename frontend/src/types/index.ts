@@ -61,12 +61,13 @@ export interface ApiRequest {
     method: HttpMethod;
     url: string;
     headers?: Record<string, string>;
-    body?: Record<string, unknown>;
-    folderId: number;
-    isLocked: boolean;
-    lockedBy?: User;
+    body?: unknown;
+    authType?: string;
+    authConfig?: unknown;
+    lockedBy: number | null;
+    lockedAt: string | null;
     createdAt: string;
-    updatedAt: string;
+    folderId: number;
 }
 
 export interface ApiRequestRequest {
