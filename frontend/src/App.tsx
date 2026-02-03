@@ -3,6 +3,7 @@ import {AuthProvider, useAuth} from './context/AuthContext.tsx';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import WorkspacePage from "./pages/WorkspacePage.tsx";
 import {ReactNode} from 'react';
 
 interface RouteGuardProps {
@@ -45,6 +46,7 @@ function AppRoutes() {
             <Route path="/login" element={<PublicRoute><LoginPage/></PublicRoute>}/>
             <Route path="/register" element={<PublicRoute><RegisterPage/></PublicRoute>}/>
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage/></ProtectedRoute>}/>
+            <Route path="/workspace/:workspaceId" element={<ProtectedRoute><WorkspacePage/></ProtectedRoute>}/>
             <Route path="/" element={<Navigate to="/dashboard"/>}/>
         </Routes>
     );
