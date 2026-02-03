@@ -7,7 +7,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<User>;
-    register: (name: string, email: string, password: string) => Promise<void>;
+    register: (name: string, email: string, password: string) => Promise<User>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -50,8 +50,10 @@ export function AuthProvider({children}: AuthProviderProps) {
         return userResponse.data;
     };
 
-    const register = async (name: string, email: string, password: string): Promise<void> => {
+    const register = async (name: string, email: string, password: string): Promise<User> => {
         await authApi.register({name, email, password});
+
+        return await login(email, password);
     };
 
     const logout = () => {
