@@ -3,10 +3,11 @@ import type {ApiRequest, ApiRequestRequest, ExecutionResponse, HttpMethod} from 
 import {HTTP_METHODS, METHOD_COLORS} from '../../util/constants';
 import {useRequestEditor} from '../../hooks';
 import {TbTerminal2} from 'react-icons/tb';
-import {FaLock, FaLockOpen, FaUser} from 'react-icons/fa';
-import {IoClose} from 'react-icons/io5';
-import JsonEditor from '../common/JsonEditor';
-import {getErrorMessage} from "../../util/errors";
+import LockStatus from './LockStatus';
+import HeadersEditor from './HeadersEditor';
+import BodyEditor from './BodyEditor';
+import ResponseViewer from './ResponseViewer';
+import {getErrorMessage} from "../../util/errors.ts";
 
 interface RequestEditorProps {
     request: ApiRequest | null;
@@ -64,8 +65,7 @@ const RequestEditor: React.FC<RequestEditorProps> = ({
         editor.setResponse(null);
 
         try {
-            const result = await onExecute();
-            editor.setResponse(result);
+            editor.setResponse(await onExecute());
         } catch (err: unknown) {
             if (err && typeof err === 'object' && 'response' in err) {
                 const axiosError = err as { response?: { data?: ExecutionResponse } };
@@ -171,30 +171,23 @@ const RequestEditor: React.FC<RequestEditorProps> = ({
             </div>
 
             <div className="flex border-b border-neutral-200 shrink-0">
-                <button
-                    onClick={() => editor.setActiveTab('headers')}
-                    className={`px-4 py-2 text-md font-medium border-b-2 transition-colors cursor-pointer ${
-                        editor.activeTab === 'headers'
-                            ? 'border-primary-600 text-primary-600'
-                            : 'border-transparent text-neutral-600 hover:text-neutral-900'
-                    }`}
-                >
-                    Headers {editor.headers.length > 0 && `(${editor.headers.length})`}
-                </button>
-                <button
-                    onClick={() => editor.setActiveTab('body')}
-                    className={`px-4 py-2 text-md font-medium border-b-2 transition-colors cursor-pointer ${
-                        editor.activeTab === 'body'
-                            ? 'border-primary-600 text-primary-600'
-                            : 'border-transparent text-neutral-600 hover:text-neutral-900'
-                    }`}
-                >
-                    Body
-                </button>
+                {(['headers', 'body'] as const).map((tab) => (
+                    <button
+                        key={tab}
+                        onClick={() => editor.setActiveTab(tab)}
+                        className={`px-4 py-2 text-md font-medium border-b-2 transition-colors cursor-pointer ${
+                            editor.activeTab === tab
+                                ? 'border-primary-600 text-primary-600'
+                                : 'border-transparent text-neutral-600 hover:text-neutral-900'
+                        }`}
+                    >
+                        {tab === 'headers' ? `Headers ${editor.headers.length > 0 ? `(${editor.headers.length})` : ''}` : 'Body'}
+                    </button>
+                ))}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 min-h-0">
-                {editor.activeTab === 'headers' && (
+                {editor.activeTab === 'headers' ? (
                     <HeadersEditor
                         headers={editor.headers}
                         canEdit={editor.canEdit}
@@ -211,9 +204,7 @@ const RequestEditor: React.FC<RequestEditorProps> = ({
                             editor.updateHeader(i, f, v);
                         }}
                     />
-                )}
-
-                {editor.activeTab === 'body' && (
+                ) : (
                     <BodyEditor
                         method={editor.method}
                         body={editor.body}
@@ -223,177 +214,7 @@ const RequestEditor: React.FC<RequestEditorProps> = ({
                 )}
             </div>
 
-            {editor.response && (
-                <ResponseViewer response={editor.response}/>
-            )}
-        </div>
-    );
-};
-
-interface LockStatusProps {
-    isLockedByMe: boolean;
-    isLockedByOther: boolean;
-    onRelease: () => void;
-}
-
-const LockStatus: React.FC<LockStatusProps> = ({isLockedByMe, isLockedByOther, onRelease}) => {
-    if (isLockedByMe) {
-        return (
-            <div className="flex items-center gap-2">
-                <span
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-md text-success-700 bg-success-50 rounded-lg">
-                    <FaLock size={14}/>
-                    Locked by you
-                </span>
-                <button
-                    onClick={onRelease}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-md text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
-                    title="Release lock"
-                >
-                    <FaLockOpen size={14}/>
-                    Release
-                </button>
-            </div>
-        );
-    }
-
-    if (isLockedByOther) {
-        return (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 text-md text-warning-700 bg-warning-50 rounded-lg">
-                <FaLock size={14}/>
-                <FaUser size={12}/>
-                Locked by another user
-            </span>
-        );
-    }
-
-    return (
-        <span className="flex items-center gap-1.5 px-3 py-1.5 text-md text-neutral-500 bg-neutral-100 rounded-lg">
-            <FaLockOpen size={14}/>
-            Unlocked
-        </span>
-    );
-};
-
-interface HeadersEditorProps {
-    headers: Array<{ key: string; value: string }>;
-    canEdit: boolean;
-    onAdd: () => void;
-    onRemove: (index: number) => void;
-    onChange: (index: number, field: 'key' | 'value', value: string) => void;
-}
-
-const HeadersEditor: React.FC<HeadersEditorProps> = ({headers, canEdit, onAdd, onRemove, onChange}) => (
-    <div className="space-y-2">
-        {headers.map((header, index) => (
-            <div key={index} className="flex items-center gap-2">
-                <input
-                    type="text"
-                    value={header.key}
-                    onChange={(e) => onChange(index, 'key', e.target.value)}
-                    disabled={!canEdit}
-                    className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg text-md focus:ring-2 focus:ring-primary-500 outline-none disabled:bg-neutral-100 disabled:cursor-not-allowed"
-                    placeholder="Header name"
-                />
-                <input
-                    type="text"
-                    value={header.value}
-                    onChange={(e) => onChange(index, 'value', e.target.value)}
-                    disabled={!canEdit}
-                    className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg text-md focus:ring-2 focus:ring-primary-500 outline-none disabled:bg-neutral-100 disabled:cursor-not-allowed"
-                    placeholder="Header value"
-                />
-                <button
-                    onClick={() => onRemove(index)}
-                    disabled={!canEdit}
-                    className="p-2 text-neutral-400 hover:text-error-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                    <IoClose size={20}/>
-                </button>
-            </div>
-        ))}
-        <button
-            onClick={onAdd}
-            disabled={!canEdit}
-            className="text-md text-primary-600 hover:text-primary-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-        >
-            + Add Header
-        </button>
-    </div>
-);
-
-interface BodyEditorProps {
-    method: string;
-    body: string;
-    canEdit: boolean;
-    onChange: (value: string) => void;
-}
-
-const BodyEditor: React.FC<BodyEditorProps> = ({method, body, canEdit, onChange}) => {
-    if (!['POST', 'PUT', 'PATCH'].includes(method)) {
-        return <p className="text-sm text-neutral-500">Body is not available for {method} requests</p>;
-    }
-
-    const formatJson = () => {
-        try {
-            const formatted = JSON.stringify(JSON.parse(body), null, 2);
-            onChange(formatted);
-        } catch {
-        }
-    };
-
-    return (
-        <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                <span className="text-sm text-neutral-600">JSON</span>
-                <button
-                    type="button"
-                    onClick={formatJson}
-                    disabled={!canEdit}
-                    className="text-xs text-primary-600 hover:text-primary-700 font-medium disabled:opacity-50 cursor-pointer"
-                >
-                    FORMAT
-                </button>
-            </div>
-            <JsonEditor value={body} onChange={onChange} disabled={!canEdit} height="250px"/>
-        </div>
-    );
-};
-
-interface ResponseViewerProps {
-    response: ExecutionResponse;
-}
-
-const ResponseViewer: React.FC<ResponseViewerProps> = ({response}) => {
-    const getStatusColor = (status: number) => {
-        if (status >= 200 && status < 300) {
-            return 'text-success-600 bg-success-50';
-        }
-
-        if (status >= 300 && status < 400) {
-            return 'text-warning-600 bg-warning-50';
-        }
-
-        return 'text-error-600 bg-error-50';
-    };
-
-    return (
-        <div className="border-t border-neutral-200 shrink-0 max-h-[60vh] flex flex-col">
-            <div className="flex items-center gap-4 px-4 py-3 bg-neutral-50 border-b border-neutral-100">
-                <span className="text-md font-medium text-neutral-700">Response</span>
-                <span className={`px-2 py-0.5 rounded text-md font-bold ${getStatusColor(response.statusCode)}`}>
-                    {response.statusText}
-                </span>
-                <span className="text-md text-neutral-500">{response.responseTimeMs}ms</span>
-                {response.errorMessage && (
-                    <span className="text-md text-error-600">{response.errorMessage}</span>
-                )}
-            </div>
-            <div className="flex-1 overflow-auto p-4 bg-neutral-50">
-                <pre className="text-md font-mono text-neutral-800 whitespace-pre-wrap">
-                    {typeof response.body === 'string' ? response.body : JSON.stringify(response.body, null, 2)}
-                </pre>
-            </div>
+            {editor.response && <ResponseViewer response={editor.response}/>}
         </div>
     );
 };
