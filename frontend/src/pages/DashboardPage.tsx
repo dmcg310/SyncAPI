@@ -1,103 +1,44 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {useNavigate} from 'react-router-dom';
 import Header from '../components/layout/Header';
 import Modal from '../components/common/Modal';
 import DeleteConfirmModal from '../components/common/DeleteConfirmModal';
 import WorkspaceCard from '../components/workspace/WorkspaceCard';
 import WorkspaceForm from '../components/workspace/WorkspaceForm';
-import {workspaceApi} from '../services/api';
+import {useModal, useWorkspaces} from '../hooks';
 import type {Workspace, WorkspaceRequest} from '@/types';
-import {IoAdd} from "react-icons/io5";
-import {BsFiles} from "react-icons/bs";
+import {IoAdd} from 'react-icons/io5';
+import {BsFiles} from 'react-icons/bs';
 
 const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
-    const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const {workspaces, loading, error, reload, create, update, remove, actionLoading} = useWorkspaces();
 
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
-    const [formLoading, setFormLoading] = useState(false);
-
-    useEffect(() => {
-        loadWorkspaces();
-    }, []);
-
-    const loadWorkspaces = async () => {
-        try {
-            setLoading(true);
-
-            const response = await workspaceApi.getAll();
-            setWorkspaces(response.data);
-            setError('');
-        } catch {
-            setError('Failed to load workspaces');
-        } finally {
-            setLoading(false);
-        }
-    };
+    const createModal = useModal();
+    const editModal = useModal<Workspace>();
+    const deleteModal = useModal<Workspace>();
 
     const handleCreate = async (data: WorkspaceRequest) => {
-        setFormLoading(true);
-
-        try {
-            await workspaceApi.create(data);
-            await loadWorkspaces();
-            setIsCreateModalOpen(false);
-        } finally {
-            setFormLoading(false);
-        }
+        await create(data);
+        createModal.close();
     };
 
     const handleEdit = async (data: WorkspaceRequest) => {
-        if (!selectedWorkspace) {
+        if (!editModal.data) {
             return;
         }
 
-        setFormLoading(true);
-
-        try {
-            await workspaceApi.update(selectedWorkspace.id, data);
-            await loadWorkspaces();
-            setIsEditModalOpen(false);
-            setSelectedWorkspace(null);
-        } finally {
-            setFormLoading(false);
-        }
+        await update(editModal.data.id, data);
+        editModal.close();
     };
 
     const handleDelete = async () => {
-        if (!selectedWorkspace) {
+        if (!deleteModal.data) {
             return;
         }
 
-        setFormLoading(true);
-
-        try {
-            await workspaceApi.delete(selectedWorkspace.id);
-            await loadWorkspaces();
-            setIsDeleteModalOpen(false);
-            setSelectedWorkspace(null);
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const openEditModal = (workspace: Workspace) => {
-        setSelectedWorkspace(workspace);
-        setIsEditModalOpen(true);
-    };
-
-    const openDeleteModal = (workspace: Workspace) => {
-        setSelectedWorkspace(workspace);
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleWorkspaceClick = (workspace: Workspace) => {
-        navigate(`/workspace/${workspace.id}`);
+        await remove(deleteModal.data.id);
+        deleteModal.close();
     };
 
     return (
@@ -111,7 +52,7 @@ const DashboardPage: React.FC = () => {
                         <p className="text-neutral-600 mt-1">Manage your API projects</p>
                     </div>
                     <button
-                        onClick={() => setIsCreateModalOpen(true)}
+                        onClick={() => createModal.open()}
                         className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700 transition-colors cursor-pointer"
                     >
                         <IoAdd size={30}/>
@@ -126,10 +67,7 @@ const DashboardPage: React.FC = () => {
                 ) : error ? (
                     <div className="bg-error-50 text-error-700 px-4 py-3 rounded-lg">
                         {error}
-                        <button
-                            onClick={loadWorkspaces}
-                            className="ml-2 underline hover:no-underline cursor-pointer"
-                        >
+                        <button onClick={reload} className="ml-2 underline hover:no-underline cursor-pointer">
                             Retry
                         </button>
                     </div>
@@ -147,57 +85,36 @@ const DashboardPage: React.FC = () => {
                             <WorkspaceCard
                                 key={workspace.id}
                                 workspace={workspace}
-                                onClick={() => handleWorkspaceClick(workspace)}
-                                onEdit={() => openEditModal(workspace)}
-                                onDelete={() => openDeleteModal(workspace)}
+                                onClick={() => navigate(`/workspace/${workspace.id}`)}
+                                onEdit={() => editModal.open(workspace)}
+                                onDelete={() => deleteModal.open(workspace)}
                             />
                         ))}
                     </div>
                 )}
             </main>
 
-            <Modal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                title="Create Workspace"
-            >
-                <WorkspaceForm
-                    onSubmit={handleCreate}
-                    onCancel={() => setIsCreateModalOpen(false)}
-                    loading={formLoading}
-                />
+            <Modal isOpen={createModal.isOpen} onClose={createModal.close} title="Create Workspace">
+                <WorkspaceForm onSubmit={handleCreate} onCancel={createModal.close} loading={actionLoading}/>
             </Modal>
 
-            <Modal
-                isOpen={isEditModalOpen}
-                onClose={() => {
-                    setIsEditModalOpen(false);
-                    setSelectedWorkspace(null);
-                }}
-                title="Edit Workspace"
-            >
+            <Modal isOpen={editModal.isOpen} onClose={editModal.close} title="Edit Workspace">
                 <WorkspaceForm
-                    workspace={selectedWorkspace}
+                    workspace={editModal.data}
                     onSubmit={handleEdit}
-                    onCancel={() => {
-                        setIsEditModalOpen(false);
-                        setSelectedWorkspace(null);
-                    }}
-                    loading={formLoading}
+                    onCancel={editModal.close}
+                    loading={actionLoading}
                 />
             </Modal>
 
             <DeleteConfirmModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => {
-                    setIsDeleteModalOpen(false);
-                    setSelectedWorkspace(null);
-                }}
+                isOpen={deleteModal.isOpen}
+                onClose={deleteModal.close}
                 onConfirm={handleDelete}
                 title="Delete Workspace"
-                message={`Are you sure you want to delete "${selectedWorkspace?.name}"? 
+                message={`Are you sure you want to delete "${deleteModal.data?.name}"? 
                 This will permanently delete all folders, requests, and environments within this workspace.`}
-                loading={formLoading}
+                loading={actionLoading}
             />
         </div>
     );
