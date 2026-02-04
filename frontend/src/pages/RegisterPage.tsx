@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/AuthContext';
+import {getErrorMessage} from "../util/errors";
 
 const RegisterPage: React.FC = () => {
     const [name, setName] = useState('');
@@ -33,12 +34,7 @@ const RegisterPage: React.FC = () => {
             await register(name, email, password);
             navigate('/dashboard');
         } catch (err: unknown) {
-            if (err && typeof err === 'object' && 'response' in err) {
-                const axiosError = err as { response?: { data?: { message?: string } } };
-                setError(axiosError.response?.data?.message || 'Registration failed');
-            } else {
-                setError('An error occurred. Please try again.');
-            }
+            setError(getErrorMessage(err, 'Registration failed'));
         } finally {
             setLoading(false);
         }

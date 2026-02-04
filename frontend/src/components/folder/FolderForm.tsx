@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import type {Folder, FolderRequest} from '@/types';
+import {getErrorMessage} from "../../util/errors";
 
 interface FolderFormProps {
     folder?: Folder | null;
@@ -39,12 +40,7 @@ const FolderForm: React.FC<FolderFormProps> = ({folder, onSubmit, onCancel, load
                 description: description.trim() || undefined
             });
         } catch (err: unknown) {
-            if (err && typeof err === 'object' && 'response' in err) {
-                const axiosError = err as { response?: { data?: { message?: string } } };
-                setError(axiosError.response?.data?.message || 'An error occurred');
-            } else {
-                setError('An error occurred');
-            }
+            setError(getErrorMessage(err));
         }
     };
 

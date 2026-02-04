@@ -6,6 +6,7 @@ import {TbTerminal2} from 'react-icons/tb';
 import {FaLock, FaLockOpen, FaUser} from 'react-icons/fa';
 import {IoClose} from 'react-icons/io5';
 import JsonEditor from '../common/JsonEditor';
+import {getErrorMessage} from "../../util/errors";
 
 interface RequestEditorProps {
     request: ApiRequest | null;
@@ -70,12 +71,11 @@ const RequestEditor: React.FC<RequestEditorProps> = ({
                 const axiosError = err as { response?: { data?: ExecutionResponse } };
                 if (axiosError.response?.data) {
                     editor.setResponse(axiosError.response.data);
-                } else {
-                    editor.setError('Request failed. Check console for details.');
+                    return;
                 }
-            } else {
-                editor.setError('Request failed. Check console for details.');
             }
+
+            editor.setError(getErrorMessage(err, 'Request failed. Check console for details.'));
         }
     };
 

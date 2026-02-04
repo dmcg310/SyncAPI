@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import type {ApiRequestRequest, HttpMethod} from '@/types';
 import {HTTP_METHODS} from '../../util/constants';
+import {getErrorMessage} from "../../util/errors";
 
 interface RequestFormProps {
     onSubmit: (data: ApiRequestRequest) => Promise<void>;
@@ -38,12 +39,7 @@ const RequestForm: React.FC<RequestFormProps> = ({onSubmit, onCancel, loading = 
                 url: url.trim()
             });
         } catch (err: unknown) {
-            if (err && typeof err === 'object' && 'response' in err) {
-                const axiosError = err as { response?: { data?: { message?: string } } };
-                setError(axiosError.response?.data?.message || 'An error occurred');
-            } else {
-                setError('An error occurred');
-            }
+            setError(getErrorMessage(err));
         }
     };
 

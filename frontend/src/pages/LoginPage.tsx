@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/AuthContext';
+import {getErrorMessage} from "../util/errors";
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -20,12 +21,7 @@ const LoginPage: React.FC = () => {
             await login(email, password);
             navigate('/dashboard');
         } catch (err: unknown) {
-            if (err && typeof err === 'object' && 'response' in err) {
-                const axiosError = err as { response?: { data?: { message?: string } } };
-                setError(axiosError.response?.data?.message || 'Invalid email or password');
-            } else {
-                setError('An error occurred. Please try again.');
-            }
+            setError(getErrorMessage(err, 'Invalid email or password'));
         } finally {
             setLoading(false);
         }
