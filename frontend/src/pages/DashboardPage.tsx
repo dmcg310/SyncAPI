@@ -9,6 +9,7 @@ import {useModal, useWorkspaces} from '../hooks';
 import type {Workspace, WorkspaceRequest} from '@/types';
 import {IoAdd} from 'react-icons/io5';
 import {BsFiles} from 'react-icons/bs';
+import Spinner from "../components/common/Spinner.tsx";
 
 const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
@@ -62,7 +63,7 @@ const DashboardPage: React.FC = () => {
 
                 {loading ? (
                     <div className="flex justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                        <Spinner/>
                     </div>
                 ) : error ? (
                     <div className="bg-error-50 text-error-700 px-4 py-3 rounded-lg">

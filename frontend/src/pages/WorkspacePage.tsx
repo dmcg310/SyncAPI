@@ -11,6 +11,7 @@ import RequestEditor from '../components/request/RequestEditor';
 import {useFolders, useModal, useRequests, useWorkspace} from '../hooks';
 import type {ApiRequest, ApiRequestRequest, ExecutionResponse, Folder, FolderRequest} from '@/types';
 import {MdArrowBackIos} from 'react-icons/md';
+import Spinner from "../components/common/Spinner.tsx";
 
 const WorkspacePage: React.FC = () => {
     const {workspaceId} = useParams<{ workspaceId: string }>();
@@ -100,7 +101,7 @@ const WorkspacePage: React.FC = () => {
             <div className="min-h-screen bg-neutral-50">
                 <Header/>
                 <div className="flex justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    <Spinner/>
                 </div>
             </div>
         );

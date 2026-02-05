@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import WorkspacePage from "./pages/WorkspacePage.tsx";
 import {ReactNode} from 'react';
+import Spinner from "./components/common/Spinner.tsx";
 
 interface RouteGuardProps {
     children: ReactNode;
@@ -15,7 +16,7 @@ function ProtectedRoute({children}: RouteGuardProps) {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <Spinner/>
             </div>
         );
     }
@@ -30,7 +31,7 @@ function PublicRoute({children}: RouteGuardProps) {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <Spinner/>
             </div>
         );
     }
