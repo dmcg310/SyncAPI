@@ -55,10 +55,19 @@ const FolderList: React.FC<FolderListProps> = ({
                                 }`}
                                 onClick={() => onSelectFolder(folder)}
                             >
-                                <div className="flex items-center gap-2 min-w-0">
-                                    <FaFolder size={15}/>
-                                    <span className="truncate text-sm font-medium">{folder.name}</span>
-                                    <span className="text-xs text-neutral-400">({folder.requestCount})</span>
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <FaFolder size={15} className="shrink-0"/>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="truncate text-sm font-medium">{folder.name}</span>
+                                            <span className="text-xs text-neutral-400">({folder.requestCount})</span>
+                                        </div>
+                                        {folder.description && (
+                                            <p className="text-xs text-neutral-500 truncate mt-0.5">
+                                                {folder.description}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -67,7 +76,7 @@ const FolderList: React.FC<FolderListProps> = ({
                                             e.stopPropagation();
                                             onEditFolder(folder);
                                         }}
-                                        className="p-1.5 text-neutral-400 hover:text-primary-600 rounded transition-colors cursor-pointer"
+                                        className="p-1.5 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors cursor-pointer"
                                         title="Edit folder"
                                     >
                                         <FaEdit size={15}/>
@@ -77,7 +86,7 @@ const FolderList: React.FC<FolderListProps> = ({
                                             e.stopPropagation();
                                             onDeleteFolder(folder);
                                         }}
-                                        className="p-1 text-neutral-400 hover:text-error-600 rounded transition-colors cursor-pointer"
+                                        className="p-1 text-neutral-400 hover:text-error-600 hover:bg-error-50 rounded transition-colors cursor-pointer"
                                         title="Delete folder"
                                     >
                                         <MdDeleteForever size={17.5}/>

@@ -2,6 +2,7 @@ import React from 'react';
 import type {Workspace} from '@/types';
 import {FaEdit, FaFolder, FaUser} from "react-icons/fa";
 import {MdDeleteForever} from "react-icons/md";
+import {IoIosBarcode} from "react-icons/io";
 
 interface WorkspaceCardProps {
     workspace: Workspace;
@@ -53,11 +54,15 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = ({workspace, onClick, onEdit
             <div className="flex items-center gap-4 text-sm text-neutral-500">
                 <div className="flex items-center gap-1.5">
                     <FaFolder size={15}/>
-                    <span>{workspace.folderCount} folders</span>
+                    <span>{workspace.folderCount} {workspace.folderCount === 1 ? 'folder' : 'folders'}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <FaUser size={15}/>
-                    <span>{workspace.memberCount} members</span>
+                    <span>{workspace.memberCount} {workspace.memberCount === 1 ? 'member' : 'members'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <IoIosBarcode size={22.5}/>
+                    <span>{workspace.environmentCount} {workspace.environmentCount === 1 ? 'environment' : 'environments'}</span>
                 </div>
             </div>
         </div>

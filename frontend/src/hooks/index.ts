@@ -4,3 +4,4 @@ export {useWorkspace} from './useWorkspace';
 export {useFolders} from './useFolders';
 export {useRequests} from './useRequests';
 export {useRequestEditor} from './useRequestEditor';
+export {useEnvironments} from './useEnvironments';

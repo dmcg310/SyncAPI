@@ -86,7 +86,7 @@ const RequestList: React.FC<RequestListProps> = ({
                                         e.stopPropagation();
                                         onDeleteRequest(request);
                                     }}
-                                    className="p-1 text-neutral-400 hover:text-error-600 rounded opacity-0 group-hover:opacity-100 transition-all"
+                                    className="p-1 text-neutral-400 hover:text-error-600 hover:bg-error-50 rounded opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                                     title="Delete request"
                                 >
                                     <MdDeleteForever size={17.5}/>

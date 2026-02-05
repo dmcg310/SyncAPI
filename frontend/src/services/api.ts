@@ -136,7 +136,7 @@ export const environmentApi = {
     delete: (workspaceId: number, environmentId: number) =>
         api.delete<void>(`/workspaces/${workspaceId}/environments/${environmentId}`),
     activate: (workspaceId: number, environmentId: number) =>
-        api.post<Environment>(`/workspaces/${workspaceId}/environments/${environmentId}/activate`)
+        api.patch<Environment>(`/workspaces/${workspaceId}/environments/${environmentId}/activate`)
 };
 
 export const variableApi = {

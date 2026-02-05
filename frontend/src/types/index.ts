@@ -26,6 +26,7 @@ export interface Workspace {
     description?: string;
     memberCount: number;
     folderCount: number;
+    environmentCount: number;
     createdAt: string;
     updatedAt: string;
 }
