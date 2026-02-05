@@ -68,16 +68,20 @@ class WorkspaceControllerTest {
         String firstWorkspaceDescription = TestUtil.generateRandomDescription();
         int firstMemberCount = TestUtil.generateRandomInt();
         int firstFolderCount = TestUtil.generateRandomInt();
+        int firstEnvironmentCount = TestUtil.generateRandomInt();
         WorkspaceResponse firstWorkspaceResponse = new WorkspaceResponse(firstWorkspaceId, firstWorkspaceName,
-                firstWorkspaceDescription, LocalDateTime.now(), firstMemberCount, firstFolderCount);
+                firstWorkspaceDescription, LocalDateTime.now(), firstMemberCount, firstFolderCount,
+                firstEnvironmentCount);
 
         Long secondWorkspaceId = TestUtil.generateRandomId();
         String secondWorkspaceName = TestUtil.generateRandomName();
         String secondWorkspaceDescription = TestUtil.generateRandomDescription();
         int secondMemberCount = TestUtil.generateRandomInt();
         int secondFolderCount = TestUtil.generateRandomInt();
+        int secondEnvironmentCount = TestUtil.generateRandomInt();
         WorkspaceResponse secondWorkspaceResponse = new WorkspaceResponse(secondWorkspaceId, secondWorkspaceName,
-                secondWorkspaceDescription, LocalDateTime.now(), secondMemberCount, secondFolderCount);
+                secondWorkspaceDescription, LocalDateTime.now(), secondMemberCount, secondFolderCount,
+                secondEnvironmentCount);
 
         when(workspaceService.getUserWorkspaces(anyString()))
                 .thenReturn(List.of(firstWorkspaceResponse, secondWorkspaceResponse));
@@ -95,7 +99,8 @@ class WorkspaceControllerTest {
                         jsonPath("$[0].description").value(firstWorkspaceDescription),
                         jsonPath("$[0].createdAt").exists(),
                         jsonPath("$[0].memberCount").value(firstMemberCount),
-                        jsonPath("$[0].folderCount").value(firstFolderCount)
+                        jsonPath("$[0].folderCount").value(firstFolderCount),
+                        jsonPath("$[0].environmentCount").value(firstEnvironmentCount)
                 )
                 .andExpectAll(
                         jsonPath("$[1].id").value(secondWorkspaceId.intValue()),
@@ -103,7 +108,8 @@ class WorkspaceControllerTest {
                         jsonPath("$[1].description").value(secondWorkspaceDescription),
                         jsonPath("$[1].createdAt").exists(),
                         jsonPath("$[1].memberCount").value(secondMemberCount),
-                        jsonPath("$[1].folderCount").value(secondFolderCount)
+                        jsonPath("$[1].folderCount").value(secondFolderCount),
+                        jsonPath("$[1].environmentCount").value(secondEnvironmentCount)
                 );
 
         verify(workspaceService).getUserWorkspaces(anyString());
@@ -117,8 +123,9 @@ class WorkspaceControllerTest {
         String workspaceDescription = TestUtil.generateRandomDescription();
         int memberCount = TestUtil.generateRandomInt();
         int folderCount = TestUtil.generateRandomInt();
+        int environmentCount = TestUtil.generateRandomInt();
         WorkspaceResponse workspaceResponse = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
-                LocalDateTime.now(), memberCount, folderCount);
+                LocalDateTime.now(), memberCount, folderCount, environmentCount);
 
         when(workspaceService.getWorkspace(eq(workspaceId), anyString()))
                 .thenReturn(workspaceResponse);
@@ -135,7 +142,8 @@ class WorkspaceControllerTest {
                         jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
-                        jsonPath("$.folderCount").value(folderCount)
+                        jsonPath("$.folderCount").value(folderCount),
+                        jsonPath("$.environmentCount").value(environmentCount)
                 );
 
         verify(workspaceService).getWorkspace(eq(workspaceId), anyString());
@@ -162,8 +170,9 @@ class WorkspaceControllerTest {
         String workspaceDescription = TestUtil.generateRandomDescription();
         int memberCount = TestUtil.generateRandomInt();
         int folderCount = TestUtil.generateRandomInt();
+        int environmentCount = TestUtil.generateRandomInt();
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
-                LocalDateTime.now(), memberCount, folderCount);
+                LocalDateTime.now(), memberCount, folderCount, environmentCount);
 
         when(workspaceService.createWorkspace(any(WorkspaceRequest.class), anyString()))
                 .thenReturn(response);
@@ -180,7 +189,8 @@ class WorkspaceControllerTest {
                         jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
-                        jsonPath("$.folderCount").value(folderCount)
+                        jsonPath("$.folderCount").value(folderCount),
+                        jsonPath("$.environmentCount").value(environmentCount)
                 );
 
         verify(workspaceService).createWorkspace(any(WorkspaceRequest.class), anyString());
@@ -213,8 +223,9 @@ class WorkspaceControllerTest {
         String workspaceDescription = TestUtil.generateRandomDescription();
         int memberCount = 2;
         int folderCount = 4;
+        int environmentCount = TestUtil.generateRandomInt();
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, updatedWorkspaceName, workspaceDescription,
-                LocalDateTime.now(), memberCount, folderCount);
+                LocalDateTime.now(), memberCount, folderCount, environmentCount);
 
         when(workspaceService.updateWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString()))
                 .thenReturn(response);
@@ -233,7 +244,8 @@ class WorkspaceControllerTest {
                         jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
-                        jsonPath("$.folderCount").value(folderCount)
+                        jsonPath("$.folderCount").value(folderCount),
+                        jsonPath("$.environmentCount").value(environmentCount)
                 );
 
         verify(workspaceService).updateWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString());
@@ -264,8 +276,9 @@ class WorkspaceControllerTest {
         String workspaceDescription = TestUtil.generateRandomDescription();
         int memberCount = TestUtil.generateRandomInt();
         int folderCount = TestUtil.generateRandomInt();
+        int environmentCount = TestUtil.generateRandomInt();
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, updatedWorkspaceName, workspaceDescription,
-                LocalDateTime.now(), memberCount, folderCount);
+                LocalDateTime.now(), memberCount, folderCount, environmentCount);
 
         when(workspaceService.patchWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString()))
                 .thenReturn(response);
@@ -284,7 +297,8 @@ class WorkspaceControllerTest {
                         jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
-                        jsonPath("$.folderCount").value(folderCount)
+                        jsonPath("$.folderCount").value(folderCount),
+                        jsonPath("$.environmentCount").value(environmentCount)
                 );
 
         verify(workspaceService).patchWorkspace(eq(workspaceId), any(WorkspaceRequest.class), anyString());
@@ -342,8 +356,9 @@ class WorkspaceControllerTest {
         String workspaceDescription = TestUtil.generateRandomDescription();
         int memberCount = TestUtil.generateRandomInt();
         int folderCount = TestUtil.generateRandomInt();
+        int environmentCount = TestUtil.generateRandomInt();
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
-                LocalDateTime.now(), memberCount, folderCount);
+                LocalDateTime.now(), memberCount, folderCount, environmentCount);
 
         when(workspaceService.addMember(eq(workspaceId), any(AddMemberRequest.class), anyString()))
                 .thenReturn(response);
@@ -364,7 +379,8 @@ class WorkspaceControllerTest {
                         jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
-                        jsonPath("$.folderCount").value(folderCount)
+                        jsonPath("$.folderCount").value(folderCount),
+                        jsonPath("$.environmentCount").value(environmentCount)
                 );
 
         verify(workspaceService).addMember(eq(workspaceId), any(AddMemberRequest.class), anyString());
@@ -396,8 +412,9 @@ class WorkspaceControllerTest {
         String workspaceDescription = TestUtil.generateRandomDescription();
         int memberCount = 1;
         int folderCount = 1;
+        int environmentCount = TestUtil.generateRandomInt();
         WorkspaceResponse response = new WorkspaceResponse(workspaceId, workspaceName, workspaceDescription,
-                LocalDateTime.now(), memberCount, folderCount);
+                LocalDateTime.now(), memberCount, folderCount, environmentCount);
 
         when(workspaceService.removeMember(eq(workspaceId), eq(userId), anyString()))
                 .thenReturn(response);
@@ -416,7 +433,8 @@ class WorkspaceControllerTest {
                         jsonPath("$.description").value(workspaceDescription),
                         jsonPath("$.createdAt").exists(),
                         jsonPath("$.memberCount").value(memberCount),
-                        jsonPath("$.folderCount").value(folderCount)
+                        jsonPath("$.folderCount").value(folderCount),
+                        jsonPath("$.environmentCount").value(environmentCount)
                 );
 
         verify(workspaceService).removeMember(eq(workspaceId), eq(userId), anyString());

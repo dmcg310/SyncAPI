@@ -201,7 +201,8 @@ public class WorkspaceService {
                 workspace.getDescription(),
                 workspace.getCreatedAt(),
                 workspace.getMembers().size(),
-                workspace.getFolders().size()
+                workspace.getFolders().size(),
+                workspace.getEnvironments().size()
         );
     }
 

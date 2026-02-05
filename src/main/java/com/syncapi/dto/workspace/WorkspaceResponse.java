@@ -18,6 +18,7 @@ public class WorkspaceResponse {
 
     private int memberCount;
     private int folderCount;
+    private int environmentCount;
 
     private List<WorkspaceMemberDTO> members;
 
@@ -36,15 +37,17 @@ public class WorkspaceResponse {
      * @param createdAt   the creation timestamp
      * @param memberCount the number of members
      * @param folderCount the number of folders
+     * @param environmentCount the number of environments
      */
     public WorkspaceResponse(Long id, String name, String description, LocalDateTime createdAt,
-                             int memberCount, int folderCount) {
+                             int memberCount, int folderCount, int environmentCount) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.createdAt = createdAt;
         this.memberCount = memberCount;
         this.folderCount = folderCount;
+        this.environmentCount = environmentCount;
     }
 
     public Long getId() {
@@ -93,6 +96,14 @@ public class WorkspaceResponse {
 
     public void setFolderCount(int folderCount) {
         this.folderCount = folderCount;
+    }
+
+    public int getEnvironmentCount() {
+        return environmentCount;
+    }
+
+    public void setEnvironmentCount(int environmentCount) {
+        this.environmentCount = environmentCount;
     }
 
     public List<WorkspaceMemberDTO> getMembers() {
