@@ -217,8 +217,8 @@ public class WorkspaceService {
                 workspace.getMembers().stream()
                         .map(member -> new WorkspaceResponse.WorkspaceMemberDTO(
                                 member.getId(),
-                                member.getName(),
-                                member.getEmail()
+                                member.getEmail(),
+                                member.getName()
                         ))
                         .toList();
 
