@@ -1,15 +1,24 @@
 import React, {useState} from 'react';
-import type {ApiRequestRequest, HttpMethod} from '@/types';
+import type {ApiRequestRequest, EnvironmentVariable, HttpMethod} from '@/types';
 import {HTTP_METHODS} from '../../util/constants';
 import {getErrorMessage} from "../../util/errors";
+import VariablePreview from '../common/VariablePreview';
 
 interface RequestFormProps {
     onSubmit: (data: ApiRequestRequest) => Promise<void>;
     onCancel: () => void;
     loading?: boolean;
+    variables?: EnvironmentVariable[];
+    activeEnvironmentName?: string;
 }
 
-const RequestForm: React.FC<RequestFormProps> = ({onSubmit, onCancel, loading = false}) => {
+const RequestForm: React.FC<RequestFormProps> = ({
+                                                     onSubmit,
+                                                     onCancel,
+                                                     loading = false,
+                                                     variables = [],
+                                                     activeEnvironmentName
+                                                 }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [method, setMethod] = useState<HttpMethod>('GET');
@@ -109,6 +118,11 @@ const RequestForm: React.FC<RequestFormProps> = ({onSubmit, onCancel, loading = 
                     className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors font-mono text-md"
                     placeholder="https://api.example.com/users"
                     required
+                />
+                <VariablePreview
+                    text={url}
+                    variables={variables}
+                    activeEnvironmentName={activeEnvironmentName}
                 />
             </div>
 

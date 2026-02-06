@@ -1,14 +1,25 @@
 import React from 'react';
 import JsonEditor from '../common/JsonEditor';
+import VariablePreview from '../common/VariablePreview';
+import type {EnvironmentVariable} from '@/types';
 
 interface BodyEditorProps {
     method: string;
     body: string;
     canEdit: boolean;
     onChange: (value: string) => void;
+    variables?: EnvironmentVariable[];
+    activeEnvironmentName?: string;
 }
 
-const BodyEditor: React.FC<BodyEditorProps> = ({method, body, canEdit, onChange}) => {
+const BodyEditor: React.FC<BodyEditorProps> = ({
+                                                   method,
+                                                   body,
+                                                   canEdit,
+                                                   onChange,
+                                                   variables = [],
+                                                   activeEnvironmentName
+                                               }) => {
     if (!['POST', 'PUT', 'PATCH'].includes(method)) {
         return <p className="text-sm text-neutral-500">Body is not available for {method} requests</p>;
     }
@@ -34,6 +45,11 @@ const BodyEditor: React.FC<BodyEditorProps> = ({method, body, canEdit, onChange}
                 </button>
             </div>
             <JsonEditor value={body} onChange={onChange} disabled={!canEdit} height="250px"/>
+            <VariablePreview
+                text={body}
+                variables={variables}
+                activeEnvironmentName={activeEnvironmentName}
+            />
         </div>
     );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import type {ApiRequest, ApiRequestRequest, ExecutionResponse, HttpMethod} from '@/types';
+import type {ApiRequest, ApiRequestRequest, EnvironmentVariable, ExecutionResponse, HttpMethod} from '@/types';
 import {HTTP_METHODS, METHOD_COLORS} from '../../util/constants';
 import {useRequestEditor} from '../../hooks';
 import {TbTerminal2} from 'react-icons/tb';
@@ -7,6 +7,7 @@ import LockStatus from './LockStatus';
 import HeadersEditor from './HeadersEditor';
 import BodyEditor from './BodyEditor';
 import ResponseViewer from './ResponseViewer';
+import VariablePreview from '../common/VariablePreview';
 import {getErrorMessage} from "../../util/errors.ts";
 
 interface RequestEditorProps {
@@ -17,6 +18,8 @@ interface RequestEditorProps {
     onUnlock: () => Promise<void>;
     saving: boolean;
     executing: boolean;
+    variables?: EnvironmentVariable[];
+    activeEnvironmentName?: string;
 }
 
 const RequestEditor: React.FC<RequestEditorProps> = ({
@@ -26,7 +29,9 @@ const RequestEditor: React.FC<RequestEditorProps> = ({
                                                          onLock,
                                                          onUnlock,
                                                          saving,
-                                                         executing
+                                                         executing,
+                                                         variables = [],
+                                                         activeEnvironmentName
                                                      }) => {
     const editor = useRequestEditor(request);
 
@@ -135,39 +140,46 @@ const RequestEditor: React.FC<RequestEditorProps> = ({
                 </div>
             )}
 
-            <div className="flex items-center gap-2 p-4 border-b border-neutral-200 shrink-0">
-                <select
-                    value={editor.method}
-                    onChange={(e) => handleFieldChange(editor.setMethod)(e.target.value as HttpMethod)}
-                    disabled={!editor.canEdit}
-                    className={`${METHOD_COLORS[editor.method]} text-white font-bold text-md px-3 py-2 rounded-lg outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                    {Object.values(HTTP_METHODS).map((m) => (
-                        <option key={m} value={m}>{m}</option>
-                    ))}
-                </select>
-                <input
-                    type="text"
-                    value={editor.url}
-                    onChange={(e) => handleFieldChange(editor.setUrl)(e.target.value)}
-                    disabled={!editor.canEdit}
-                    className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none font-mono text-md disabled:bg-neutral-100 disabled:cursor-not-allowed"
-                    placeholder="https://api.example.com/endpoint"
+            <div className="p-4 border-b border-neutral-200 shrink-0 space-y-2">
+                <div className="flex items-center gap-2">
+                    <select
+                        value={editor.method}
+                        onChange={(e) => handleFieldChange(editor.setMethod)(e.target.value as HttpMethod)}
+                        disabled={!editor.canEdit}
+                        className={`${METHOD_COLORS[editor.method]} text-white font-bold text-md px-3 py-2 rounded-lg outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                        {Object.values(HTTP_METHODS).map((m) => (
+                            <option key={m} value={m}>{m}</option>
+                        ))}
+                    </select>
+                    <input
+                        type="text"
+                        value={editor.url}
+                        onChange={(e) => handleFieldChange(editor.setUrl)(e.target.value)}
+                        disabled={!editor.canEdit}
+                        className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none font-mono text-md disabled:bg-neutral-100 disabled:cursor-not-allowed"
+                        placeholder="https://api.example.com/endpoint"
+                    />
+                    <button
+                        onClick={handleSave}
+                        disabled={saving || !editor.canEdit}
+                        className="px-4 py-2 text-md font-medium text-neutral-700 border border-neutral-300 hover:bg-neutral-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        {saving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                        onClick={handleExecute}
+                        disabled={executing}
+                        className="px-4 py-2 text-md font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                        {executing ? 'Sending...' : 'Send'}
+                    </button>
+                </div>
+                <VariablePreview
+                    text={editor.url}
+                    variables={variables}
+                    activeEnvironmentName={activeEnvironmentName}
                 />
-                <button
-                    onClick={handleSave}
-                    disabled={saving || !editor.canEdit}
-                    className="px-4 py-2 text-md font-medium text-neutral-700 border border-neutral-300 hover:bg-neutral-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                    {saving ? 'Saving...' : 'Save'}
-                </button>
-                <button
-                    onClick={handleExecute}
-                    disabled={executing}
-                    className="px-4 py-2 text-md font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                    {executing ? 'Sending...' : 'Send'}
-                </button>
             </div>
 
             <div className="flex border-b border-neutral-200 shrink-0">
@@ -210,6 +222,8 @@ const RequestEditor: React.FC<RequestEditorProps> = ({
                         body={editor.body}
                         canEdit={editor.canEdit}
                         onChange={(v) => handleFieldChange(editor.setBody)(v)}
+                        variables={variables}
+                        activeEnvironmentName={activeEnvironmentName}
                     />
                 )}
             </div>

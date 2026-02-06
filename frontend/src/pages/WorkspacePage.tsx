@@ -9,7 +9,15 @@ import RequestList from '../components/request/RequestList';
 import RequestForm from '../components/request/RequestForm';
 import RequestEditor from '../components/request/RequestEditor';
 import EnvironmentList from '../components/environment/EnvironmentList';
-import {useEnvironments, useFolders, useModal, useRequests, useWorkspace, useWorkspaceMembers} from '../hooks';
+import {
+    useEnvironments,
+    useFolders,
+    useModal,
+    useRequests,
+    useVariables,
+    useWorkspace,
+    useWorkspaceMembers
+} from '../hooks';
 import type {
     ApiRequest,
     ApiRequestRequest,
@@ -34,6 +42,7 @@ const WorkspacePage: React.FC = () => {
     const {user} = useAuth();
     const {workspace, reload: reloadWorkspace} = useWorkspace(numericWorkspaceId);
     const environments = useEnvironments(numericWorkspaceId);
+    const variables = useVariables(environments.activeEnvironment?.id ?? null);
     const folders = useFolders(numericWorkspaceId);
     const requests = useRequests(folders.selectedFolder?.id ?? null, folders.reload);
     const members = useWorkspaceMembers(numericWorkspaceId, reloadWorkspace);
@@ -341,6 +350,8 @@ const WorkspacePage: React.FC = () => {
                         onUnlock={handleUnlockRequest}
                         saving={requests.actionLoading}
                         executing={requests.executing}
+                        variables={variables.variables}
+                        activeEnvironmentName={environments.activeEnvironment?.name}
                     />
                 </div>
             </div>
@@ -377,6 +388,8 @@ const WorkspacePage: React.FC = () => {
                     onSubmit={handleCreateRequest}
                     onCancel={createRequestModal.close}
                     loading={requests.actionLoading}
+                    variables={variables.variables}
+                    activeEnvironmentName={environments.activeEnvironment?.name}
                 />
             </Modal>
 
