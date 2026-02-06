@@ -24,6 +24,7 @@ import {MdAdd, MdArrowBackIos, MdCheck, MdExpandMore, MdPeople, MdSettings} from
 import {useAuth} from '../context/AuthContext';
 import Spinner from "../components/common/Spinner.tsx";
 import EnvironmentForm from "../components/environment/EnvironmentForm.tsx";
+import EnvironmentDetailsModal from "../components/environment/EnvironmentDetailsModal.tsx";
 import MemberList from "../components/workspace/MemberList.tsx";
 
 const WorkspacePage: React.FC = () => {
@@ -43,7 +44,8 @@ const WorkspacePage: React.FC = () => {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const createEnvironmentModal = useModal();
-    const editEnvironmentModal = useModal<Environment>();
+    const manageEnvironmentModal = useModal<Environment>();
+    const editEnvironmentDetailsModal = useModal<Environment>();
     const deleteEnvironmentModal = useModal<Environment>();
 
     const createFolderModal = useModal();
@@ -139,12 +141,25 @@ const WorkspacePage: React.FC = () => {
     };
 
     const handleEditEnvironment = async (data: EnvironmentRequest) => {
-        if (!editEnvironmentModal.data) {
+        if (!editEnvironmentDetailsModal.data) {
             return;
         }
 
-        await environments.update(editEnvironmentModal.data.id, data);
-        editEnvironmentModal.close();
+        await environments.update(editEnvironmentDetailsModal.data.id, data);
+        editEnvironmentDetailsModal.close();
+
+        if (manageEnvironmentModal.data) {
+            // @ts-ignore
+            const updatedEnv = environments.environments.find(e => e.id === manageEnvironmentModal.data.id);
+            if (updatedEnv) {
+                manageEnvironmentModal.open(updatedEnv);
+            }
+        }
+    };
+
+    const handleOpenEditEnvironmentDetails = (environment: Environment) => {
+        manageEnvironmentModal.close();
+        editEnvironmentDetailsModal.open(environment);
     };
 
     const handleActivateEnvironment = async (environment: Environment) => {
@@ -383,11 +398,19 @@ const WorkspacePage: React.FC = () => {
                 />
             </Modal>
 
-            <Modal isOpen={editEnvironmentModal.isOpen} onClose={editEnvironmentModal.close} title="Edit Environment">
+            <EnvironmentDetailsModal
+                isOpen={manageEnvironmentModal.isOpen}
+                onClose={manageEnvironmentModal.close}
+                environment={manageEnvironmentModal.data}
+                onEditEnvironment={handleOpenEditEnvironmentDetails}
+            />
+
+            <Modal isOpen={editEnvironmentDetailsModal.isOpen} onClose={editEnvironmentDetailsModal.close}
+                   title="Edit Environment">
                 <EnvironmentForm
-                    environment={editEnvironmentModal.data}
+                    environment={editEnvironmentDetailsModal.data}
                     onSubmit={handleEditEnvironment}
-                    onCancel={editEnvironmentModal.close}
+                    onCancel={editEnvironmentDetailsModal.close}
                     loading={environments.actionLoading}
                 />
             </Modal>
@@ -418,7 +441,7 @@ const WorkspacePage: React.FC = () => {
                         }}
                         onEdit={(environment) => {
                             setShowManageModal(false);
-                            editEnvironmentModal.open(environment);
+                            manageEnvironmentModal.open(environment);
                         }}
                         onDelete={(environment) => {
                             setShowManageModal(false);

@@ -6,9 +6,10 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     children: ReactNode;
+    size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const Modal: React.FC<ModalProps> = ({isOpen, onClose, title, children}) => {
+const Modal: React.FC<ModalProps> = ({isOpen, onClose, title, children, size = 'md'}) => {
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -31,13 +32,21 @@ const Modal: React.FC<ModalProps> = ({isOpen, onClose, title, children}) => {
         return null;
     }
 
+    const sizeClasses = {
+        sm: 'max-w-sm',
+        md: 'max-w-md',
+        lg: 'max-w-2xl',
+        xl: 'max-w-4xl'
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div
                 className="absolute inset-0 bg-neutral-900/50"
                 onClick={onClose}
             />
-            <div className="relative bg-white rounded-xl shadow-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div
+                className={`relative bg-white rounded-xl shadow-lg ${sizeClasses[size]} w-full mx-4 max-h-[90vh] overflow-y-auto`}>
                 <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
                     <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
                     <button
