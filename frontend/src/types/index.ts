@@ -5,6 +5,12 @@ export interface User {
     createdAt: string;
 }
 
+export interface Member {
+    userId: number
+    email: string;
+    name: string;
+}
+
 export interface LoginRequest {
     email: string;
     password: string;
@@ -32,7 +38,7 @@ export interface Workspace {
 }
 
 export interface WorkspaceDetail extends Workspace {
-    members: User[];
+    members: Member[];
 }
 
 export interface WorkspaceRequest {

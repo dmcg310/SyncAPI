@@ -31,7 +31,7 @@ const NameDescriptionForm: React.FC<NameDescriptionFormProps> = ({
         setDescription(initialDescription);
     }, [initialName, initialDescription]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setError('');
 

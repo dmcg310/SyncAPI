@@ -1,7 +1,7 @@
 import React from 'react';
 import type {Workspace} from '@/types';
-import {FaEdit, FaFolder, FaUser} from "react-icons/fa";
-import {MdDeleteForever} from "react-icons/md";
+import {FaEdit, FaFolder} from "react-icons/fa";
+import {MdDeleteForever, MdPeople} from "react-icons/md";
 import {IoIosBarcode} from "react-icons/io";
 
 interface WorkspaceCardProps {
@@ -57,7 +57,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = ({workspace, onClick, onEdit
                     <span>{workspace.folderCount} {workspace.folderCount === 1 ? 'folder' : 'folders'}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                    <FaUser size={15}/>
+                    <MdPeople size={22.5}/>
                     <span>{workspace.memberCount} {workspace.memberCount === 1 ? 'member' : 'members'}</span>
                 </div>
                 <div className="flex items-center gap-1.5">

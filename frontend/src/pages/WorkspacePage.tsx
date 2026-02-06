@@ -9,7 +9,7 @@ import RequestList from '../components/request/RequestList';
 import RequestForm from '../components/request/RequestForm';
 import RequestEditor from '../components/request/RequestEditor';
 import EnvironmentList from '../components/environment/EnvironmentList';
-import {useEnvironments, useFolders, useModal, useRequests, useWorkspace} from '../hooks';
+import {useEnvironments, useFolders, useModal, useRequests, useWorkspace, useWorkspaceMembers} from '../hooks';
 import type {
     ApiRequest,
     ApiRequestRequest,
@@ -17,23 +17,29 @@ import type {
     EnvironmentRequest,
     ExecutionResponse,
     Folder,
-    FolderRequest
+    FolderRequest,
+    Member
 } from '@/types';
-import {MdAdd, MdArrowBackIos, MdCheck, MdExpandMore, MdSettings} from 'react-icons/md';
+import {MdAdd, MdArrowBackIos, MdCheck, MdExpandMore, MdPeople, MdSettings} from 'react-icons/md';
+import {useAuth} from '../context/AuthContext';
 import Spinner from "../components/common/Spinner.tsx";
 import EnvironmentForm from "../components/environment/EnvironmentForm.tsx";
+import MemberList from "../components/workspace/MemberList.tsx";
 
 const WorkspacePage: React.FC = () => {
     const {workspaceId} = useParams<{ workspaceId: string }>();
     const numericWorkspaceId = workspaceId ? Number(workspaceId) : null;
 
-    const {workspace} = useWorkspace(numericWorkspaceId);
+    const {user} = useAuth();
+    const {workspace, reload: reloadWorkspace} = useWorkspace(numericWorkspaceId);
     const environments = useEnvironments(numericWorkspaceId);
     const folders = useFolders(numericWorkspaceId);
     const requests = useRequests(folders.selectedFolder?.id ?? null, folders.reload);
+    const members = useWorkspaceMembers(numericWorkspaceId, reloadWorkspace);
 
     const [showEnvironmentDropdown, setShowEnvironmentDropdown] = useState(false);
     const [showManageModal, setShowManageModal] = useState(false);
+    const [showMembersModal, setShowMembersModal] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const createEnvironmentModal = useModal();
@@ -45,6 +51,7 @@ const WorkspacePage: React.FC = () => {
     const deleteFolderModal = useModal<Folder>();
     const createRequestModal = useModal();
     const deleteRequestModal = useModal<ApiRequest>();
+    const deleteMemberModal = useModal<Member>();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -157,6 +164,15 @@ const WorkspacePage: React.FC = () => {
         deleteEnvironmentModal.close();
     };
 
+    const handleDeleteMember = async () => {
+        if (!deleteMemberModal.data) {
+            return;
+        }
+
+        await members.removeMember(deleteMemberModal.data.userId);
+        deleteMemberModal.close();
+    };
+
     if (folders.loading) {
         return (
             <div className="min-h-screen bg-neutral-50">
@@ -184,6 +200,14 @@ const WorkspacePage: React.FC = () => {
                         )}
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowMembersModal(true)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors cursor-pointer"
+                            title="Manage Members"
+                        >
+                            <MdPeople size={18}/>
+                            <span className="text-lg font-semibold text-neutral-900">Members</span>
+                        </button>
                         {environments.environments.length === 0 ? (
                             <button
                                 onClick={() => createEnvironmentModal.open()}
@@ -403,6 +427,29 @@ const WorkspacePage: React.FC = () => {
                     />
                 </div>
             </Modal>
+
+            <Modal
+                isOpen={showMembersModal}
+                onClose={() => setShowMembersModal(false)}
+                title="Workspace Members"
+            >
+                <MemberList
+                    members={workspace?.members || []}
+                    currentUserId={user?.id || 0}
+                    onAddMember={members.addMember}
+                    onRemoveMember={(member) => deleteMemberModal.open(member)}
+                    loading={members.actionLoading}
+                />
+            </Modal>
+
+            <DeleteConfirmModal
+                isOpen={deleteMemberModal.isOpen}
+                onClose={deleteMemberModal.close}
+                onConfirm={handleDeleteMember}
+                title="Remove Member"
+                message={`Are you sure you want to remove "${deleteMemberModal.data?.name}" from this workspace?`}
+                loading={members.actionLoading}
+            />
         </div>
     );
 };
