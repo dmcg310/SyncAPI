@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {requestApi} from '../services/api';
+import {getErrorMessage} from '../util/errors';
 import type {ApiRequest, ApiRequestRequest, ExecutionResponse} from '@/types';
 
 interface UseRequestsReturn {
@@ -38,8 +39,9 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
         try {
             const response = await requestApi.getByFolder(folderId);
             setRequests(response.data);
-        } catch {
-            setError('Failed to load requests');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to load requests');
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -65,6 +67,7 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             const response = await requestApi.create(folderId, data);
@@ -73,8 +76,10 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
             setSelectedRequest(response.data);
 
             return response.data;
-        } catch {
-            throw new Error('Failed to create request');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to create request');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -86,6 +91,7 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             const response = await requestApi.update(folderId, requestId, data);
@@ -93,8 +99,10 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
             await reload();
 
             return response.data;
-        } catch {
-            throw new Error('Failed to update request');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to update request');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -106,6 +114,7 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             await requestApi.delete(folderId, requestId);
@@ -117,8 +126,10 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
             }
 
             return true;
-        } catch {
-            throw new Error('Failed to delete request');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to delete request');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -130,10 +141,15 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
         }
 
         setExecuting(true);
+        setError(null);
 
         try {
             const response = await requestApi.execute(folderId, requestId);
             return response.data;
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to execute request');
+            setError(message);
+            throw new Error(message);
         } finally {
             setExecuting(false);
         }
@@ -144,13 +160,21 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
             return null;
         }
 
-        const response = await requestApi.lock(folderId, requestId);
-        const updated = response.data;
+        setError(null);
 
-        setSelectedRequest(updated);
-        setRequests(prev => prev.map(r => r.id === updated.id ? updated : r));
+        try {
+            const response = await requestApi.lock(folderId, requestId);
+            const updated = response.data;
 
-        return updated;
+            setSelectedRequest(updated);
+            setRequests(prev => prev.map(r => r.id === updated.id ? updated : r));
+
+            return updated;
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to lock request');
+            setError(message);
+            throw new Error(message);
+        }
     }, [folderId]);
 
     const unlock = useCallback(async (requestId: number): Promise<ApiRequest | null> => {
@@ -158,13 +182,21 @@ export function useRequests(folderId: number | null, onFoldersChanged?: () => vo
             return null;
         }
 
-        const response = await requestApi.unlock(folderId, requestId);
-        const updated = response.data;
+        setError(null);
 
-        setSelectedRequest(updated);
-        await reload();
+        try {
+            const response = await requestApi.unlock(folderId, requestId);
+            const updated = response.data;
 
-        return updated;
+            setSelectedRequest(updated);
+            await reload();
+
+            return updated;
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to unlock request');
+            setError(message);
+            throw new Error(message);
+        }
     }, [folderId, reload]);
 
     return {

@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {folderApi} from '../services/api';
+import {getErrorMessage} from '../util/errors';
 import type {Folder, FolderRequest} from '@/types';
 
 interface UseFoldersReturn {
@@ -33,8 +34,9 @@ export function useFolders(workspaceId: number | null): UseFoldersReturn {
         try {
             const response = await folderApi.getByWorkspace(workspaceId);
             setFolders(response.data);
-        } catch {
-            setError('Failed to load folders');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to load folders');
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -57,14 +59,17 @@ export function useFolders(workspaceId: number | null): UseFoldersReturn {
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             const response = await folderApi.create(workspaceId, data);
             await reload();
 
             return response.data;
-        } catch {
-            throw new Error('Failed to create folder');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to create folder');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -76,6 +81,7 @@ export function useFolders(workspaceId: number | null): UseFoldersReturn {
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             const response = await folderApi.update(workspaceId, folderId, data);
@@ -88,8 +94,10 @@ export function useFolders(workspaceId: number | null): UseFoldersReturn {
             }
 
             return response.data;
-        } catch {
-            throw new Error('Failed to update folder');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to update folder');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -101,6 +109,7 @@ export function useFolders(workspaceId: number | null): UseFoldersReturn {
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             await folderApi.delete(workspaceId, folderId);
@@ -111,8 +120,10 @@ export function useFolders(workspaceId: number | null): UseFoldersReturn {
             }
 
             return true;
-        } catch {
-            throw new Error('Failed to delete folder');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to delete folder');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }

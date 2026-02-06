@@ -5,14 +5,14 @@ import type {EnvironmentVariable} from '@/types';
 interface VariableRowProps {
     variable: EnvironmentVariable;
     onUpdate: (variableId: number, key: string, value: string) => Promise<void>;
-    onDelete: (variableId: number) => Promise<void>;
+    onDeleteClick: (variable: EnvironmentVariable) => void;
     disabled?: boolean;
 }
 
 const VariableRow: React.FC<VariableRowProps> = ({
                                                      variable,
                                                      onUpdate,
-                                                     onDelete,
+                                                     onDeleteClick,
                                                      disabled = false
                                                  }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -57,14 +57,8 @@ const VariableRow: React.FC<VariableRowProps> = ({
         }
     };
 
-    const handleDelete = async () => {
-        if (window.confirm(`Delete variable "${variable.key}"?`)) {
-            try {
-                await onDelete(variable.id);
-            } catch (error) {
-                console.error('Failed to delete variable:', error);
-            }
-        }
+    const handleDelete = () => {
+        onDeleteClick(variable);
     };
 
     if (isEditing) {

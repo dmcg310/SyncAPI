@@ -1,8 +1,10 @@
 import React, {useState} from 'react';
 import Modal from '../common/Modal';
+import DeleteConfirmModal from '../common/DeleteConfirmModal';
 import VariableList from './VariableList';
 import {useVariables} from '../../hooks/useVariables';
-import type {Environment} from '@/types';
+import {useModal} from '../../hooks';
+import type {Environment, EnvironmentVariable} from '@/types';
 import {MdEdit} from 'react-icons/md';
 
 interface EnvironmentDetailsModalProps {
@@ -20,6 +22,7 @@ const EnvironmentDetailsModal: React.FC<EnvironmentDetailsModalProps> = ({
                                                                          }) => {
     const variables = useVariables(environment?.id ?? null);
     const [error, setError] = useState<string | null>(null);
+    const deleteVariableModal = useModal<EnvironmentVariable>();
 
     const handleAddVariable = async (key: string, value: string) => {
         try {
@@ -41,13 +44,21 @@ const EnvironmentDetailsModal: React.FC<EnvironmentDetailsModalProps> = ({
         }
     };
 
-    const handleDeleteVariable = async (variableId: number) => {
+    const handleDeleteClick = (variable: EnvironmentVariable) => {
+        deleteVariableModal.open(variable);
+    };
+
+    const handleDeleteVariable = async () => {
+        if (!deleteVariableModal.data) {
+            return;
+        }
+
         try {
             setError(null);
-            await variables.remove(variableId);
+            await variables.remove(deleteVariableModal.data.id);
+            deleteVariableModal.close();
         } catch (err) {
             setError('Failed to delete variable');
-            throw err;
         }
     };
 
@@ -98,11 +109,20 @@ const EnvironmentDetailsModal: React.FC<EnvironmentDetailsModalProps> = ({
                         variables={variables.variables}
                         onAdd={handleAddVariable}
                         onUpdate={handleUpdateVariable}
-                        onDelete={handleDeleteVariable}
+                        onDeleteClick={handleDeleteClick}
                         loading={variables.loading}
                     />
                 </div>
             </div>
+
+            <DeleteConfirmModal
+                isOpen={deleteVariableModal.isOpen}
+                onClose={deleteVariableModal.close}
+                onConfirm={handleDeleteVariable}
+                title="Delete Variable"
+                message={`Are you sure you want to delete variable "${deleteVariableModal.data?.key}"?`}
+                loading={variables.actionLoading}
+            />
         </Modal>
     );
 };

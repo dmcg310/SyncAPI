@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {workspaceApi} from '../services/api';
+import {getErrorMessage} from '../util/errors';
 import type {WorkspaceDetail} from '@/types';
 
 interface UseWorkspaceReturn {
@@ -25,8 +26,9 @@ export function useWorkspace(workspaceId: number | null): UseWorkspaceReturn {
         try {
             const response = await workspaceApi.getById(workspaceId);
             setWorkspace(response.data);
-        } catch {
-            setError('Failed to load workspace');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to load workspace');
+            setError(message);
         } finally {
             setLoading(false);
         }

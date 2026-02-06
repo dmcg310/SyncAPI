@@ -10,7 +10,7 @@ interface VariableListProps {
     variables: EnvironmentVariable[];
     onAdd: (key: string, value: string) => Promise<void>;
     onUpdate: (variableId: number, key: string, value: string) => Promise<void>;
-    onDelete: (variableId: number) => Promise<void>;
+    onDeleteClick: (variable: EnvironmentVariable) => void;
     loading?: boolean;
 }
 
@@ -18,7 +18,7 @@ const VariableList: React.FC<VariableListProps> = ({
                                                        variables,
                                                        onAdd,
                                                        onUpdate,
-                                                       onDelete,
+                                                       onDeleteClick,
                                                        loading = false
                                                    }) => {
     const [isAdding, setIsAdding] = useState(false);
@@ -156,7 +156,7 @@ const VariableList: React.FC<VariableListProps> = ({
                                 key={variable.id}
                                 variable={variable}
                                 onUpdate={onUpdate}
-                                onDelete={onDelete}
+                                onDeleteClick={onDeleteClick}
                                 disabled={loading}
                             />
                         ))}

@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {variableApi} from '../services/api';
+import {getErrorMessage} from '../util/errors';
 import type {EnvironmentVariable, EnvironmentVariableRequest} from '@/types';
 
 interface UseVariablesReturn {
@@ -30,8 +31,9 @@ export function useVariables(environmentId: number | null): UseVariablesReturn {
         try {
             const response = await variableApi.getByEnvironment(environmentId);
             setVariables(response.data);
-        } catch {
-            setError('Failed to load variables');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to load variables');
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -49,14 +51,17 @@ export function useVariables(environmentId: number | null): UseVariablesReturn {
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             const response = await variableApi.create(environmentId, data);
             await reload();
 
             return response.data;
-        } catch {
-            throw new Error('Failed to create variable');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to create variable');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -68,14 +73,17 @@ export function useVariables(environmentId: number | null): UseVariablesReturn {
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             const response = await variableApi.update(environmentId, variableId, data);
             await reload();
 
             return response.data;
-        } catch {
-            throw new Error('Failed to update variable');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to update variable');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -87,14 +95,17 @@ export function useVariables(environmentId: number | null): UseVariablesReturn {
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             await variableApi.delete(environmentId, variableId);
             await reload();
 
             return true;
-        } catch {
-            throw new Error('Failed to delete variable');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to delete variable');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }

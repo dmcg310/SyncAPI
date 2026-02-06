@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {environmentApi} from '../services/api';
+import {getErrorMessage} from '../util/errors';
 import type {Environment, EnvironmentRequest} from '@/types';
 
 interface UseEnvironmentsReturn {
@@ -36,8 +37,9 @@ export function useEnvironments(workspaceId: number | null): UseEnvironmentsRetu
 
             const active = response.data.find(env => env.isActive) ?? null;
             setActiveEnvironment(active);
-        } catch {
-            setError('Failed to load environments');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to load environments');
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -55,14 +57,17 @@ export function useEnvironments(workspaceId: number | null): UseEnvironmentsRetu
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             const response = await environmentApi.create(workspaceId, data);
             await reload();
 
             return response.data;
-        } catch {
-            throw new Error('Failed to create environment');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to create environment');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -74,14 +79,17 @@ export function useEnvironments(workspaceId: number | null): UseEnvironmentsRetu
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             const response = await environmentApi.update(workspaceId, environmentId, data);
             await reload();
 
             return response.data;
-        } catch {
-            throw new Error('Failed to update environment');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to update environment');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -93,14 +101,17 @@ export function useEnvironments(workspaceId: number | null): UseEnvironmentsRetu
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             await environmentApi.delete(workspaceId, environmentId);
             await reload();
 
             return true;
-        } catch {
-            throw new Error('Failed to delete environment');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to delete environment');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
@@ -112,14 +123,17 @@ export function useEnvironments(workspaceId: number | null): UseEnvironmentsRetu
         }
 
         setActionLoading(true);
+        setError(null);
 
         try {
             const response = await environmentApi.activate(workspaceId, environmentId);
             await reload();
 
             return response.data;
-        } catch {
-            throw new Error('Failed to activate environment');
+        } catch (err: unknown) {
+            const message = getErrorMessage(err, 'Failed to activate environment');
+            setError(message);
+            throw new Error(message);
         } finally {
             setActionLoading(false);
         }
