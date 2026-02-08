@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import WorkspacePage from "./pages/WorkspacePage.tsx";
+import ProfilePage from "./pages/ProfilePage.tsx";
 import {ReactNode} from 'react';
 import Spinner from "./components/common/Spinner.tsx";
 
@@ -48,6 +49,7 @@ function AppRoutes() {
             <Route path="/register" element={<PublicRoute><RegisterPage/></PublicRoute>}/>
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage/></ProtectedRoute>}/>
             <Route path="/workspace/:workspaceId" element={<ProtectedRoute><WorkspacePage/></ProtectedRoute>}/>
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage/></ProtectedRoute>}/>
             <Route path="/" element={<Navigate to="/dashboard"/>}/>
         </Routes>
     );

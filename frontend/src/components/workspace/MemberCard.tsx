@@ -1,6 +1,7 @@
 import React from 'react';
 import {MdDeleteForever} from 'react-icons/md';
 import type {Member} from '@/types';
+import {getInitials} from '../../util/stringUtils';
 
 interface MemberCardProps {
     member: Member;
@@ -9,15 +10,6 @@ interface MemberCardProps {
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({member, onRemove, isCurrentUser}) => {
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
-
     return (
         <div
             className="group flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-neutral-50 transition-colors">
