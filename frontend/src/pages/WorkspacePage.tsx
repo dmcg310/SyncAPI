@@ -416,6 +416,7 @@ const WorkspacePage: React.FC = () => {
                         spec={documentation.spec}
                         loading={documentation.loading}
                         error={documentation.error}
+                        onRefresh={documentation.reload}
                     />
                 </div>
             )}

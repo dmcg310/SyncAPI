@@ -1,4 +1,5 @@
 import React, {useRef, useState} from 'react';
+import {MdRefresh} from 'react-icons/md';
 import DocsSidebar from './DocsSidebar';
 import EndpointCard from './EndpointCard';
 import Spinner from '../common/Spinner';
@@ -8,11 +9,13 @@ interface DocumentationViewProps {
     spec: OpenApiSpec | null;
     loading: boolean;
     error: string | null;
+    onRefresh: () => void;
 }
 
-const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, error}) => {
+const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, error, onRefresh}) => {
     const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
     const endpointRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
 
     if (loading) {
         return (
@@ -72,15 +75,18 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, err
         }
     };
 
-    const endpoints = Object.entries(spec.paths).flatMap(([path, pathItem]) =>
-        Object.entries(pathItem)
-            .filter(([method]) => ['get', 'post', 'put', 'patch', 'delete'].includes(method))
-            .map(([method, operation]) => ({
-                path,
-                method: method.toUpperCase() as HttpMethod,
-                operation
-            }))
-    );
+    const endpoints = Object.entries(spec.paths)
+        .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
+        .flatMap(([path, pathItem]) =>
+            Object.entries(pathItem)
+                .filter(([method]) => ['get', 'post', 'put', 'patch', 'delete'].includes(method))
+                .sort(([methodA], [methodB]) => methodA.localeCompare(methodB))
+                .map(([method, operation]) => ({
+                    path,
+                    method: method.toUpperCase() as HttpMethod,
+                    operation
+                }))
+        );
 
     return (
         <div className="min-h-screen flex">
@@ -95,12 +101,23 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, err
             <div className="flex-1 overflow-y-auto bg-neutral-50">
                 <div className="max-w-4xl mx-auto p-6">
                     <div className="mb-8">
-                        <div className="flex items-center gap-4 text-md text-neutral-500">
-                            <span>OpenAPI {spec.openapi}</span>
-                            <span>•</span>
-                            <span>Version {spec.info.version}</span>
-                            <span>•</span>
-                            <span>{endpointCount} {endpointCount === 1 ? 'endpoint' : 'endpoints'}</span>
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                        </div>
+                        <div className="flex items-center justify-between gap-4 text-md text-neutral-500">
+                            <p className="mt-1 text-md">
+                                OpenAPI {spec.openapi} - Version {spec.info.version}{" "}
+                                - {endpointCount} {endpointCount === 1 ? 'endpoint' : 'endpoints'}
+                            </p>
+
+                            <button
+                                onClick={onRefresh}
+                                disabled={loading}
+                                className="flex items-center gap-2 px-3 py-2 text-md font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+                                title="Refresh documentation"
+                            >
+                                <MdRefresh size={18} className={loading ? 'animate-spin' : ''}/>
+                                Refresh
+                            </button>
                         </div>
                     </div>
 
