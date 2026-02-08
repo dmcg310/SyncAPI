@@ -20,3 +20,5 @@ export const STORAGE_KEYS = {
     TOKEN: 'syncapi_token',
     USER: 'syncapi_user'
 };
+
+export const MIN_PASSWORD_LENGTH = 6;

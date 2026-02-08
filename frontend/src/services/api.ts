@@ -63,7 +63,7 @@ export const authApi = {
         api.post<LoginResponse>('/auth/login', data),
     me: () =>
         api.get<User>('/auth/me'),
-    updatePassword: (data: { currentPassword: string; newPassword: string }) =>
+    updatePassword: (data: { originalPassword: string; newPassword: string }) =>
         api.patch<void>('/auth/password', data)
 };
 

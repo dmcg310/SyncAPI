@@ -2,6 +2,7 @@ import React from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useAuth} from '../context/AuthContext';
 import Header from '../components/layout/Header';
+import ChangePasswordForm from '../components/profile/ChangePasswordForm';
 import {FaSignOutAlt} from "react-icons/fa";
 
 const ProfilePage: React.FC = () => {
@@ -67,6 +68,8 @@ const ProfilePage: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+
+                        <ChangePasswordForm/>
 
                         <div className="pt-6 border-t border-neutral-200">
                             <button
