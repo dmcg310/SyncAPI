@@ -50,7 +50,17 @@ const WorkspacePage: React.FC = () => {
     const members = useWorkspaceMembers(numericWorkspaceId, reloadWorkspace);
     const documentation = useDocumentation(numericWorkspaceId);
 
-    const [activeTab, setActiveTab] = useState<'requests' | 'documentation'>('requests');
+    const getStoredTab = (): 'requests' | 'documentation' => {
+        if (!numericWorkspaceId) {
+            return 'requests';
+        }
+
+        const stored = localStorage.getItem(`workspace_${numericWorkspaceId}_active_tab`);
+
+        return (stored === 'documentation' ? 'documentation' : 'requests');
+    };
+
+    const [activeTab, setActiveTab] = useState<'requests' | 'documentation'>(getStoredTab);
     const [showEnvironmentDropdown, setShowEnvironmentDropdown] = useState(false);
     const [showManageModal, setShowManageModal] = useState(false);
     const [showMembersModal, setShowMembersModal] = useState(false);
@@ -78,6 +88,12 @@ const WorkspacePage: React.FC = () => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (numericWorkspaceId) {
+            localStorage.setItem(`workspace_${numericWorkspaceId}_active_tab`, activeTab);
+        }
+    }, [activeTab, numericWorkspaceId]);
 
     const handleCreateFolder = async (data: FolderRequest) => {
         await folders.create(data);

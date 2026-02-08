@@ -1,7 +1,8 @@
-import React from 'react';
-import EndpointList from './EndpointList';
+import React, {useRef, useState} from 'react';
+import DocsSidebar from './DocsSidebar';
+import EndpointCard from './EndpointCard';
 import Spinner from '../common/Spinner';
-import type {OpenApiSpec} from '@/types';
+import type {HttpMethod, OpenApiSpec} from '@/types';
 
 interface DocumentationViewProps {
     spec: OpenApiSpec | null;
@@ -10,6 +11,9 @@ interface DocumentationViewProps {
 }
 
 const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, error}) => {
+    const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
+    const endpointRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
     if (loading) {
         return (
             <div className="flex justify-center items-center py-16">
@@ -47,7 +51,7 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, err
                 <h3 className="text-lg font-medium text-neutral-900 mb-1">
                     No documentation available
                 </h3>
-                <p className="text-sm text-neutral-500">
+                <p className="text-md text-neutral-500">
                     Documentation could not be loaded.
                 </p>
             </div>
@@ -58,23 +62,69 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, err
         return count + Object.keys(pathItem).length;
     }, 0);
 
+    const handleSelectEndpoint = (method: HttpMethod, path: string) => {
+        const endpointKey = `${method}-${path}`;
+        setSelectedEndpoint(endpointKey);
+
+        const element = endpointRefs.current[endpointKey];
+        if (element) {
+            element.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+    };
+
+    const endpoints = Object.entries(spec.paths).flatMap(([path, pathItem]) =>
+        Object.entries(pathItem)
+            .filter(([method]) => ['get', 'post', 'put', 'patch', 'delete'].includes(method))
+            .map(([method, operation]) => ({
+                path,
+                method: method.toUpperCase() as HttpMethod,
+                operation
+            }))
+    );
+
     return (
-        <div className="max-w-5xl mx-auto p-6">
-            <div className="mb-6">
-                <div className="flex items-center gap-4 mt-3 text-md text-neutral-500">
-                    <span>OpenAPI {spec.openapi}</span>
-                    <span>•</span>
-                    <span>Version {spec.info.version}</span>
-                    <span>•</span>
-                    <span>{endpointCount} {endpointCount === 1 ? 'endpoint' : 'endpoints'}</span>
-                </div>
+        <div className="min-h-screen flex">
+            <div className="w-80 bg-white border-r border-neutral-200 shrink-0">
+                <DocsSidebar
+                    paths={spec.paths}
+                    selectedEndpoint={selectedEndpoint}
+                    onSelectEndpoint={handleSelectEndpoint}
+                />
             </div>
 
-            <div className="border-t border-neutral-200 pt-6">
-                <h2 className="text-lg font-semibold text-neutral-900 mb-4">
-                    API Endpoints
-                </h2>
-                <EndpointList paths={spec.paths}/>
+            <div className="flex-1 overflow-y-auto bg-neutral-50">
+                <div className="max-w-4xl mx-auto p-6">
+                    <div className="mb-8">
+                        <div className="flex items-center gap-4 text-md text-neutral-500">
+                            <span>OpenAPI {spec.openapi}</span>
+                            <span>•</span>
+                            <span>Version {spec.info.version}</span>
+                            <span>•</span>
+                            <span>{endpointCount} {endpointCount === 1 ? 'endpoint' : 'endpoints'}</span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        {endpoints.map(({path, method, operation}) => {
+                            const endpointKey = `${method}-${path}`;
+                            return (
+                                <div
+                                    key={endpointKey}
+                                    ref={(el) => {
+                                        endpointRefs.current[endpointKey] = el;
+                                    }}
+                                >
+                                    <EndpointCard
+                                        method={method}
+                                        path={path}
+                                        operation={operation}
+                                        onClick={() => handleSelectEndpoint(method, path)}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
         </div>
     );
