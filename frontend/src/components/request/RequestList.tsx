@@ -1,10 +1,10 @@
 import React from 'react';
 import type {ApiRequest} from '@/types';
-import {METHOD_COLORS} from '../../util/constants';
 import {IoAdd} from "react-icons/io5";
 import {IoIosCodeWorking} from "react-icons/io";
 import {MdDeleteForever} from "react-icons/md";
 import {FaLock} from "react-icons/fa";
+import {getMethodColorClass} from "../../util/util.ts";
 
 interface RequestListProps {
     requests: ApiRequest[];
@@ -21,10 +21,6 @@ const RequestList: React.FC<RequestListProps> = ({
                                                      onCreateRequest,
                                                      onDeleteRequest
                                                  }) => {
-    const getMethodColorClass = (method: string) => {
-        return METHOD_COLORS[method as keyof typeof METHOD_COLORS] || 'bg-neutral-500';
-    };
-
     return (
         <div className="h-full flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-neutral-200">

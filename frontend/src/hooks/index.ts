@@ -7,3 +7,4 @@ export {useRequestEditor} from './useRequestEditor';
 export {useEnvironments} from './useEnvironments';
 export {useVariables} from './useVariables';
 export {useWorkspaceMembers} from './useWorkspaceMembers';
+export {useDocumentation} from './useDocumentation';

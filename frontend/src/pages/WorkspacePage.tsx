@@ -9,7 +9,9 @@ import RequestList from '../components/request/RequestList';
 import RequestForm from '../components/request/RequestForm';
 import RequestEditor from '../components/request/RequestEditor';
 import EnvironmentList from '../components/environment/EnvironmentList';
+import DocumentationView from '../components/documentation/DocumentationView';
 import {
+    useDocumentation,
     useEnvironments,
     useFolders,
     useModal,
@@ -46,7 +48,9 @@ const WorkspacePage: React.FC = () => {
     const folders = useFolders(numericWorkspaceId);
     const requests = useRequests(folders.selectedFolder?.id ?? null, folders.reload);
     const members = useWorkspaceMembers(numericWorkspaceId, reloadWorkspace);
+    const documentation = useDocumentation(numericWorkspaceId);
 
+    const [activeTab, setActiveTab] = useState<'requests' | 'documentation'>('requests');
     const [showEnvironmentDropdown, setShowEnvironmentDropdown] = useState(false);
     const [showManageModal, setShowManageModal] = useState(false);
     const [showMembersModal, setShowMembersModal] = useState(false);
@@ -212,149 +216,193 @@ const WorkspacePage: React.FC = () => {
         <div className="min-h-screen bg-neutral-50 flex flex-col">
             <Header/>
 
-            <div className="bg-white border-b border-neutral-200 px-4 py-3">
-                <div className="max-w-full mx-auto flex items-center gap-4">
-                    <Link to="/dashboard" className="text-neutral-400 hover:text-neutral-600 transition-colors">
-                        <MdArrowBackIos size={30}/>
-                    </Link>
-                    <div className="flex-1">
-                        <h1 className="text-lg font-semibold text-neutral-900">{workspace?.name}</h1>
-                        {workspace?.description && (
-                            <p className="text-sm text-neutral-500">{workspace.description}</p>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setShowMembersModal(true)}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors cursor-pointer"
-                            title="Manage Members"
-                        >
-                            <MdPeople size={18}/>
-                            <span className="text-lg font-semibold text-neutral-900">Members</span>
-                        </button>
-                        {environments.environments.length === 0 ? (
+            <div className="bg-white border-b border-neutral-200">
+                <div className="px-4 py-3">
+                    <div className="max-w-full mx-auto flex items-center gap-4">
+                        <Link to="/dashboard" className="text-neutral-400 hover:text-neutral-600 transition-colors">
+                            <MdArrowBackIos size={30}/>
+                        </Link>
+                        <div className="flex-1">
+                            <h1 className="text-lg font-semibold text-neutral-900">{workspace?.name}</h1>
+                            {workspace?.description && (
+                                <p className="text-sm text-neutral-500">{workspace.description}</p>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
                             <button
-                                onClick={() => createEnvironmentModal.open()}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors cursor-pointer"
+                                onClick={() => setShowMembersModal(true)}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors cursor-pointer"
+                                title="Manage Members"
                             >
-                                <MdAdd size={18}/>
-                                <span className="text-lg font-semibold">Create Environment</span>
+                                <MdPeople size={18}/>
+                                <span className="text-lg font-semibold text-neutral-900">Members</span>
                             </button>
-                        ) : (
-                            <div className="relative" ref={dropdownRef}>
+                            {environments.environments.length === 0 ? (
                                 <button
-                                    onClick={() => setShowEnvironmentDropdown(!showEnvironmentDropdown)}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors min-w-45 justify-between cursor-pointer"
+                                    onClick={() => createEnvironmentModal.open()}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors cursor-pointer"
                                 >
-                                    <span className="text-lg font-semibold text-neutral-900">
-                                        {environments.activeEnvironment?.name || 'Select Environment'}
-                                    </span>
-                                    <MdExpandMore
-                                        size={20}
-                                        className={`text-neutral-600 transition-transform ${
-                                            showEnvironmentDropdown ? 'rotate-180' : ''
-                                        }`}
-                                    />
+                                    <MdAdd size={18}/>
+                                    <span className="text-lg font-semibold">Create Environment</span>
                                 </button>
+                            ) : (
+                                <div className="relative" ref={dropdownRef}>
+                                    <button
+                                        onClick={() => setShowEnvironmentDropdown(!showEnvironmentDropdown)}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors min-w-45 justify-between cursor-pointer"
+                                    >
+                                        <span className="text-lg font-semibold text-neutral-900">
+                                            {environments.activeEnvironment?.name || 'Select Environment'}
+                                        </span>
+                                        <MdExpandMore
+                                            size={20}
+                                            className={`text-neutral-600 transition-transform ${
+                                                showEnvironmentDropdown ? 'rotate-180' : ''
+                                            }`}
+                                        />
+                                    </button>
 
-                                {showEnvironmentDropdown && (
-                                    <div
-                                        className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-neutral-200 z-50 max-h-96 overflow-hidden flex flex-col">
-                                        <div className="overflow-y-auto flex-1">
-                                            {environments.environments.map((env) => (
+                                    {showEnvironmentDropdown && (
+                                        <div
+                                            className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-neutral-200 z-50 max-h-96 overflow-hidden flex flex-col">
+                                            <div className="overflow-y-auto flex-1">
+                                                {environments.environments.map((env) => (
+                                                    <button
+                                                        key={env.id}
+                                                        onClick={() => {
+                                                            handleActivateEnvironment(env);
+                                                            setShowEnvironmentDropdown(false);
+                                                        }}
+                                                        className={`w-full px-4 py-2.5 text-left hover:bg-neutral-50 transition-colors flex items-center justify-between cursor-pointer ${
+                                                            env.id === environments.activeEnvironment?.id ? 'bg-primary-50' : ''
+                                                        }`}
+                                                    >
+                                                        <div className="flex-1 min-w-0">
+                                                            <div
+                                                                className="text-md font-medium text-neutral-900 truncate">
+                                                                {env.name}
+                                                            </div>
+                                                            {env.description && (
+                                                                <div
+                                                                    className="text-sm text-neutral-500 truncate mt-0.5">
+                                                                    {env.description}
+                                                                </div>
+                                                            )}
+                                                            <div className="text-sm text-neutral-400 mt-0.5">
+                                                                {env.variableCount} {env.variableCount === 1 ? 'variable' : 'variables'}
+                                                            </div>
+                                                        </div>
+                                                        {env.id === environments.activeEnvironment?.id && (
+                                                            <MdCheck size={18} className="text-primary-600 ml-2"/>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div className="p-2 border-t border-neutral-200">
                                                 <button
-                                                    key={env.id}
                                                     onClick={() => {
-                                                        handleActivateEnvironment(env);
+                                                        setShowManageModal(true);
                                                         setShowEnvironmentDropdown(false);
                                                     }}
-                                                    className={`w-full px-4 py-2.5 text-left hover:bg-neutral-50 transition-colors flex items-center justify-between cursor-pointer ${
-                                                        env.id === environments.activeEnvironment?.id ? 'bg-primary-50' : ''
-                                                    }`}
+                                                    className="w-full px-3 py-2 text-md font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
                                                 >
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-md font-medium text-neutral-900 truncate">
-                                                            {env.name}
-                                                        </div>
-                                                        {env.description && (
-                                                            <div className="text-sm text-neutral-500 truncate mt-0.5">
-                                                                {env.description}
-                                                            </div>
-                                                        )}
-                                                        <div className="text-sm text-neutral-400 mt-0.5">
-                                                            {env.variableCount} {env.variableCount === 1 ? 'variable' : 'variables'}
-                                                        </div>
-                                                    </div>
-                                                    {env.id === environments.activeEnvironment?.id && (
-                                                        <MdCheck size={18} className="text-primary-600 ml-2"/>
-                                                    )}
+                                                    <MdSettings size={18}/>
+                                                    Manage Environments
                                                 </button>
-                                            ))}
+                                            </div>
                                         </div>
-                                        <div className="p-2 border-t border-neutral-200">
-                                            <button
-                                                onClick={() => {
-                                                    setShowManageModal(true);
-                                                    setShowEnvironmentDropdown(false);
-                                                }}
-                                                className="w-full px-3 py-2 text-md font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
-                                            >
-                                                <MdSettings size={18}/>
-                                                Manage Environments
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                <div className="px-4">
+                    <div className="flex gap-1 border-b border-neutral-200">
+                        <button
+                            onClick={() => setActiveTab('requests')}
+                            className={`px-4 py-2 text-sm font-medium transition-colors relative cursor-pointer ${
+                                activeTab === 'requests'
+                                    ? 'text-primary-600'
+                                    : 'text-neutral-600 hover:text-neutral-900'
+                            }`}
+                        >
+                            Requests
+                            {activeTab === 'requests' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600"/>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('documentation')}
+                            className={`px-4 py-2 text-sm font-medium transition-colors relative cursor-pointer ${
+                                activeTab === 'documentation'
+                                    ? 'text-primary-600'
+                                    : 'text-neutral-600 hover:text-neutral-900'
+                            }`}
+                        >
+                            Documentation
+                            {activeTab === 'documentation' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600"/>
+                            )}
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {(environments.error || folders.error || requests.error) && (
+            {(environments.error || folders.error || requests.error || documentation.error) && (
                 <div className="mx-4 mt-4 bg-error-50 text-error-700 px-4 py-3 rounded-lg">
-                    {environments.error || folders.error || requests.error}
+                    {environments.error || folders.error || requests.error || documentation.error}
                 </div>
             )}
 
-            <div className="flex-1 flex overflow-hidden">
-                <div className="w-64 bg-white border-r border-neutral-200 shrink-0">
-                    <FolderList
-                        folders={folders.folders}
-                        selectedFolderId={folders.selectedFolder?.id || null}
-                        onSelectFolder={folders.selectFolder}
-                        onCreateFolder={() => createFolderModal.open()}
-                        onEditFolder={(folder) => editFolderModal.open(folder)}
-                        onDeleteFolder={(folder) => deleteFolderModal.open(folder)}
-                    />
-                </div>
-
-                {folders.selectedFolder && (
-                    <div className="w-72 bg-white border-r border-neutral-200 shrink-0">
-                        <RequestList
-                            requests={requests.requests}
-                            selectedRequestId={requests.selectedRequest?.id || null}
-                            onSelectRequest={requests.selectRequest}
-                            onCreateRequest={() => createRequestModal.open()}
-                            onDeleteRequest={(request) => deleteRequestModal.open(request)}
+            {activeTab === 'requests' ? (
+                <div className="flex-1 flex overflow-hidden">
+                    <div className="w-64 bg-white border-r border-neutral-200 shrink-0">
+                        <FolderList
+                            folders={folders.folders}
+                            selectedFolderId={folders.selectedFolder?.id || null}
+                            onSelectFolder={folders.selectFolder}
+                            onCreateFolder={() => createFolderModal.open()}
+                            onEditFolder={(folder) => editFolderModal.open(folder)}
+                            onDeleteFolder={(folder) => deleteFolderModal.open(folder)}
                         />
                     </div>
-                )}
 
-                <div className="flex-1 bg-white">
-                    <RequestEditor
-                        request={requests.selectedRequest}
-                        onSave={handleSaveRequest}
-                        onExecute={handleExecuteRequest}
-                        onLock={handleLockRequest}
-                        onUnlock={handleUnlockRequest}
-                        saving={requests.actionLoading}
-                        executing={requests.executing}
-                        variables={variables.variables}
-                        activeEnvironmentName={environments.activeEnvironment?.name}
+                    {folders.selectedFolder && (
+                        <div className="w-72 bg-white border-r border-neutral-200 shrink-0">
+                            <RequestList
+                                requests={requests.requests}
+                                selectedRequestId={requests.selectedRequest?.id || null}
+                                onSelectRequest={requests.selectRequest}
+                                onCreateRequest={() => createRequestModal.open()}
+                                onDeleteRequest={(request) => deleteRequestModal.open(request)}
+                            />
+                        </div>
+                    )}
+
+                    <div className="flex-1 bg-white">
+                        <RequestEditor
+                            request={requests.selectedRequest}
+                            onSave={handleSaveRequest}
+                            onExecute={handleExecuteRequest}
+                            onLock={handleLockRequest}
+                            onUnlock={handleUnlockRequest}
+                            saving={requests.actionLoading}
+                            executing={requests.executing}
+                            variables={variables.variables}
+                            activeEnvironmentName={environments.activeEnvironment?.name}
+                        />
+                    </div>
+                </div>
+            ) : (
+                <div className="flex-1 bg-white overflow-y-auto">
+                    <DocumentationView
+                        spec={documentation.spec}
+                        loading={documentation.loading}
+                        error={documentation.error}
                     />
                 </div>
-            </div>
+            )}
 
             <Modal isOpen={createFolderModal.isOpen} onClose={createFolderModal.close} title="Create Folder">
                 <FolderForm
