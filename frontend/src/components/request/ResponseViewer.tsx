@@ -1,28 +1,18 @@
 import React from 'react';
 import type {ExecutionResponse} from '@/types';
+import {getStatusColor} from "../../util/util.ts";
 
 interface ResponseViewerProps {
     response: ExecutionResponse;
 }
 
 const ResponseViewer: React.FC<ResponseViewerProps> = ({response}) => {
-    const getStatusColor = (status: number) => {
-        if (status >= 200 && status < 300) {
-            return 'text-success-600 bg-success-50';
-        }
-
-        if (status >= 300 && status < 400) {
-            return 'text-warning-600 bg-warning-50';
-        }
-
-        return 'text-error-600 bg-error-50';
-    };
-
     return (
         <div className="border-t border-neutral-200 shrink-0 max-h-[60vh] flex flex-col">
             <div className="flex items-center gap-4 px-4 py-3 bg-neutral-50 border-b border-neutral-100">
                 <span className="text-md font-medium text-neutral-700">Response</span>
-                <span className={`px-2 py-0.5 rounded text-md font-bold ${getStatusColor(response.statusCode)}`}>
+                <span
+                    className={`px-2 py-0.5 rounded text-md font-bold ${getStatusColor(response.statusCode.toString())}`}>
                     {response.statusText}
                 </span>
                 <span className="text-md text-neutral-500">{response.responseTimeMs}ms</span>
