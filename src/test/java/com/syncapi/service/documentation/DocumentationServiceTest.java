@@ -3,6 +3,7 @@ package com.syncapi.service.documentation;
 import com.syncapi.TestUtil;
 import com.syncapi.dto.documentation.OpenApiOperation;
 import com.syncapi.dto.documentation.OpenApiPathItem;
+import com.syncapi.dto.documentation.OpenApiServer;
 import com.syncapi.dto.documentation.OpenApiSpec;
 import com.syncapi.entity.folder.Folder;
 import com.syncapi.entity.request.Request;
@@ -73,6 +74,9 @@ class DocumentationServiceTest {
         assertThat(spec.getOpenapi()).isEqualTo(OPENAPI_VERSION);
         assertThat(spec.getInfo().getTitle()).isEqualTo(workspace.getName());
         assertThat(spec.getInfo().getDescription()).isEqualTo(workspace.getDescription());
+        assertThat(spec.getServers()).isNotNull();
+        assertThat(spec.getServers()).hasSize(1);
+        assertThat(spec.getServers().getFirst().getUrl()).isEqualTo("https://api.example.com");
         assertThat(spec.getPaths()).containsKey("/users");
 
         OpenApiPathItem pathItem = spec.getPaths().get("/users");
@@ -208,6 +212,7 @@ class DocumentationServiceTest {
         // then
         assertThat(spec.getOpenapi()).isEqualTo(OPENAPI_VERSION);
         assertThat(spec.getInfo().getTitle()).isEqualTo(workspace.getName());
+        assertThat(spec.getServers()).isNull();
         assertThat(spec.getPaths()).isEmpty();
     }
 
@@ -392,5 +397,185 @@ class DocumentationServiceTest {
         var responses = spec.getPaths().get("/users").getGet().getResponses();
         assertThat(responses).containsKey("200");
         assertThat(responses.get("200").getDescription()).isEqualTo("Successful response");
+    }
+
+    @Test
+    void shouldExtractServerFromFullUrl() {
+        // given
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), "Get Posts", RequestMethod.GET,
+                "https://jsonplaceholder.typicode.com/posts", folder);
+
+        when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
+        when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of(folder));
+        when(requestRepository.findByFolderId(folder.getId())).thenReturn(List.of(request));
+
+        // when
+        OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
+
+        // then
+        assertThat(spec.getServers()).isNotNull();
+        assertThat(spec.getServers()).hasSize(1);
+        assertThat(spec.getServers().getFirst().getUrl()).isEqualTo("https://jsonplaceholder.typicode.com");
+        assertThat(spec.getPaths()).containsKey("/posts");
+    }
+
+    @Test
+    void shouldExtractMultipleServersFromDifferentBaseUrls() {
+        // given
+        Request request1 = TestUtil.createRequest(TestUtil.generateRandomId(), "Get Users", RequestMethod.GET,
+                "https://api.example.com/users", folder);
+        Request request2 = TestUtil.createRequest(TestUtil.generateRandomId(), "Get Posts", RequestMethod.GET,
+                "https://jsonplaceholder.typicode.com/posts", folder);
+
+        when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
+        when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of(folder));
+        when(requestRepository.findByFolderId(folder.getId())).thenReturn(List.of(request1, request2));
+
+        // when
+        OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
+
+        // then
+        assertThat(spec.getServers()).isNotNull();
+        assertThat(spec.getServers()).hasSize(2);
+        assertThat(spec.getServers()).extracting(OpenApiServer::getUrl)
+                .containsExactlyInAnyOrder("https://api.example.com", "https://jsonplaceholder.typicode.com");
+    }
+
+    @Test
+    void shouldHandleVariablePlaceholderUrls() {
+        // given
+        Request request1 = TestUtil.createRequest(TestUtil.generateRandomId(), "Login", RequestMethod.POST,
+                "{{BASE_URL}}/api/auth/login", folder);
+        Request request2 = TestUtil.createRequest(TestUtil.generateRandomId(), "Update Password", RequestMethod.PATCH,
+                "{{BASE_URL}}/api/auth/password", folder);
+
+        when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
+        when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of(folder));
+        when(requestRepository.findByFolderId(folder.getId())).thenReturn(List.of(request1, request2));
+
+        // when
+        OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
+
+        // then
+        assertThat(spec.getServers()).isNotNull();
+        assertThat(spec.getServers()).hasSize(1);
+        assertThat(spec.getServers().getFirst().getUrl()).isEmpty();
+        assertThat(spec.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
+        assertThat(spec.getPaths()).containsKeys("/api/auth/login", "/api/auth/password");
+    }
+
+    @Test
+    void shouldHandleMixOfVariableAndFullUrls() {
+        // given
+        Request request1 = TestUtil.createRequest(TestUtil.generateRandomId(), "Login", RequestMethod.POST,
+                "{{BASE_URL}}/api/auth/login", folder);
+        Request request2 = TestUtil.createRequest(TestUtil.generateRandomId(), "Get Posts", RequestMethod.GET,
+                "https://jsonplaceholder.typicode.com/posts", folder);
+
+        when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
+        when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of(folder));
+        when(requestRepository.findByFolderId(folder.getId())).thenReturn(List.of(request1, request2));
+
+        // when
+        OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
+
+        // then
+        assertThat(spec.getServers()).isNotNull();
+        assertThat(spec.getServers()).hasSize(2);
+        assertThat(spec.getServers().getFirst().getUrl()).isEmpty();
+        assertThat(spec.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
+        assertThat(spec.getServers().get(1).getUrl()).isEqualTo("https://jsonplaceholder.typicode.com");
+        assertThat(spec.getPaths()).containsKeys("/api/auth/login", "/posts");
+    }
+
+    @Test
+    void shouldExtractPathFromVariablePlaceholderUrl() {
+        // given
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), "Login", RequestMethod.POST,
+                "{{BASE_URL}}/api/auth/login", folder);
+
+        when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
+        when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of(folder));
+        when(requestRepository.findByFolderId(folder.getId())).thenReturn(List.of(request));
+
+        // when
+        OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
+
+        // then
+        assertThat(spec.getPaths()).containsKey("/api/auth/login");
+        assertThat(spec.getPaths().get("/api/auth/login").getPost()).isNotNull();
+    }
+
+    @Test
+    void shouldHandleVariablePlaceholderWithRootPath() {
+        // given
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), "Health Check", RequestMethod.GET,
+                "{{BASE_URL}}/", folder);
+
+        when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
+        when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of(folder));
+        when(requestRepository.findByFolderId(folder.getId())).thenReturn(List.of(request));
+
+        // when
+        OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
+
+        // then
+        assertThat(spec.getPaths()).containsKey("/");
+        assertThat(spec.getServers()).isNotNull();
+        assertThat(spec.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
+    }
+
+    @Test
+    void shouldExtractServerWithPort() {
+        // given
+        Request request = TestUtil.createRequest(TestUtil.generateRandomId(), "Get Users", RequestMethod.GET,
+                "http://localhost:8080/api/users", folder);
+
+        when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
+        when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of(folder));
+        when(requestRepository.findByFolderId(folder.getId())).thenReturn(List.of(request));
+
+        // when
+        OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
+
+        // then
+        assertThat(spec.getServers()).isNotNull();
+        assertThat(spec.getServers()).hasSize(1);
+        assertThat(spec.getServers().getFirst().getUrl()).isEqualTo("http://localhost:8080");
+        assertThat(spec.getPaths()).containsKey("/api/users");
+    }
+
+    @Test
+    void shouldDeduplicateServersWithSameBaseUrl() {
+        // given
+        Request request1 = TestUtil.createRequest(TestUtil.generateRandomId(), "Get Users", RequestMethod.GET,
+                "https://api.example.com/users", folder);
+        Request request2 = TestUtil.createRequest(TestUtil.generateRandomId(), "Get Posts", RequestMethod.GET,
+                "https://api.example.com/posts", folder);
+
+        when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
+        when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of(folder));
+        when(requestRepository.findByFolderId(folder.getId())).thenReturn(List.of(request1, request2));
+
+        // when
+        OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
+
+        // then
+        assertThat(spec.getServers()).isNotNull();
+        assertThat(spec.getServers()).hasSize(1);
+        assertThat(spec.getServers().getFirst().getUrl()).isEqualTo("https://api.example.com");
+    }
+
+    @Test
+    void shouldReturnNullServersForEmptyWorkspace() {
+        // given
+        when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
+        when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of());
+
+        // when
+        OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
+
+        // then
+        assertThat(spec.getServers()).isNull();
     }
 }

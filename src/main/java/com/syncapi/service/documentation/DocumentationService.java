@@ -8,6 +8,7 @@ import com.syncapi.dto.documentation.OpenApiPathItem;
 import com.syncapi.dto.documentation.OpenApiRequestBody;
 import com.syncapi.dto.documentation.OpenApiResponse;
 import com.syncapi.dto.documentation.OpenApiSchema;
+import com.syncapi.dto.documentation.OpenApiServer;
 import com.syncapi.dto.documentation.OpenApiSpec;
 import com.syncapi.entity.request.Request;
 import com.syncapi.entity.workspace.Workspace;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +37,7 @@ public class DocumentationService {
 
     private static final Pattern PATH_PARAM_PATTERN = Pattern.compile("\\{([^}]+)}");
     private static final Pattern NUMERIC_SEGMENT_PATTERN = Pattern.compile("^\\d+$");
+    private static final Pattern VARIABLE_PLACEHOLDER_PATTERN = Pattern.compile("^\\{\\{[^}]+}}(.*)$");
 
     private final FolderRepository folderRepository;
     private final RequestRepository requestRepository;
@@ -64,9 +67,11 @@ public class DocumentationService {
         Workspace workspace = util.getWorkspaceWithAccessCheck(workspaceId, email);
         OpenApiInfo info = new OpenApiInfo(workspace.getName(), workspace.getDescription());
 
-        Map<String, OpenApiPathItem> paths = buildPaths(getAllRequestsInWorkspace(workspaceId));
+        List<Request> requests = getAllRequestsInWorkspace(workspaceId);
+        List<OpenApiServer> servers = buildServers(requests);
+        Map<String, OpenApiPathItem> paths = buildPaths(requests);
 
-        return new OpenApiSpec(info, paths);
+        return new OpenApiSpec(info, servers, paths);
     }
 
     /**
@@ -79,6 +84,66 @@ public class DocumentationService {
         return folderRepository.findByWorkspaceId(workspaceId).stream()
                 .flatMap(folder -> requestRepository.findByFolderId(folder.getId()).stream())
                 .toList();
+    }
+
+    /**
+     * Builds the servers list from requests.
+     *
+     * @param requests the list of requests
+     * @return the servers list
+     */
+    private List<OpenApiServer> buildServers(List<Request> requests) {
+        List<OpenApiServer> servers = requests.stream()
+                .map(Request::getUrl)
+                .filter(url -> !hasVariablePlaceholder(url))
+                .map(this::extractBaseUrl)
+                .flatMap(Optional::stream)
+                .distinct()
+                .map(baseUrl -> new OpenApiServer(baseUrl, null))
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+        boolean hasVariableUrl = requests.stream()
+                .anyMatch(r -> hasVariablePlaceholder(r.getUrl()));
+        if (hasVariableUrl) {
+            servers.addFirst(new OpenApiServer("", "Variable base URL (from environment)"));
+        }
+
+        return servers.isEmpty()
+                ? null
+                : servers;
+    }
+
+    /**
+     * Checks if a URL contains a variable placeholder (e.g., {{BASE_URL}}).
+     *
+     * @param url the URL to check
+     * @return true if the URL contains a variable placeholder
+     */
+    private boolean hasVariablePlaceholder(String url) {
+        return VARIABLE_PLACEHOLDER_PATTERN.matcher(url).matches();
+    }
+
+    /**
+     * Extracts the base URL from a full URL.
+     *
+     * @param url the full URL
+     * @return the base URL (scheme + host + port), or empty if invalid
+     */
+    private Optional<String> extractBaseUrl(String url) {
+        try {
+            URI uri = URI.create(url);
+            if (uri.getScheme() != null && uri.getHost() != null) {
+                String baseUrl = uri.getScheme() + "://" + uri.getHost();
+                if (uri.getPort() != -1) {
+                    baseUrl += ":" + uri.getPort();
+                }
+
+                return Optional.of(baseUrl);
+            }
+        } catch (Exception e) {
+        }
+
+        return Optional.empty();
     }
 
     /**
@@ -110,10 +175,18 @@ public class DocumentationService {
      */
     private String extractPath(String url) {
         try {
+            Matcher matcher = VARIABLE_PLACEHOLDER_PATTERN.matcher(url);
+            if (matcher.matches()) {
+                String pathAfterPlaceholder = matcher.group(1);
+
+                return pathAfterPlaceholder.isEmpty() ? "/" : pathAfterPlaceholder;
+            }
+
             String path = URI.create(url).getPath();
 
-            return (path == null
-                    || path.isEmpty()) ? "/" : path;
+            return (path == null || path.isEmpty())
+                    ? "/"
+                    : path;
         } catch (Exception e) {
             return "/";
         }
