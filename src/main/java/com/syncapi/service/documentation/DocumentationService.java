@@ -68,10 +68,9 @@ public class DocumentationService {
         OpenApiInfo info = new OpenApiInfo(workspace.getName(), workspace.getDescription());
 
         List<Request> requests = getAllRequestsInWorkspace(workspaceId);
-        List<OpenApiServer> servers = buildServers(requests);
         Map<String, OpenApiPathItem> paths = buildPaths(requests);
 
-        return new OpenApiSpec(info, servers, paths);
+        return new OpenApiSpec(info, paths);
     }
 
     /**
@@ -87,12 +86,12 @@ public class DocumentationService {
     }
 
     /**
-     * Builds the servers list from requests.
+     * Builds the servers list for a specific path from its requests.
      *
-     * @param requests the list of requests
-     * @return the servers list
+     * @param requests the list of requests for this path
+     * @return the servers list for the path
      */
-    private List<OpenApiServer> buildServers(List<Request> requests) {
+    private List<OpenApiServer> buildServersForPath(List<Request> requests) {
         List<OpenApiServer> servers = requests.stream()
                 .map(Request::getUrl)
                 .filter(url -> !hasVariablePlaceholder(url))
@@ -154,14 +153,26 @@ public class DocumentationService {
      */
     private Map<String, OpenApiPathItem> buildPaths(List<Request> requests) {
         Map<String, OpenApiPathItem> paths = new LinkedHashMap<>();
+        Map<String, List<Request>> pathToRequests = new LinkedHashMap<>();
 
         for (Request request : requests) {
             String normalizedPath = normalizePath(extractPath(request.getUrl()));
             OpenApiPathItem pathItem = paths.computeIfAbsent(normalizedPath, k -> new OpenApiPathItem());
 
+            pathToRequests.computeIfAbsent(normalizedPath, k -> new ArrayList<>()).add(request);
+
             OpenApiOperation operation = buildOperation(request, normalizedPath);
 
             setOperationByMethod(pathItem, request.getMethod(), operation);
+        }
+
+        for (Map.Entry<String, OpenApiPathItem> entry : paths.entrySet()) {
+            String path = entry.getKey();
+            OpenApiPathItem pathItem = entry.getValue();
+            List<Request> pathRequests = pathToRequests.get(path);
+
+            List<OpenApiServer> pathServers = buildServersForPath(pathRequests);
+            pathItem.setServers(pathServers);
         }
 
         return paths;

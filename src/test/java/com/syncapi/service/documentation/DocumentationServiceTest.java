@@ -74,12 +74,12 @@ class DocumentationServiceTest {
         assertThat(spec.getOpenapi()).isEqualTo(OPENAPI_VERSION);
         assertThat(spec.getInfo().getTitle()).isEqualTo(workspace.getName());
         assertThat(spec.getInfo().getDescription()).isEqualTo(workspace.getDescription());
-        assertThat(spec.getServers()).isNotNull();
-        assertThat(spec.getServers()).hasSize(1);
-        assertThat(spec.getServers().getFirst().getUrl()).isEqualTo("https://api.example.com");
         assertThat(spec.getPaths()).containsKey("/users");
 
         OpenApiPathItem pathItem = spec.getPaths().get("/users");
+        assertThat(pathItem.getServers()).isNotNull();
+        assertThat(pathItem.getServers()).hasSize(1);
+        assertThat(pathItem.getServers().getFirst().getUrl()).isEqualTo("https://api.example.com");
         assertThat(pathItem.getGet()).isNotNull();
         assertThat(pathItem.getGet().getSummary()).isEqualTo("Get Users");
         assertThat(pathItem.getPost()).isNull();
@@ -212,7 +212,6 @@ class DocumentationServiceTest {
         // then
         assertThat(spec.getOpenapi()).isEqualTo(OPENAPI_VERSION);
         assertThat(spec.getInfo().getTitle()).isEqualTo(workspace.getName());
-        assertThat(spec.getServers()).isNull();
         assertThat(spec.getPaths()).isEmpty();
     }
 
@@ -413,14 +412,16 @@ class DocumentationServiceTest {
         OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
 
         // then
-        assertThat(spec.getServers()).isNotNull();
-        assertThat(spec.getServers()).hasSize(1);
-        assertThat(spec.getServers().getFirst().getUrl()).isEqualTo("https://jsonplaceholder.typicode.com");
         assertThat(spec.getPaths()).containsKey("/posts");
+
+        OpenApiPathItem pathItem = spec.getPaths().get("/posts");
+        assertThat(pathItem.getServers()).isNotNull();
+        assertThat(pathItem.getServers()).hasSize(1);
+        assertThat(pathItem.getServers().getFirst().getUrl()).isEqualTo("https://jsonplaceholder.typicode.com");
     }
 
     @Test
-    void shouldExtractMultipleServersFromDifferentBaseUrls() {
+    void shouldExtractPerPathServersFromDifferentBaseUrls() {
         // given
         Request request1 = TestUtil.createRequest(TestUtil.generateRandomId(), "Get Users", RequestMethod.GET,
                 "https://api.example.com/users", folder);
@@ -435,10 +436,15 @@ class DocumentationServiceTest {
         OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
 
         // then
-        assertThat(spec.getServers()).isNotNull();
-        assertThat(spec.getServers()).hasSize(2);
-        assertThat(spec.getServers()).extracting(OpenApiServer::getUrl)
-                .containsExactlyInAnyOrder("https://api.example.com", "https://jsonplaceholder.typicode.com");
+        OpenApiPathItem usersPath = spec.getPaths().get("/users");
+        assertThat(usersPath.getServers()).isNotNull();
+        assertThat(usersPath.getServers()).hasSize(1);
+        assertThat(usersPath.getServers().getFirst().getUrl()).isEqualTo("https://api.example.com");
+
+        OpenApiPathItem postsPath = spec.getPaths().get("/posts");
+        assertThat(postsPath.getServers()).isNotNull();
+        assertThat(postsPath.getServers()).hasSize(1);
+        assertThat(postsPath.getServers().getFirst().getUrl()).isEqualTo("https://jsonplaceholder.typicode.com");
     }
 
     @Test
@@ -457,11 +463,19 @@ class DocumentationServiceTest {
         OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
 
         // then
-        assertThat(spec.getServers()).isNotNull();
-        assertThat(spec.getServers()).hasSize(1);
-        assertThat(spec.getServers().getFirst().getUrl()).isEmpty();
-        assertThat(spec.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
         assertThat(spec.getPaths()).containsKeys("/api/auth/login", "/api/auth/password");
+
+        OpenApiPathItem loginPath = spec.getPaths().get("/api/auth/login");
+        assertThat(loginPath.getServers()).isNotNull();
+        assertThat(loginPath.getServers()).hasSize(1);
+        assertThat(loginPath.getServers().getFirst().getUrl()).isEmpty();
+        assertThat(loginPath.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
+
+        OpenApiPathItem passwordPath = spec.getPaths().get("/api/auth/password");
+        assertThat(passwordPath.getServers()).isNotNull();
+        assertThat(passwordPath.getServers()).hasSize(1);
+        assertThat(passwordPath.getServers().getFirst().getUrl()).isEmpty();
+        assertThat(passwordPath.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
     }
 
     @Test
@@ -480,12 +494,18 @@ class DocumentationServiceTest {
         OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
 
         // then
-        assertThat(spec.getServers()).isNotNull();
-        assertThat(spec.getServers()).hasSize(2);
-        assertThat(spec.getServers().getFirst().getUrl()).isEmpty();
-        assertThat(spec.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
-        assertThat(spec.getServers().get(1).getUrl()).isEqualTo("https://jsonplaceholder.typicode.com");
         assertThat(spec.getPaths()).containsKeys("/api/auth/login", "/posts");
+
+        OpenApiPathItem loginPath = spec.getPaths().get("/api/auth/login");
+        assertThat(loginPath.getServers()).isNotNull();
+        assertThat(loginPath.getServers()).hasSize(1);
+        assertThat(loginPath.getServers().getFirst().getUrl()).isEmpty();
+        assertThat(loginPath.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
+
+        OpenApiPathItem postsPath = spec.getPaths().get("/posts");
+        assertThat(postsPath.getServers()).isNotNull();
+        assertThat(postsPath.getServers()).hasSize(1);
+        assertThat(postsPath.getServers().getFirst().getUrl()).isEqualTo("https://jsonplaceholder.typicode.com");
     }
 
     @Test
@@ -503,7 +523,11 @@ class DocumentationServiceTest {
 
         // then
         assertThat(spec.getPaths()).containsKey("/api/auth/login");
-        assertThat(spec.getPaths().get("/api/auth/login").getPost()).isNotNull();
+
+        OpenApiPathItem pathItem = spec.getPaths().get("/api/auth/login");
+        assertThat(pathItem.getPost()).isNotNull();
+        assertThat(pathItem.getServers()).isNotNull();
+        assertThat(pathItem.getServers().getFirst().getUrl()).isEmpty();
     }
 
     @Test
@@ -521,8 +545,10 @@ class DocumentationServiceTest {
 
         // then
         assertThat(spec.getPaths()).containsKey("/");
-        assertThat(spec.getServers()).isNotNull();
-        assertThat(spec.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
+
+        OpenApiPathItem pathItem = spec.getPaths().get("/");
+        assertThat(pathItem.getServers()).isNotNull();
+        assertThat(pathItem.getServers().getFirst().getDescription()).isEqualTo("Variable base URL (from environment)");
     }
 
     @Test
@@ -539,14 +565,16 @@ class DocumentationServiceTest {
         OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
 
         // then
-        assertThat(spec.getServers()).isNotNull();
-        assertThat(spec.getServers()).hasSize(1);
-        assertThat(spec.getServers().getFirst().getUrl()).isEqualTo("http://localhost:8080");
         assertThat(spec.getPaths()).containsKey("/api/users");
+
+        OpenApiPathItem pathItem = spec.getPaths().get("/api/users");
+        assertThat(pathItem.getServers()).isNotNull();
+        assertThat(pathItem.getServers()).hasSize(1);
+        assertThat(pathItem.getServers().getFirst().getUrl()).isEqualTo("http://localhost:8080");
     }
 
     @Test
-    void shouldDeduplicateServersWithSameBaseUrl() {
+    void shouldAssignSameServerToPathsWithSameBaseUrl() {
         // given
         Request request1 = TestUtil.createRequest(TestUtil.generateRandomId(), "Get Users", RequestMethod.GET,
                 "https://api.example.com/users", folder);
@@ -561,13 +589,19 @@ class DocumentationServiceTest {
         OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
 
         // then
-        assertThat(spec.getServers()).isNotNull();
-        assertThat(spec.getServers()).hasSize(1);
-        assertThat(spec.getServers().getFirst().getUrl()).isEqualTo("https://api.example.com");
+        OpenApiPathItem usersPath = spec.getPaths().get("/users");
+        assertThat(usersPath.getServers()).isNotNull();
+        assertThat(usersPath.getServers()).hasSize(1);
+        assertThat(usersPath.getServers().getFirst().getUrl()).isEqualTo("https://api.example.com");
+
+        OpenApiPathItem postsPath = spec.getPaths().get("/posts");
+        assertThat(postsPath.getServers()).isNotNull();
+        assertThat(postsPath.getServers()).hasSize(1);
+        assertThat(postsPath.getServers().getFirst().getUrl()).isEqualTo("https://api.example.com");
     }
 
     @Test
-    void shouldReturnNullServersForEmptyWorkspace() {
+    void shouldReturnEmptyPathsForEmptyWorkspace() {
         // given
         when(util.getWorkspaceWithAccessCheck(workspace.getId(), email)).thenReturn(workspace);
         when(folderRepository.findByWorkspaceId(workspace.getId())).thenReturn(List.of());
@@ -576,6 +610,6 @@ class DocumentationServiceTest {
         OpenApiSpec spec = documentationService.generateSpec(workspace.getId(), email);
 
         // then
-        assertThat(spec.getServers()).isNull();
+        assertThat(spec.getPaths()).isEmpty();
     }
 }

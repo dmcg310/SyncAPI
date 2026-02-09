@@ -2,11 +2,14 @@ package com.syncapi.dto.documentation;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.List;
+
 /**
  * DTO representing an OpenAPI Path Item with various HTTP operations.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OpenApiPathItem {
+    private List<OpenApiServer> servers;
     private OpenApiOperation get;
     private OpenApiOperation post;
     private OpenApiOperation put;
@@ -19,13 +22,22 @@ public class OpenApiPathItem {
     public OpenApiPathItem() {
     }
 
-    public OpenApiPathItem(OpenApiOperation get, OpenApiOperation post, OpenApiOperation put, OpenApiOperation patch,
-                           OpenApiOperation delete) {
+    public OpenApiPathItem(List<OpenApiServer> servers, OpenApiOperation get, OpenApiOperation post,
+                           OpenApiOperation put, OpenApiOperation patch, OpenApiOperation delete) {
+        this.servers = servers;
         this.get = get;
         this.post = post;
         this.put = put;
         this.patch = patch;
         this.delete = delete;
+    }
+
+    public List<OpenApiServer> getServers() {
+        return servers;
+    }
+
+    public void setServers(List<OpenApiServer> servers) {
+        this.servers = servers;
     }
 
     public OpenApiOperation getGet() {
