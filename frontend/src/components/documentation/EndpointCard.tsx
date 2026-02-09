@@ -5,6 +5,9 @@ import {getMethodColorClass} from "../../util/util.ts";
 import ParameterTable from './ParameterTable';
 import RequestBodyView from './RequestBodyView';
 import ResponseView from './ResponseView';
+import CodeSnippet from './CodeSnippet';
+import CopyButton from './CopyButton';
+import {generateAxiosSnippet, generateCurlSnippet, generateFetchSnippet} from '../../util/snippets';
 
 interface EndpointCardProps {
     method: HttpMethod;
@@ -15,6 +18,7 @@ interface EndpointCardProps {
 
 const EndpointCard: React.FC<EndpointCardProps> = ({method, path, operation, onClick}) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [snippetType, setSnippetType] = useState<'cURL' | 'fetch' | 'axios'>('cURL');
     const paramCount = operation.parameters?.length ?? 0;
     const hasRequestBody = !!operation.requestBody;
     const responseCount = Object.keys(operation.responses).length;
@@ -22,6 +26,13 @@ const EndpointCard: React.FC<EndpointCardProps> = ({method, path, operation, onC
     const handleClick = () => {
         setIsExpanded(!isExpanded);
         onClick?.();
+    };
+
+    const snippetOptions = {method, path, operation};
+    const snippets = {
+        cURL: generateCurlSnippet(snippetOptions),
+        fetch: generateFetchSnippet(snippetOptions),
+        axios: generateAxiosSnippet(snippetOptions)
     };
 
     return (
@@ -79,20 +90,70 @@ const EndpointCard: React.FC<EndpointCardProps> = ({method, path, operation, onC
 
             {isExpanded && (
                 <div className="px-6 pb-6 pt-0 space-y-6 border-t border-neutral-100 mt-2">
+                    <div className="pt-4">
+                        <h3 className="text-md font-semibold text-neutral-900 mb-3">Endpoint URL</h3>
+                        <div className="pr-4 flex items-center rounded-lg bg-neutral-50 border border-neutral-200">
+                            <code
+                                className="flex-1 rounded-md px-3 py-2 text-md font-mono text-neutral-900">
+                                https://api.example.com{path}
+                            </code>
+                            <CopyButton text={`https://api.example.com${path}`} label="Copy URL"/>
+                        </div>
+                    </div>
+
+                    <div className="pt-2">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-md font-semibold text-neutral-900">Code Examples</h3>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setSnippetType('cURL')}
+                                    className={`px-3 py-1 text-md font-medium rounded-md transition-colors cursor-pointer ${
+                                        snippetType === 'cURL'
+                                            ? 'bg-primary-100 text-primary-700'
+                                            : 'text-neutral-600 hover:bg-neutral-100'
+                                    }`}
+                                >
+                                    cURL
+                                </button>
+                                <button
+                                    onClick={() => setSnippetType('fetch')}
+                                    className={`px-3 py-1 text-md font-medium rounded-md transition-colors cursor-pointer ${
+                                        snippetType === 'fetch'
+                                            ? 'bg-primary-100 text-primary-700'
+                                            : 'text-neutral-600 hover:bg-neutral-100'
+                                    }`}
+                                >
+                                    Fetch
+                                </button>
+                                <button
+                                    onClick={() => setSnippetType('axios')}
+                                    className={`px-3 py-1 text-md font-medium rounded-md transition-colors cursor-pointer ${
+                                        snippetType === 'axios'
+                                            ? 'bg-primary-100 text-primary-700'
+                                            : 'text-neutral-600 hover:bg-neutral-100'
+                                    }`}
+                                >
+                                    Axios
+                                </button>
+                            </div>
+                        </div>
+                        <CodeSnippet code={snippets[snippetType]} language={snippetType}/>
+                    </div>
+
                     {operation.parameters && operation.parameters.length > 0 && (
-                        <div className="pt-4">
+                        <div className="pt-2">
                             <ParameterTable parameters={operation.parameters}/>
                         </div>
                     )}
 
                     {operation.requestBody && (
-                        <div className="pt-4">
+                        <div className="pt-2">
                             <RequestBodyView requestBody={operation.requestBody}/>
                         </div>
                     )}
 
                     {operation.responses && Object.keys(operation.responses).length > 0 && (
-                        <div className="pt-4">
+                        <div className="pt-2">
                             <ResponseView responses={operation.responses}/>
                         </div>
                     )}

@@ -21,7 +21,7 @@ const BodyEditor: React.FC<BodyEditorProps> = ({
                                                    activeEnvironmentName
                                                }) => {
     if (!['POST', 'PUT', 'PATCH'].includes(method)) {
-        return <p className="text-sm text-neutral-500">Body is not available for {method} requests</p>;
+        return <p className="text-md text-neutral-500">Body is not available for {method} requests</p>;
     }
 
     const formatJson = () => {
