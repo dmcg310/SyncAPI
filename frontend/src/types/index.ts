@@ -131,6 +131,7 @@ export interface EnvironmentVariableRequest {
 export interface OpenApiSpec {
     openapi: string;
     info: OpenApiInfo;
+    servers?: OpenApiServer[];
     paths: Record<string, OpenApiPathItem>;
 }
 
@@ -140,12 +141,18 @@ export interface OpenApiInfo {
     version: string;
 }
 
+export interface OpenApiServer {
+    url: string;
+    description?: string;
+}
+
 export interface OpenApiPathItem {
     get?: OpenApiOperation;
     post?: OpenApiOperation;
     put?: OpenApiOperation;
     patch?: OpenApiOperation;
     delete?: OpenApiOperation;
+    servers?: OpenApiServer[];
 }
 
 export interface OpenApiOperation {

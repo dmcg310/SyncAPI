@@ -17,9 +17,14 @@ const DocsSidebar: React.FC<DocsSidebarProps> = ({paths, selectedEndpoint, onSel
         }>> = {};
 
         Object.entries(paths).forEach(([path, pathItem]) => {
-            const firstSegment = path.split('/').filter(Boolean)[0] || 'Root';
-            const groupName = firstSegment.charAt(0).toUpperCase() + firstSegment.slice(1);
+            const serverUrl = pathItem.servers?.[0]?.url;
+            const isVariableUrl = pathItem.servers
+                && pathItem.servers.length > 0
+                && (!serverUrl || serverUrl.trim() === '');
 
+            const groupName = isVariableUrl
+                ? 'Variable URL'
+                : serverUrl || 'No Server';
             if (!groups[groupName]) {
                 groups[groupName] = [];
             }
@@ -38,7 +43,17 @@ const DocsSidebar: React.FC<DocsSidebarProps> = ({paths, selectedEndpoint, onSel
         return groups;
     }, [paths]);
 
-    const sortedGroupNames = Object.keys(groupedEndpoints).sort();
+    const sortedGroupNames = Object.keys(groupedEndpoints).sort((a, b) => {
+        if (a === 'Variable URL') {
+            return -1;
+        }
+
+        if (b === 'Variable URL') {
+            return 1;
+        }
+
+        return a.localeCompare(b);
+    });
     if (sortedGroupNames.length === 0) {
         return (
             <div className="p-4 text-center">

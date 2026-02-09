@@ -85,7 +85,8 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, err
                 .map(([method, operation]) => ({
                     path,
                     method: method.toUpperCase() as HttpMethod,
-                    operation
+                    operation,
+                    servers: pathItem.servers
                 }))
         );
 
@@ -126,7 +127,7 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, err
                     </div>
 
                     <div className="space-y-4">
-                        {endpoints.map(({path, method, operation}) => {
+                        {endpoints.map(({path, method, operation, servers}) => {
                             const endpointKey = `${method}-${path}`;
                             return (
                                 <div
@@ -139,6 +140,7 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, err
                                         method={method}
                                         path={path}
                                         operation={operation}
+                                        servers={servers}
                                         onClick={() => handleSelectEndpoint(method, path)}
                                     />
                                 </div>

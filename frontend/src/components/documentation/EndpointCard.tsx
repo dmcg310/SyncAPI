@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {MdExpandMore} from 'react-icons/md';
-import type {HttpMethod, OpenApiOperation} from '@/types';
+import type {HttpMethod, OpenApiOperation, OpenApiServer} from '@/types';
 import {getMethodColorClass} from "../../util/util.ts";
 import ParameterTable from './ParameterTable';
 import RequestBodyView from './RequestBodyView';
@@ -13,22 +13,26 @@ interface EndpointCardProps {
     method: HttpMethod;
     path: string;
     operation: OpenApiOperation;
+    servers?: OpenApiServer[];
     onClick?: () => void;
 }
 
-const EndpointCard: React.FC<EndpointCardProps> = ({method, path, operation, onClick}) => {
+const EndpointCard: React.FC<EndpointCardProps> = ({method, path, operation, servers, onClick}) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [snippetType, setSnippetType] = useState<'cURL' | 'fetch' | 'axios'>('cURL');
     const paramCount = operation.parameters?.length ?? 0;
     const hasRequestBody = !!operation.requestBody;
     const responseCount = Object.keys(operation.responses).length;
 
+    const serverUrl = servers?.[0]?.url || null;
+    const isVariableUrl = servers && servers.length > 0 && (!serverUrl || serverUrl.trim() === '');
+
     const handleClick = () => {
         setIsExpanded(!isExpanded);
         onClick?.();
     };
 
-    const snippetOptions = {method, path, operation};
+    const snippetOptions = {method, path, operation, baseUrl: serverUrl || undefined};
     const snippets = {
         cURL: generateCurlSnippet(snippetOptions),
         fetch: generateFetchSnippet(snippetOptions),
@@ -92,13 +96,38 @@ const EndpointCard: React.FC<EndpointCardProps> = ({method, path, operation, onC
                 <div className="px-6 pb-6 pt-0 space-y-6 border-t border-neutral-100 mt-2">
                     <div className="pt-4">
                         <h3 className="text-md font-semibold text-neutral-900 mb-3">Endpoint URL</h3>
-                        <div className="pr-4 flex items-center rounded-lg bg-neutral-50 border border-neutral-200">
-                            <code
-                                className="flex-1 rounded-md px-3 py-2 text-md font-mono text-neutral-900">
-                                https://api.example.com{path}
-                            </code>
-                            <CopyButton text={`https://api.example.com${path}`} label="Copy URL"/>
-                        </div>
+                        {isVariableUrl ? (
+                            <div className="space-y-2">
+                                <div className="pr-4 flex items-center rounded-lg bg-amber-50 border border-amber-200">
+                                    <code className="flex-1 rounded-md px-3 py-2 text-md font-mono text-amber-900">
+                                        <span className="text-amber-700 font-semibold">{'{{BASE_URL}}'}</span>
+                                        <span className="text-neutral-900">{path}</span>
+                                    </code>
+                                    <CopyButton text={`{{BASE_URL}}${path}`} label="Copy URL"/>
+                                </div>
+                                <p className="text-md text-neutral-600">
+                                    Base URL is determined by your variable configuration
+                                </p>
+                            </div>
+                        ) : serverUrl ? (
+                            <div className="space-y-2">
+                                <div
+                                    className="pr-4 flex items-center rounded-lg bg-neutral-50 border border-neutral-200">
+                                    <code className="flex-1 rounded-md px-3 py-2 text-md font-mono text-neutral-900">
+                                        <span className="text-primary-600">{serverUrl}</span>
+                                        <span className="text-neutral-900">{path}</span>
+                                    </code>
+                                    <CopyButton text={`${serverUrl}${path}`} label="Copy URL"/>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="pr-4 flex items-center rounded-lg bg-neutral-50 border border-neutral-200">
+                                <code className="flex-1 rounded-md px-3 py-2 text-md font-mono text-neutral-900">
+                                    {path}
+                                </code>
+                                <CopyButton text={path} label="Copy path"/>
+                            </div>
+                        )}
                     </div>
 
                     <div className="pt-2">
