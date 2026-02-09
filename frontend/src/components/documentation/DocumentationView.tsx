@@ -2,6 +2,7 @@ import React, {useRef, useState} from 'react';
 import {MdRefresh} from 'react-icons/md';
 import DocsSidebar from './DocsSidebar';
 import EndpointCard from './EndpointCard';
+import ExportButton from './ExportButton';
 import Spinner from '../common/Spinner';
 import type {HttpMethod, OpenApiSpec} from '@/types';
 
@@ -109,15 +110,18 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, err
                                 - {endpointCount} {endpointCount === 1 ? 'endpoint' : 'endpoints'}
                             </p>
 
-                            <button
-                                onClick={onRefresh}
-                                disabled={loading}
-                                className="flex items-center gap-2 px-3 py-2 text-md font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
-                                title="Refresh documentation"
-                            >
-                                <MdRefresh size={18} className={loading ? 'animate-spin' : ''}/>
-                                Refresh
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <ExportButton spec={spec}/>
+                                <button
+                                    onClick={onRefresh}
+                                    disabled={loading}
+                                    className="flex items-center gap-2 px-3 py-2 text-md font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+                                    title="Refresh documentation"
+                                >
+                                    <MdRefresh size={18} className={loading ? 'animate-spin' : ''}/>
+                                    Refresh
+                                </button>
+                            </div>
                         </div>
                     </div>
 
