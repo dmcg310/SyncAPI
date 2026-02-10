@@ -6,7 +6,7 @@ interface CodeSnippetProps {
     language?: string;
 }
 
-const CodeSnippet: React.FC<CodeSnippetProps> = ({code, language = 'bash'}) => {
+const CodeSnippet: React.FC<CodeSnippetProps> = ({code, language = 'cURL'}) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const lineLimit = 10;

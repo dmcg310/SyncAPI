@@ -7,7 +7,7 @@ import RequestBodyView from './RequestBodyView';
 import ResponseView from './ResponseView';
 import CodeSnippet from './CodeSnippet';
 import CopyButton from './CopyButton';
-import {generateAxiosSnippet, generateCurlSnippet, generateFetchSnippet} from '../../util/snippets';
+import {generateCurlSnippet} from '../../util/snippets';
 
 interface EndpointCardProps {
     method: HttpMethod;
@@ -19,7 +19,6 @@ interface EndpointCardProps {
 
 const EndpointCard: React.FC<EndpointCardProps> = ({method, path, operation, servers, onClick}) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [snippetType, setSnippetType] = useState<'cURL' | 'fetch' | 'axios'>('cURL');
     const paramCount = operation.parameters?.length ?? 0;
     const hasRequestBody = !!operation.requestBody;
     const responseCount = Object.keys(operation.responses).length;
@@ -33,11 +32,7 @@ const EndpointCard: React.FC<EndpointCardProps> = ({method, path, operation, ser
     };
 
     const snippetOptions = {method, path, operation, baseUrl: serverUrl || undefined};
-    const snippets = {
-        cURL: generateCurlSnippet(snippetOptions),
-        fetch: generateFetchSnippet(snippetOptions),
-        axios: generateAxiosSnippet(snippetOptions)
-    };
+    const snippet = generateCurlSnippet(snippetOptions);
 
     return (
         <div
@@ -131,42 +126,8 @@ const EndpointCard: React.FC<EndpointCardProps> = ({method, path, operation, ser
                     </div>
 
                     <div className="pt-2">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-md font-semibold text-neutral-900">Code Examples</h3>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setSnippetType('cURL')}
-                                    className={`px-3 py-1 text-md font-medium rounded-md transition-colors cursor-pointer ${
-                                        snippetType === 'cURL'
-                                            ? 'bg-primary-100 text-primary-700'
-                                            : 'text-neutral-600 hover:bg-neutral-100'
-                                    }`}
-                                >
-                                    cURL
-                                </button>
-                                <button
-                                    onClick={() => setSnippetType('fetch')}
-                                    className={`px-3 py-1 text-md font-medium rounded-md transition-colors cursor-pointer ${
-                                        snippetType === 'fetch'
-                                            ? 'bg-primary-100 text-primary-700'
-                                            : 'text-neutral-600 hover:bg-neutral-100'
-                                    }`}
-                                >
-                                    Fetch
-                                </button>
-                                <button
-                                    onClick={() => setSnippetType('axios')}
-                                    className={`px-3 py-1 text-md font-medium rounded-md transition-colors cursor-pointer ${
-                                        snippetType === 'axios'
-                                            ? 'bg-primary-100 text-primary-700'
-                                            : 'text-neutral-600 hover:bg-neutral-100'
-                                    }`}
-                                >
-                                    Axios
-                                </button>
-                            </div>
-                        </div>
-                        <CodeSnippet code={snippets[snippetType]} language={snippetType}/>
+                        <h3 className="text-md font-semibold text-neutral-900 mb-3">cURL Example</h3>
+                        <CodeSnippet code={snippet} language="cURL"/>
                     </div>
 
                     {operation.parameters && operation.parameters.length > 0 && (
