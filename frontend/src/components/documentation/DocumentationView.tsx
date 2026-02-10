@@ -5,6 +5,7 @@ import EndpointCard from './EndpointCard';
 import ExportButton from './ExportButton';
 import Spinner from '../common/Spinner';
 import type {HttpMethod, OpenApiSpec} from '@/types';
+import {HTTP_METHODS_ARRAY} from "../../util/constants.ts";
 
 interface DocumentationViewProps {
     spec: OpenApiSpec | null;
@@ -62,8 +63,12 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({spec, loading, err
         );
     }
 
-    const endpointCount = Object.values(spec.paths).reduce((count, pathItem) => {
-        return count + Object.keys(pathItem).length;
+    const endpointCount = Object.values(spec.paths).reduce((total, pathItem) => {
+        const ops = Object.keys(pathItem).filter(key =>
+            HTTP_METHODS_ARRAY.includes(key as typeof HTTP_METHODS_ARRAY[number])
+        );
+
+        return total + ops.length;
     }, 0);
 
     const handleSelectEndpoint = (method: HttpMethod, path: string) => {

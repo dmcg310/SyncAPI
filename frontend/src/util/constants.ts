@@ -8,6 +8,8 @@ export const HTTP_METHODS = {
     DELETE: 'DELETE'
 };
 
+export const HTTP_METHODS_ARRAY = ['get', 'post', 'put', 'patch', 'delete'];
+
 export const METHOD_COLORS = {
     GET: 'bg-http-get',
     POST: 'bg-http-post',
